@@ -1,5 +1,5 @@
 /* ===========================================================================
-   Marginalia — "Living Margin" design system
+   Marginalia, "Living Margin" design system
    A sheet of paper on a desk; the center is calm reading, the margins are alive.
    Tri-voice type: Newsreader (serif) = content, JetBrains Mono = explanation,
    Caveat = personality. Red pen (#C2410C) is punctuation, not paint.
@@ -7,8 +7,8 @@
 
 :root {
   /* Paper + ink palette */
-  --desk: #e5dcc9;
-  --desk-2: #ede7d8;
+  --desk: #ddd3bf;
+  --desk-2: #e8e0cd;
   --paper: #fcfaf4;
   --ink: #211c16;
   --ink-soft: #5b5347;
@@ -41,23 +41,27 @@ html, body { margin: 0; padding: 0; }
 body {
   font-family: var(--serif);
   color: var(--ink);
-  background: var(--desk);
+  background:
+    radial-gradient(1500px 950px at 50% -12%, #ece3cf 0%, var(--desk) 56%, #cabea6 100%);
+  background-color: var(--desk);
+  background-attachment: fixed;
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection { background: var(--accent-soft); }
 
-/* Faint paper fiber noise over the whole desk (decorative). */
+/* Fine paper-fibre grain over the whole desk (decorative). */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.5;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.55;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 a { color: var(--accent); }
@@ -179,25 +183,27 @@ main {
 .sheet {
   position: relative;
   max-width: var(--sheet-w);
-  margin: 30px auto 64px;
-  filter: drop-shadow(0 36px 70px rgba(40, 30, 20, 0.34))
-    drop-shadow(0 3px 8px rgba(40, 30, 20, 0.12));
+  margin: 34px auto 70px;
+  filter: drop-shadow(0 40px 80px rgba(40, 30, 20, 0.32))
+    drop-shadow(0 4px 10px rgba(40, 30, 20, 0.14));
 }
 .sheet-pad {
   position: relative;
-  background: var(--paper);
-  border: 1px solid rgba(33, 28, 22, 0.08);
-  padding: 0 40px 70px;
+  background: linear-gradient(180deg, #fefdf9 0%, var(--paper) 14%, var(--paper) 100%);
+  border: 1px solid rgba(33, 28, 22, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 0 90px rgba(176, 150, 110, 0.05);
+  padding: 0 40px 72px;
 }
-/* faint paper grain on the sheet itself */
+/* fine paper-fibre grain on the sheet itself */
 .sheet-pad::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.4;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  opacity: 0.45;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
 }
 .sheet-pad > * { position: relative; z-index: 1; }
 
@@ -250,7 +256,7 @@ main {
 }
 
 /* ---------------------------------------------------------------------------
-   Living Margin — the three-zone grid
+   Living Margin, the three-zone grid
    --------------------------------------------------------------------------- */
 .lmrow {
   display: grid;
@@ -594,7 +600,7 @@ main {
 }
 
 /* ---------------------------------------------------------------------------
-   Footer — contact sheet
+   Footer, contact sheet
    --------------------------------------------------------------------------- */
 .contact-footer {
   position: relative;
@@ -673,7 +679,7 @@ main {
 .center { align-items: center; justify-content: center; }
 
 /* ---------------------------------------------------------------------------
-   Responsive — margins collapse, notes inline
+   Responsive, margins collapse, notes inline
    --------------------------------------------------------------------------- */
 @media (max-width: 1040px) {
   .lmrow { grid-template-columns: 1fr !important; gap: 14px !important; }

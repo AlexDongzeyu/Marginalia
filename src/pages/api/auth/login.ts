@@ -1,5 +1,5 @@
 /**
- * POST /api/auth/login — verify credentials and set a session cookie.
+ * POST /api/auth/login, verify credentials and set a session cookie.
  */
 import type { APIContext } from "astro";
 import { verifyPassword, createSessionCookie, getUserByEmail } from "../../../lib/auth";

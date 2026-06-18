@@ -1,5 +1,5 @@
 /**
- * POST /api/explain-simpler — the on-page assistant.
+ * POST /api/explain-simpler, the on-page assistant.
  * Re-explains a single sentence from an article, scoped to that article's
  * topic. Labeled AI; explains the displayed content only.
  */

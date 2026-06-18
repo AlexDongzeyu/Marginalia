@@ -1,5 +1,5 @@
 /**
- * GET /api/map — returns research directions shaped as graph nodes + edges
+ * GET /api/map, returns research directions shaped as graph nodes + edges
  * for the React Flow map. Node size scales with `momentum` (recent article
  * count); edges link children to their parent branch.
  */

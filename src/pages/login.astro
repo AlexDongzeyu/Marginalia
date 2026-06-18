@@ -3,7 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Sheet from "../components/Sheet.astro";
 import Masthead from "../components/Masthead.astro";
 ---
-<BaseLayout title="Sign in — Marginalia" bodyClass="page-login">
+<BaseLayout title="Sign in · Marginalia" bodyClass="page-login">
   <Sheet>
     <Masthead title="Welcome back" tagline="Sign in to your reading room." top="Members' entrance" compact={true} />
     <div style="max-width:440px; margin:0 auto;">
@@ -37,7 +37,7 @@ import Masthead from "../components/Masthead.astro";
         const out = await res.json();
         if (res.ok) window.location.href = "/dashboard";
         else if (status) status.textContent = out.error || "Could not sign in.";
-      } catch { if (status) status.textContent = "Network error — try again."; }
+      } catch { if (status) status.textContent = "Network error, try again."; }
     });
   </script>
 </BaseLayout>

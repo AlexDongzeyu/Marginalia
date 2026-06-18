@@ -11,7 +11,7 @@ const article = await getArticleOfDay(env.DB);
 const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 const diffClass = article?.difficulty === "Beginner" ? "tag-beginner" : article?.difficulty === "Advanced" ? "tag-advanced" : "tag-intermediate";
 ---
-<BaseLayout title="Today — Marginalia" bodyClass="page-today">
+<BaseLayout title="Today · Marginalia" bodyClass="page-today">
   <Sheet>
     <Masthead title="Today's Margin" tagline={today} top="The paper worth understanding" compact={true} />
     <MarginRow>
@@ -39,7 +39,7 @@ const diffClass = article?.difficulty === "Beginner" ? "tag-beginner" : article?
       </div>
       <Fragment slot="right">
         {article && (
-          <MarginNote variant="why" tilt="r">{article.is_ai4good === 1 ? "real-world stakes — AI pointed at a problem that matters." : "a foundational idea worth getting right."}</MarginNote>
+          <MarginNote variant="why" tilt="r">{article.is_ai4good === 1 ? "real-world stakes, AI pointed at a problem that matters." : "a foundational idea worth getting right."}</MarginNote>
         )}
       </Fragment>
     </MarginRow>

@@ -6,7 +6,7 @@ import MarginRow from "../components/MarginRow.astro";
 import MarginNote from "../components/MarginNote.astro";
 import TornDivider from "../components/TornDivider.astro";
 ---
-<BaseLayout title="About — Marginalia" bodyClass="page-about">
+<BaseLayout title="About · Marginalia" bodyClass="page-about">
   <Sheet>
     <Masthead title="About" tagline="Why a few students read AI papers so you don't have to." top="The masthead" compact={true} />
 
@@ -18,14 +18,14 @@ import TornDivider from "../components/TornDivider.astro";
         <div class="section-label">Our mission</div>
         <p>AI research moves fast and is written for experts. Marginalia is a free,
           student-run guide that explains new and notable AI work in plain language,
-          maps the field so newcomers can explore it, and — once you understand
-          something — lets <span class="anchor" data-anchor="who">you annotate it</span> for the next person.</p>
+          maps the field so newcomers can explore it, and, once you understand
+          something, lets <span class="anchor" data-anchor="who">you annotate it</span> for the next person.</p>
         <p>The name is a nod to <span class="anchor" data-anchor="def">marginalia</span>: the notes people scribble in
           the margins to make a difficult text their own. That's what we do, in
           public, for AI.</p>
       </div>
       <Fragment slot="right">
-        <MarginNote variant="def" anchor="def" taped={true} tilt="l"><b>marginalia</b> (n.) — notes in the margins of a book. here, the whole point.</MarginNote>
+        <MarginNote variant="def" anchor="def" taped={true} tilt="l"><b>marginalia</b> (n.), notes in the margins of a book. here, the whole point.</MarginNote>
       </Fragment>
     </MarginRow>
 
@@ -52,7 +52,7 @@ import TornDivider from "../components/TornDivider.astro";
       <div class="read">
         <ul>
           <li><strong>Original summaries only.</strong> We never republish a paper's abstract verbatim.</li>
-          <li><strong>We credit and link everything</strong> — authors, the arXiv page, the PDF.</li>
+          <li><strong>We credit and link everything</strong>, authors, the arXiv page, the PDF.</li>
           <li><strong>Transparency labels.</strong> AI involvement is always marked.</li>
           <li><strong>Human review before publish.</strong> The editorial queue is our anti-hallucination check.</li>
           <li><strong>The scrutiny test.</strong> Everything here should survive a researcher clicking through.</li>

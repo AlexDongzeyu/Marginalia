@@ -9,7 +9,7 @@ const rows = await env.DB.prepare(
 ).all<{ slug: string; name: string; region: string | null; description: string }>();
 const chapters = rows.results ?? [];
 ---
-<BaseLayout title="Chapters — Marginalia" bodyClass="page-chapters">
+<BaseLayout title="Chapters · Marginalia" bodyClass="page-chapters">
   <Sheet>
     <Masthead title="Chapters" tagline="Student-run reading rooms, everywhere." top="The network" compact={true} />
     <div style="max-width:680px; margin:0 auto;">
@@ -20,7 +20,7 @@ const chapters = rows.results ?? [];
       {chapters.length > 0 ? chapters.map((c) => (
         <a class="note-row" href={`/chapters/${c.slug}`}><span class="nr-main"><span class="title">{c.name}</span><br /><span class="meta">{c.region ?? ""}</span></span><span class="arr">→</span></a>
       )) : (
-        <p class="muted text-center" style="margin-top:24px;">No chapters yet — be the founding one. <a href="/chapters/start">Start a chapter →</a></p>
+        <p class="muted text-center" style="margin-top:24px;">No chapters yet, be the founding one. <a href="/chapters/start">Start a chapter →</a></p>
       )}
     </div>
   </Sheet>

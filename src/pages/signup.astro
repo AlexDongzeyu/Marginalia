@@ -3,7 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Sheet from "../components/Sheet.astro";
 import Masthead from "../components/Masthead.astro";
 ---
-<BaseLayout title="Create account — Marginalia" bodyClass="page-signup">
+<BaseLayout title="Create account · Marginalia" bodyClass="page-signup">
   <Sheet>
     <Masthead title="Join Marginalia" tagline="Create your account to contribute." top="New member" compact={true} />
     <div style="max-width:440px; margin:0 auto;">
@@ -41,7 +41,7 @@ import Masthead from "../components/Masthead.astro";
         const out = await res.json();
         if (res.ok) window.location.href = "/dashboard";
         else if (status) status.textContent = out.error || "Could not create account.";
-      } catch { if (status) status.textContent = "Network error — try again."; }
+      } catch { if (status) status.textContent = "Network error, try again."; }
     });
   </script>
 </BaseLayout>

@@ -7,7 +7,7 @@ import { listDraftArticles } from "../lib/db";
 const { env } = Astro.locals.runtime;
 const drafts = await listDraftArticles(env.DB);
 ---
-<BaseLayout title="Review queue — Marginalia" bodyClass="page-admin" hideComfort={true}>
+<BaseLayout title="Review queue · Marginalia" bodyClass="page-admin" hideComfort={true}>
   <Sheet>
     <Masthead title="Review queue" tagline="Nothing publishes without a human." top="Editorial" compact={true} />
     <div style="max-width:720px; margin:0 auto;">
@@ -25,7 +25,7 @@ const drafts = await listDraftArticles(env.DB);
           <div class="mn-card draft-card" data-id={d.id} style="max-width:none; margin-bottom:16px;">
             <div class="row wrap gap-8" style="justify-content:space-between;">
               <span class="tag">{d.status}</span>
-              <span class="muted" style="font-family:var(--mono); font-size:10px;">arXiv: {d.arxiv_id ?? "—"} · {d.ai_model}</span>
+              <span class="muted" style="font-family:var(--mono); font-size:10px;">arXiv: {d.arxiv_id ?? "n/a"} · {d.ai_model}</span>
             </div>
             <label class="field" style="margin:10px 0 0;"><span style="font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);">Plain title</span><input class="paper-input edit-plain_title" value={d.plain_title} /></label>
             <p class="muted" style="font-size:12px; margin:8px 0;">orig: <em>{d.original_title}</em></p>
@@ -59,7 +59,7 @@ const drafts = await listDraftArticles(env.DB);
       try {
         const res = await fetch(`/api/articles/${id}/review`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ ...payload, reviewer: reviewerEl.value.trim() || "Editorial" }) });
         const data = await res.json();
-        if (statusEl) statusEl.textContent = res.ok ? `✓ ${data.status}` : `✗ ${data.error}`;
+        if (statusEl) statusEl.textContent = res.ok ? `${data.status}` : `${data.error}`;
         if (res.ok && (payload.action === "publish" || payload.action === "reject" || payload.action === "set-aotd")) {
           const card = document.querySelector(`.draft-card[data-id="${id}"]`); if (card) (card as HTMLElement).style.opacity = "0.5";
         }
@@ -84,7 +84,7 @@ const drafts = await listDraftArticles(env.DB);
       try {
         const res = await fetch(`/api/cron/ingest`, { method: "POST", headers: authHeaders() });
         const data = await res.json();
-        if (statusEl) statusEl.textContent = res.ok ? `Drafted ${data.drafted} (fetched ${data.fetched}). Reload to see them.` : `✗ ${data.error}`;
+        if (statusEl) statusEl.textContent = res.ok ? `Drafted ${data.drafted} (fetched ${data.fetched}). Reload to see them.` : `${data.error}`;
       } catch { if (statusEl) statusEl.textContent = "Network error."; }
     });
   </script>

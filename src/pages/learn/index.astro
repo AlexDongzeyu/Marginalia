@@ -5,15 +5,15 @@ import Masthead from "../../components/Masthead.astro";
 
 const tracks = [
   { slug: "beginner-path", title: "Beginner Path", num: "i.", blurb: "Zero background needed. From 'what is a model?' to reading real papers.", lessons: 6, level: "Beginner" },
-  { slug: "large-language-models", title: "Large Language Models", num: "ii.", blurb: "How models like ChatGPT actually work — tokens, attention, limits.", lessons: 5, level: "Beginner" },
+  { slug: "large-language-models", title: "Large Language Models", num: "ii.", blurb: "How models like ChatGPT actually work, tokens, attention, limits.", lessons: 5, level: "Beginner" },
   { slug: "computer-vision", title: "Computer Vision", num: "iii.", blurb: "How machines learn to see, from pixels to recognising objects.", lessons: 4, level: "Intermediate" },
   { slug: "ai-for-good", title: "AI for Good", num: "iv.", blurb: "Real applications in health, climate, education, accessibility.", lessons: 5, level: "Beginner" },
   { slug: "build-and-deploy", title: "Build & Deploy", num: "v.", blurb: "Go hands-on: run a model, ship a small project, put it online.", lessons: 6, level: "Intermediate" },
 ];
 ---
-<BaseLayout title="Learn — Marginalia" bodyClass="page-learn">
+<BaseLayout title="Learn · Marginalia" bodyClass="page-learn">
   <Sheet>
-    <Masthead title="Learn" tagline="AI from the ground up — annotated textbook style." top="The lessons" compact={true} />
+    <Masthead title="Learn" tagline="AI from the ground up, annotated textbook style." top="The lessons" compact={true} />
     <div style="max-width:680px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:14px;">
       {tracks.map((t) => (
         <a class="torn-card" href={`/learn/${t.slug}`} data-reveal style="text-decoration:none; color:inherit; display:block;">

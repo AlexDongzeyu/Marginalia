@@ -9,7 +9,7 @@ const rows = await env.DB.prepare(
 ).all<{ slug: string; title: string; sent_at: string }>();
 const issues = rows.results ?? [];
 ---
-<BaseLayout title="Newsletter — Marginalia" bodyClass="page-newsletter">
+<BaseLayout title="Newsletter · Marginalia" bodyClass="page-newsletter">
   <Sheet>
     <Masthead title="The weekly letter" tagline="The papers worth your weekend, in plain language." top="One email a week" compact={true} />
     <div style="max-width:520px; margin:0 auto; text-align:center;">
@@ -29,7 +29,7 @@ const issues = rows.results ?? [];
     <div style="max-width:560px; margin:30px auto 0;">
       <div class="section-label">What you'll get</div>
       <div class="read"><ul>
-        <li>3–5 newly explained papers, in plain language</li>
+        <li>3-5 newly explained papers, in plain language</li>
         <li>A "start here" pick for newcomers</li>
         <li>One highlighted research direction from the map</li>
       </ul></div>
@@ -48,7 +48,7 @@ const issues = rows.results ?? [];
       if (status) status.textContent = "Subscribing…";
       const res = await fetch("/api/subscribe", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
       const data = await res.json().catch(() => ({}));
-      if (status) status.textContent = res.ok ? "✓ you're on the list!" : (data.error || "Something went wrong.");
+      if (status) status.textContent = res.ok ? "you're on the list!" : (data.error || "Something went wrong.");
       if (res.ok) form.reset();
     });
   </script>

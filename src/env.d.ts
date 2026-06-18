@@ -8,7 +8,7 @@ type Ai = import("@cloudflare/workers-types").Ai;
 interface Env {
   /** D1 database binding (see wrangler.toml). */
   DB: D1Database;
-  /** Workers AI binding — runs Llama models at the edge. */
+  /** Workers AI binding, runs Llama models at the edge. */
   AI: Ai;
   /** Deploy environment label. */
   ENVIRONMENT: string;

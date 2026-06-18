@@ -19,7 +19,7 @@ function escapeHtml(s: string): string {
 
 function inline(text: string): string {
   let out = escapeHtml(text);
-  // links [text](http...) — only http(s) URLs allowed
+  // links [text](http...), only http(s) URLs allowed
   out = out.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
     (_m, label, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`,

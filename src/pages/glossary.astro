@@ -7,7 +7,7 @@ import { getApprovedGlossary } from "../lib/db";
 const { env } = Astro.locals.runtime;
 const terms = await getApprovedGlossary(env.DB);
 ---
-<BaseLayout title="Glossary — Marginalia" bodyClass="page-glossary">
+<BaseLayout title="Glossary · Marginalia" bodyClass="page-glossary">
   <Sheet>
     <Masthead title="Glossary" tagline="Every bit of jargon, in one sentence." top="Definitions" compact={true} />
     <div style="max-width:680px; margin:0 auto;">
@@ -20,7 +20,7 @@ const terms = await getApprovedGlossary(env.DB);
           </div>
         ))}
       </dl>
-      {terms.length === 0 && <p class="muted text-center">No terms yet — the pipeline proposes new ones as articles publish.</p>}
+      {terms.length === 0 && <p class="muted text-center">No terms yet, the pipeline proposes new ones as articles publish.</p>}
     </div>
   </Sheet>
   <script>

@@ -1,5 +1,5 @@
 /**
- * ResearchMap — the interactive map of research directions (the differentiator).
+ * ResearchMap, the interactive map of research directions (the differentiator).
  * Not a citation graph: an editorial map where each node is a plain-language
  * research direction. Click a node → side panel with description + a link to
  * its articles. Built on React Flow, laid out in concentric branches.
@@ -227,7 +227,7 @@ export default function ResearchMap() {
             <div className="map-panel-stat">
               {selected.articleCount > 0
                 ? `${selected.articleCount} explained ${selected.articleCount === 1 ? "paper" : "papers"}`
-                : "No explained papers yet — check back soon."}
+                : "No explained papers yet, check back soon."}
             </div>
             <a className="btn btn-primary" href={`/directions/${selected.slug}`}>
               Open this direction →

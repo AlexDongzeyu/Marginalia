@@ -5,16 +5,16 @@ import Masthead from "../../components/Masthead.astro";
 
 const TRACKS: Record<string, { title: string; intro: string; lessons: string[] }> = {
   "beginner-path": { title: "Beginner Path", intro: "Start here if AI is brand new. Each lesson is a short read with a check-yourself question.", lessons: ["What even is AI? (and what it isn't)", "Data, models, and 'learning' explained", "Neural networks without the maths", "What a language model actually does", "How to read an AI paper as a beginner", "Where to go next"] },
-  "large-language-models": { title: "Large Language Models", intro: "How the models behind modern chatbots work — and where they break.", lessons: ["Tokens: how models see text", "Attention, the key idea", "Training vs. fine-tuning", "Prompting and its limits", "Hallucinations and safety"] },
+  "large-language-models": { title: "Large Language Models", intro: "How the models behind modern chatbots work, and where they break.", lessons: ["Tokens: how models see text", "Attention, the key idea", "Training vs. fine-tuning", "Prompting and its limits", "Hallucinations and safety"] },
   "computer-vision": { title: "Computer Vision", intro: "From pixels to perception.", lessons: ["How computers store images", "Convolutions, simply", "Recognising objects", "Where vision meets language"] },
-  "ai-for-good": { title: "AI for Good", intro: "Applications that help people — and how to build responsibly.", lessons: ["AI in health", "AI for climate", "AI for education & access", "Fairness and bias", "Building responsibly"] },
+  "ai-for-good": { title: "AI for Good", intro: "Applications that help people, and how to build responsibly.", lessons: ["AI in health", "AI for climate", "AI for education & access", "Fairness and bias", "Building responsibly"] },
   "build-and-deploy": { title: "Build & Deploy", intro: "Hands-on: run a model and ship something small.", lessons: ["Your first model run", "Working with an API", "Building a tiny app", "Putting it online", "Evaluating your results", "Sharing your project"] },
 };
 const { track } = Astro.params;
 const data = track ? TRACKS[track] : undefined;
 if (!data) return new Response(null, { status: 404, statusText: "Not Found" });
 ---
-<BaseLayout title={`${data.title} — Learn — Marginalia`} bodyClass="page-track">
+<BaseLayout title={`${data.title} · Learn · Marginalia`} bodyClass="page-track">
   <Sheet>
     <Masthead title={data.title} tagline={data.intro} top="A track" compact={true} />
     <div style="max-width:620px; margin:0 auto;">

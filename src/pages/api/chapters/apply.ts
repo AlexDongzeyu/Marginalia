@@ -1,5 +1,5 @@
 /**
- * POST /api/chapters/apply — store a chapter application as 'pending'.
+ * POST /api/chapters/apply, store a chapter application as 'pending'.
  */
 import type { APIContext } from "astro";
 
@@ -37,7 +37,7 @@ export async function POST({ request, locals }: APIContext) {
   }
 
   const baseSlug = slugify(name) || `chapter-${Date.now()}`;
-  const fullDesc = `${description}\n\n— Lead: ${leadName} <${email}>`;
+  const fullDesc = `${description}\n\nLead: ${leadName} <${email}>`;
 
   try {
     await env.DB.prepare(

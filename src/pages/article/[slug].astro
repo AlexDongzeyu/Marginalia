@@ -1,6 +1,6 @@
 ---
 /**
- * /article/[slug] — "The Annotated Paper".
+ * /article/[slug], "The Annotated Paper".
  * Center: explainer (from D1) with a Source-PDF toggle (arXiv embed).
  * Left margin: team explainer notes. Right margin: member notes + leaderboard.
  * Footer: an understanding quiz that awards a stamp (client-side demo).
@@ -26,7 +26,7 @@ const diffClass = article.difficulty === "Beginner" ? "tag-beginner" : article.d
 const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${article.arxiv_id}` : null);
 ---
 
-<BaseLayout title={`${article.plain_title} — Marginalia`} description={article.hook} bodyClass="page-article">
+<BaseLayout title={`${article.plain_title} · Marginalia`} description={article.hook} bodyClass="page-article">
   <div class="sheet">
     <div class="sheet-pad">
       <!-- HEADER -->
@@ -38,7 +38,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
           {dirs[0] && <span class="tag tag-lm">{dirs[0].name}</span>}
           <span class={`tag ${diffClass}`}>{article.difficulty}</span>
           <span class="tag">{article.read_minutes} min read</span>
-          <span class="tag" style="border:1px dashed var(--line-2);">✎ {article.ai_model === "hand-written" ? "Written" : "AI-assisted"}, reviewed by {article.reviewer_name ?? "the team"}</span>
+          <span class="tag" style="border:1px dashed var(--line-2);">{article.ai_model === "hand-written" ? "Written" : "AI-assisted"}, reviewed by {article.reviewer_name ?? "the team"}</span>
         </div>
       </div>
 
@@ -50,15 +50,15 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
           {dirs[0] && (
             <div class="mn-card mn-tilt-l" data-reveal data-note="area">
               <div class="mn-label">Area</div>
-              <div class="mn-body"><b>{dirs[0].name}</b> — {dirs[0].plain_description}</div>
+              <div class="mn-body"><b>{dirs[0].name}</b>, {dirs[0].plain_description}</div>
             </div>
           )}
           <div class="mn-hand" data-reveal style="rotate:.6deg;">
-            translation: we read the hard version so this one stays simple ✏️
+            translation: we read the hard version so this one stays simple
           </div>
           <div class="mn-card mn-tilt-r" data-reveal data-note="why">
             <div class="mn-label">Why it matters</div>
-            <div class="mn-body">{article.is_ai4good === 1 ? "this is AI pointed at a real-world problem — health, climate, access." : "understanding this is a building block for the rest of the field."}</div>
+            <div class="mn-body">{article.is_ai4good === 1 ? "this is AI pointed at a real-world problem, health, climate, access." : "understanding this is a building block for the rest of the field."}</div>
           </div>
         </div>
 
@@ -82,7 +82,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
             <div style="margin-top:18px; background:var(--card-2); border:1px solid rgba(122,92,62,.22); padding:16px 18px;">
               <div class="mn-label" style="color:var(--accent);">Source</div>
               <p style="margin:6px 0 10px; font-size:14px; color:var(--ink-soft);">
-                {article.authors.join(", ")}{article.institution ? ` — ${article.institution}` : ""}
+                {article.authors.join(", ")}{article.institution ? `, ${article.institution}` : ""}
               </p>
               <div class="row wrap gap-8">
                 {article.source_url && <a class="btn-outline" href={article.source_url} target="_blank" rel="noopener noreferrer">View on arXiv ↗</a>}
@@ -106,7 +106,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
           <!-- SOURCE PDF -->
           <div id="sourcePane" class="hidden">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:#2B2620; color:#EAE3D5; padding:8px 12px; font-family:var(--mono); font-size:11px;">
-              <span style="opacity:.6;">arXiv:{article.arxiv_id ?? "—"}</span>
+              <span style="opacity:.6;">arXiv:{article.arxiv_id ?? "n/a"}</span>
               {article.source_url && <a href={article.source_url} target="_blank" rel="noopener noreferrer" style="color:#F0A878; text-decoration:none;">Open on arXiv ↗</a>}
             </div>
             {pdfUrl ? (
@@ -211,7 +211,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
     // ----- quiz (generic comprehension; awards a local stamp) -----
     const QUESTIONS = [
       { text: "What does Marginalia do with this paper?", opts: ["Republishes the PDF as its own", "Explains it in plain language and links to the source", "Sells a summary"], correct: 1 },
-      { text: "Where do you read the original?", opts: ["On arXiv — we link out, never republish", "Only here", "Nowhere"], correct: 0 },
+      { text: "Where do you read the original?", opts: ["On arXiv, we link out, never republish", "Only here", "Nowhere"], correct: 0 },
       { text: "What does the red-pen underline mark?", opts: ["A spelling mistake", "A phrase with a margin note or link", "Nothing"], correct: 2 - 1 },
     ];
     const sel = {};
@@ -243,11 +243,11 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
       const pass = QUESTIONS.every((q, qi) => sel[qi] === q.correct);
       const msg = document.getElementById("quizMsg");
       if (pass) {
-        msg.textContent = "Nailed it — stamp earned.";
+        msg.textContent = "Nailed it, stamp earned.";
         document.getElementById("quizStamp").classList.remove("hidden");
         try { localStorage.setItem("mg.stamp." + articleSlug, "1"); } catch {}
-        toast("✓ +10 — you understood this one");
-      } else { msg.textContent = "Not quite — try again."; }
+        toast("+10, you understood this one");
+      } else { msg.textContent = "Not quite, try again."; }
     });
 
     // ----- leaderboard (demo) -----

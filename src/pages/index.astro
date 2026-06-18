@@ -1,8 +1,8 @@
 ---
 /**
- * Home — "The Front Page". The annotated intro is where the concept lands.
- * Data-driven from D1 (Article of the Day + latest), wrapped in the paper sheet
- * with living margins.
+ * Home, "The Front Page".
+ * A calm reading column down the middle, personality in the margins, all of it
+ * on one sheet of paper. Data comes from D1 (article of the day + latest).
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Sheet from "../components/Sheet.astro";
@@ -10,21 +10,29 @@ import Masthead from "../components/Masthead.astro";
 import MarginRow from "../components/MarginRow.astro";
 import MarginNote from "../components/MarginNote.astro";
 import TornDivider from "../components/TornDivider.astro";
+import ArticleCard from "../components/ArticleCard.astro";
 import { getArticleOfDay, getLatestArticles } from "../lib/db";
+
+export const prerender = false;
 
 const { env } = Astro.locals.runtime;
 const [today, latest] = await Promise.all([
-  getArticleOfDay(env.DB),
-  getLatestArticles(env.DB, 4),
+  getArticleOfDay(env.DB).catch(() => null),
+  getLatestArticles(env.DB, 5).catch(() => []),
 ]);
 
-const todayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const now = new Date();
+const todayDate = now.toLocaleDateString("en-US", {
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+});
 const issueNo = Math.floor((Date.now() - Date.UTC(2024, 0, 1)) / 86_400_000);
-const diffClass = (d: string) =>
-  d === "Beginner" ? "tag-beginner" : d === "Advanced" ? "tag-advanced" : "tag-intermediate";
+
+const ransom = [..."FIELD NOTES"];
 ---
 
-<BaseLayout bodyClass="page-home">
+<BaseLayout title="Marginalia · Notes on the AI research that matters">
   <Sheet>
     <Masthead
       title="Marginalia"
@@ -33,186 +41,226 @@ const diffClass = (d: string) =>
       bottom="A student-run reading room · est. 2024"
     />
 
-    <!-- ANNOTATED INTRO -->
+    {/* ---- What this is ------------------------------------------------ */}
     <MarginRow>
       <Fragment slot="left">
-        <MarginNote variant="hand" anchor="who">
-          yes — a 16-year-old started this. no, we don't bite. <span class="mn-arrow">↘</span>
+        <MarginNote variant="hand">
+          yes, a 16-year-old started this.<br />no, we do not bite.
+          <span class="mn-arrow">↘</span>
         </MarginNote>
-        <MarginNote variant="hand" anchor="matters">
-          we read the papers so you don't have to. <span style="font-style:italic;">(yet.)</span> <span class="mn-arrow">↘</span>
+        <MarginNote variant="hand">
+          we read the hard papers<br />so you do not have to.
+          <span class="mn-arrow">↘</span>
         </MarginNote>
       </Fragment>
 
       <div class="read">
         <div class="section-label">What this is</div>
         <p>
-          Marginalia is a daily, plain-language guide to
-          <span class="anchor" data-anchor="matters">the AI research that actually matters</span>.
-          Every day we pick one paper worth understanding, read it properly, and
-          <span class="anchor" data-anchor="margins">explain it in the margins</span> — the jargon,
-          the stakes, and the occasional joke.
+          Marginalia is a daily, plain-language guide to the
+          <span class="anchor" data-anchor="research">AI research</span> that
+          actually matters. Each day we pick one paper worth understanding, read
+          it properly, and explain it in the margins: the jargon, the stakes,
+          and the occasional joke.
         </p>
         <p>
-          No PhD required. You bring the curiosity; we bring
-          <span class="anchor" data-anchor="who">the red pen</span> — and once you understand
-          something, you can annotate it for the next person.
+          No PhD required. You bring the curiosity; we bring the
+          <span class="anchor" data-anchor="redpen">red pen</span>. Once
+          something finally clicks, you can annotate it for the next person who
+          shows up.
         </p>
-        <div class="cta-row">
-          <a href="/today" class="btn-ink">Read today's paper →</a>
-          <a href="/map" class="btn-outline">Explore the map</a>
-        </div>
       </div>
 
       <Fragment slot="right">
-        <MarginNote variant="def" anchor="margins" taped={true} tilt="l">
-          <b>marginalia</b> (n.) — notes scribbled in the margins of a book. here, the whole point.
+        <MarginNote variant="def" anchor="research" taped tilt="r" label="Def.">
+          <b>research (n.)</b> the part everyone cites and almost nobody reads.
+          we read it.
         </MarginNote>
-        <MarginNote variant="member" anchor="member" initials="AK">
-          a member left this → "the red pen is my favorite part fr"
+        <MarginNote variant="member" anchor="redpen" initials="MK">
+          a member left this: "the red pen is genuinely my favorite part."
         </MarginNote>
       </Fragment>
     </MarginRow>
 
     <TornDivider variant="a" />
 
-    <!-- TODAY'S MARGIN -->
+    {/* ---- Today's margin --------------------------------------------- */}
     <MarginRow>
       <Fragment slot="left">
         <MarginNote variant="hand">
-          today's pick. updated every morning before school. <span class="mn-arrow">↘</span>
+          one paper a day.<br />read at your own pace.
+          <span class="mn-arrow">↘</span>
         </MarginNote>
       </Fragment>
 
       <div>
-        <div class="section-label">Today's Margin — {todayDate}</div>
+        <div class="section-label">Today's Margin · {todayDate}</div>
         {today ? (
-          <div class="scrap">
-            <svg class="clip" width="34" height="64" viewBox="0 0 34 64"><path d="M17 8 C9 8 7 14 7 22 L7 46 C7 55 13 58 18 58 C24 58 28 53 28 46 L28 18 C28 13 24 11 21 11 C17 11 14 14 14 19 L14 44" fill="none" stroke="#9aa0a6" stroke-width="3.4" stroke-linecap="round"></path></svg>
-            <div class="scrap-tags">
-              {today.directions?.[0] && <span class={`tag tag-lm`}>{today.directions[0].name}</span>}
-              <span class={`tag ${diffClass(today.difficulty)}`}>{today.difficulty}</span>
-              <span class="tag">{today.read_minutes} min read</span>
-            </div>
+          <article class="scrap">
+            <svg class="clip" width="26" height="46" viewBox="0 0 26 46" fill="none" aria-hidden="true">
+              <path d="M13 4c-5 0-9 4-9 9v22c0 3.3 2.7 6 6 6s6-2.7 6-6V14"
+                stroke="#7a5c3e" stroke-width="2.4" stroke-linecap="round" />
+            </svg>
+            {today.directions && today.directions.length > 0 && (
+              <div class="scrap-tags">
+                {today.directions.slice(0, 2).map((d) => (
+                  <span class="tag">{d.name}</span>
+                ))}
+              </div>
+            )}
+            <p class="orig">{today.original_title}</p>
             <h2>{today.plain_title}</h2>
-            <p class="orig">orig. “{today.original_title}”{today.authors[0] ? ` · ${today.authors[0]}${today.authors.length > 1 ? " et al." : ""}` : ""}</p>
             <p class="hook">{today.hook}</p>
-            <a href={`/article/${today.slug}`} class="more">Read the annotated version →</a>
-          </div>
+            <a class="more" href={`/article/${today.slug}`}>Read today's annotation →</a>
+          </article>
         ) : (
-          <div class="scrap"><h2>No pick yet today</h2><p class="hook">Check back this morning — or browse <a href="/feed">the feed</a>.</p></div>
+          <article class="scrap">
+            <p class="hook">
+              Today's paper is still drying on the line. Check back shortly, or
+              browse the full feed.
+            </p>
+            <a class="more" href="/feed">Browse the feed →</a>
+          </article>
         )}
       </div>
 
       <Fragment slot="right">
-        {today && (
-          <MarginNote variant="why" anchor="why" tilt="r">
-            {today.is_ai4good === 1
-              ? "real-world stakes: this is AI pointed at a problem that actually matters."
-              : "a chatbot you can actually trust is one that knows what it doesn't know."}
-          </MarginNote>
-        )}
         <MarginNote variant="hand">
-          ↖ pass the 3-question quiz on this one and you get the <span class="mn-arrow">+10 stamp</span>
+          we pick the one paper<br />worth your attention today.
         </MarginNote>
       </Fragment>
     </MarginRow>
 
     <TornDivider variant="b" />
 
-    <!-- WHAT WE DO -->
+    {/* ---- What we do -------------------------------------------------- */}
     <MarginRow>
       <div>
-        <div class="section-label" style="text-align:center;">What we do</div>
+        <div class="section-label">How a day works</div>
         <div class="torn-cards">
           <div class="torn-card" data-reveal>
             <div class="roman">i.</div>
-            <h3>Read</h3>
-            <p>One paper a day, explained in the margins. No jargon left undefined.</p>
+            <h3>We pick one paper</h3>
+            <p>From the firehose of new AI work, one paper that is worth your time.</p>
           </div>
           <div class="torn-card" data-reveal>
             <div class="roman">ii.</div>
-            <h3>Learn</h3>
-            <p>Pass quizzes, earn stamps, climb the leaderboard with your chapter.</p>
+            <h3>We read it for you</h3>
+            <p>Then we rewrite it in plain language, with the jargon defined in the margins.</p>
           </div>
           <div class="torn-card" data-reveal>
             <div class="roman">iii.</div>
-            <h3>Build</h3>
-            <p>Write your own marginalia. Edit it, keep a copy, help the next reader.</p>
+            <h3>You annotate it</h3>
+            <p>Add your own note. The next reader learns from the margin you leave behind.</p>
           </div>
         </div>
       </div>
-      <Fragment slot="right">
-        <MarginNote variant="hand">
-          ↖ understand it before you annotate it. the quiz is the gate.
-        </MarginNote>
-      </Fragment>
     </MarginRow>
 
     <TornDivider variant="c" />
 
-    <!-- LATEST ANNOTATIONS -->
+    {/* ---- Latest annotations ------------------------------------------ */}
     <MarginRow>
       <Fragment slot="left">
         <MarginNote variant="hand">
-          the archive grows by one every day. <span class="mn-arrow">↘</span>
+          a small archive,<br />growing one day at a time.
+          <span class="mn-arrow">↘</span>
         </MarginNote>
       </Fragment>
+
       <div>
         <div class="section-label">Latest annotations</div>
-        {latest.map((a) => (
-          <a class="note-row" href={`/article/${a.slug}`} data-reveal>
-            <span class="date">{a.published_at || a.published_date ? new Date(a.published_at ?? a.published_date!).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}</span>
-            <span class="nr-main">
-              <span class="title">{a.plain_title}</span><br />
-              <span class="meta">{[a.directions?.[0]?.name, a.difficulty].filter(Boolean).join(" · ")}</span>
-            </span>
-            <span class="arr">→</span>
-          </a>
-        ))}
-        <a href="/feed" class="text-link" style="margin-top:18px;">Open the full archive →</a>
+        {latest.length > 0 ? (
+          <div>
+            {latest.map((a) => <ArticleCard article={a} />)}
+            <a class="text-link" href="/feed" style="margin-top:18px;">See the full feed →</a>
+          </div>
+        ) : (
+          <p class="read" style="color:var(--ink-soft);">
+            The archive is just getting started. The first annotations land soon.
+          </p>
+        )}
       </div>
-      <Fragment slot="right" />
+
+      <Fragment slot="right">
+        <MarginNote variant="why" anchor="" tilt="l" label="Why bother">
+          one good paper, properly understood, beats fifty half-read headlines.
+        </MarginNote>
+      </Fragment>
     </MarginRow>
 
-    <!-- NEWSLETTER -->
-    <section style="max-width:560px; margin:42px auto 0; padding:30px 0 6px; text-align:center;">
-      <div class="ransom" aria-hidden="true">
-        <span style="font-family:var(--mono); font-size:24px; background:#211C16; color:#FCFAF4; transform:rotate(-4deg);">S</span>
-        <span style="font-family:var(--serif); font-size:25px; background:#FCFAF4; color:#211C16; border:1px solid var(--line-2); transform:rotate(3deg);">U</span>
-        <span style="font-family:var(--mono); font-size:23px; background:#C2410C; color:#FCFAF4; transform:rotate(-2deg);">B</span>
-        <span style="font-family:var(--hand); font-size:30px; background:#FCFAF4; color:#211C16; border:1px solid var(--line-2); transform:rotate(2.5deg);">s</span>
-        <span style="font-family:var(--serif); font-style:italic; font-size:25px; background:#1E3A5F; color:#FCFAF4; transform:rotate(-3deg);">c</span>
-        <span style="font-family:var(--mono); font-size:24px; background:#FCFAF4; color:#211C16; border:1px solid var(--line-2); transform:rotate(4deg);">R</span>
-        <span style="font-family:var(--serif); font-size:25px; background:#211C16; color:#FCFAF4; transform:rotate(-1.5deg);">I</span>
-        <span style="font-family:var(--mono); font-size:23px; background:#FCFAF4; color:#211C16; border:1px solid var(--line-2); transform:rotate(2deg);">B</span>
-        <span style="font-family:var(--serif); font-style:italic; font-size:25px; background:#C2410C; color:#FCFAF4; transform:rotate(-3.5deg);">e</span>
+    <TornDivider variant="a" />
+
+    {/* ---- Newsletter -------------------------------------------------- */}
+    <section style="max-width:var(--read-w);margin:8px auto 12px;text-align:center;">
+      <div class="ransom">
+        {ransom.map((ch, i) =>
+          ch === " " ? (
+            <span style="padding:0 4px;background:transparent;"></span>
+          ) : (
+            <span
+              style={`background:${
+                i % 3 === 0 ? "var(--ink)" : i % 3 === 1 ? "var(--accent)" : "var(--paper)"
+              };color:${
+                i % 3 === 2 ? "var(--ink)" : "var(--paper)"
+              };font-family:${
+                i % 2 === 0 ? "var(--serif)" : "var(--mono)"
+              };transform:rotate(${(i % 5) - 2}deg);border:${
+                i % 3 === 2 ? "1px solid var(--ink)" : "none"
+              };`}
+            >{ch}</span>
+          )
+        )}
       </div>
-      <p style="margin:0 auto 18px; max-width:380px; font-size:18px; line-height:1.5; color:var(--ink-soft); font-style:italic;">
-        One short letter each week — the papers worth your weekend, in plain language.
+      <p class="read" style="font-size:18px;color:#3a342b;">
+        One short letter each week: the papers worth your weekend, in plain
+        language. No spam, no hype.
       </p>
-      <form id="homeSubscribe" style="display:flex; gap:8px; justify-content:center; max-width:400px; margin:0 auto;">
-        <input type="email" name="email" required placeholder="you@school.edu" class="paper-input" style="flex:1;" aria-label="Email" />
-        <button type="submit" class="btn-ink">Join</button>
+      <form id="subscribe-form" style="display:flex;gap:8px;justify-content:center;max-width:420px;margin:18px auto 0;flex-wrap:wrap;">
+        <input
+          class="paper-input"
+          type="email"
+          name="email"
+          placeholder="you@example.com"
+          required
+          style="flex:1;min-width:200px;"
+        />
+        <button class="btn-ink" type="submit">Subscribe</button>
       </form>
-      <p style="margin:14px 0 0; font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--ink-faintest);">no spam · unsubscribe in one click · we're 17, we get it</p>
+      <p id="subscribe-msg" style="font-family:var(--mono);font-size:12px;color:var(--ok);margin-top:12px;min-height:18px;" aria-live="polite"></p>
     </section>
   </Sheet>
 
-  <script>
-    const form = document.getElementById("homeSubscribe") as HTMLFormElement | null;
-    form?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-      const res = await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+  <script is:inline>
+    (() => {
+      const form = document.getElementById("subscribe-form");
+      const msg = document.getElementById("subscribe-msg");
+      if (!form) return;
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = new FormData(form).get("email");
+        msg.style.color = "var(--ink-soft)";
+        msg.textContent = "sending...";
+        try {
+          const res = await fetch("/api/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            msg.style.color = "var(--ok)";
+            msg.textContent = "you are on the list. check your inbox.";
+            form.reset();
+          } else {
+            msg.style.color = "var(--accent)";
+            msg.textContent = data.error || "something went wrong.";
+          }
+        } catch {
+          msg.style.color = "var(--accent)";
+          msg.textContent = "network error, please try again.";
+        }
       });
-      const data = await res.json().catch(() => ({}));
-      form.innerHTML = `<p style="font-family:var(--hand); font-size:24px; color:#2E6B36;">${
-        res.ok ? "✓ you're on the list — check your inbox!" : (data.error || "Something went wrong.")
-      }</p>`;
-    });
+    })();
   </script>
 </BaseLayout>

@@ -3,7 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Sheet from "../../components/Sheet.astro";
 import Masthead from "../../components/Masthead.astro";
 ---
-<BaseLayout title="Start a chapter — Marginalia" bodyClass="page-chapter-start">
+<BaseLayout title="Start a chapter · Marginalia" bodyClass="page-chapter-start">
   <Sheet>
     <Masthead title="Start a chapter" tagline="Bring Marginalia to your campus." top="Application" compact={true} />
     <div style="max-width:520px; margin:0 auto;">
@@ -28,9 +28,9 @@ import Masthead from "../../components/Masthead.astro";
       try {
         const res = await fetch("/api/chapters/apply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         const data = await res.json();
-        if (res.ok) form.innerHTML = `<p class="read" style="font-family:var(--hand); font-size:26px; color:#2E6B36;">Thanks, ${"" + (payload.lead_name || "")}! Your application is in — we'll email ${"" + (payload.email || "")}.</p>`;
+        if (res.ok) form.innerHTML = `<p class="read" style="font-family:var(--hand); font-size:26px; color:#2E6B36;">Thanks, ${"" + (payload.lead_name || "")}! Your application is in, we'll email ${"" + (payload.email || "")}.</p>`;
         else if (status) status.textContent = data.error || "Something went wrong.";
-      } catch { if (status) status.textContent = "Network error — please try again."; }
+      } catch { if (status) status.textContent = "Network error, please try again."; }
     });
   </script>
 </BaseLayout>

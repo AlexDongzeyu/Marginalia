@@ -13,7 +13,7 @@ type ComfortState = {
   calm: boolean;
   focus: boolean;
   contrast: boolean;
-  textScale: number; // percent, 80–150
+  textScale: number; // percent, 80-150
 };
 
 const DEFAULT_STATE: ComfortState = {
@@ -113,7 +113,7 @@ export function initComfortSettings() {
     applyState(state);
   });
 
-  // Quick exit — leave immediately and try to scrub history.
+  // Quick exit, leave immediately and try to scrub history.
   document.getElementById("comfortExit")?.addEventListener("click", () => {
     try {
       window.location.replace("https://www.google.com");

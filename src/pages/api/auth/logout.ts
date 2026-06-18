@@ -1,5 +1,5 @@
 /**
- * POST or GET /api/auth/logout — clear the session cookie.
+ * POST or GET /api/auth/logout, clear the session cookie.
  */
 import type { APIContext } from "astro";
 import { clearSessionCookie } from "../../../lib/auth";

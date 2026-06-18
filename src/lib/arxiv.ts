@@ -1,7 +1,7 @@
 /**
  * arXiv source adapter.
  * Fetches recent papers from the arXiv API and parses the Atom XML response.
- * We store ONLY metadata + our own summaries — never the abstract verbatim —
+ * We store ONLY metadata + our own summaries, never the abstract verbatim,
  * and respect arXiv API etiquette (descriptive UA, modest request rate).
  */
 

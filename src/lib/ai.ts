@@ -1,6 +1,6 @@
 /**
  * Workers AI helpers.
- * Runs Cloudflare-hosted Llama models at the edge — no external API key.
+ * Runs Cloudflare-hosted Llama models at the edge, no external API key.
  * Two jobs:
  *   1. explainPaper(): turn a paper's metadata into an ORIGINAL plain-language
  *      explainer as strict JSON (never copies the abstract).
@@ -48,7 +48,7 @@ export const KNOWN_DIRECTION_SLUGS = [
 ];
 
 function buildPrompt(paper: ArxivPaper): string {
-  return `You are an editor for "Marginalia", a site that explains AI research to curious beginners (about a grade-9 reading level). You will be given a paper's title and abstract. Write an ORIGINAL plain-language explainer. Do NOT copy or paraphrase the abstract sentence-by-sentence — explain the ideas in your own simple words.
+  return `You are an editor for "Marginalia", a site that explains AI research to curious beginners (about a grade-9 reading level). You will be given a paper's title and abstract. Write an ORIGINAL plain-language explainer. Do NOT copy or paraphrase the abstract sentence-by-sentence, explain the ideas in your own simple words.
 
 Return ONLY valid minified JSON with exactly these keys:
 - "plain_title": a rewritten, jargon-free title (a real person would click it)
@@ -135,7 +135,7 @@ export async function explainPaper(ai: Ai, paper: ArxivPaper): Promise<ExplainRe
   return { draft: coerceDraft(raw), model: MODEL };
 }
 
-/** On-page "Explain it simpler" — scoped to the displayed sentence. */
+/** On-page "Explain it simpler", scoped to the displayed sentence. */
 export async function explainSimpler(
   ai: Ai,
   sentence: string,

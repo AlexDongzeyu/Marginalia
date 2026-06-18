@@ -1,5 +1,5 @@
 /**
- * POST /api/subscribe — newsletter signup.
+ * POST /api/subscribe, newsletter signup.
  * Stores email in D1 `subscribers`. Minimal validation; idempotent.
  */
 import type { APIContext } from "astro";

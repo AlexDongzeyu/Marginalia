@@ -1,5 +1,5 @@
 /**
- * POST /api/cron/ingest — manual trigger for the daily ingest pipeline.
+ * POST /api/cron/ingest, manual trigger for the daily ingest pipeline.
  * Admin-gated via the ADMIN_TOKEN secret (Bearer header or ?token=).
  * The unattended daily run is handled by the separate cron Worker
  * (workers/cron.ts); this route lets an editor kick it off on demand.

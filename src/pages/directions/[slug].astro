@@ -20,7 +20,7 @@ const latest = articles.filter((a) => a.is_foundational !== 1);
 const related = allDirections.filter((d) => d.branch === direction.branch && d.parent_id && d.slug !== direction.slug);
 const branchLabel: Record<string, string> = { foundations: "Foundations", methods: "Methods & Models", applied: "AI for Good", society: "Safety & Society" };
 ---
-<BaseLayout title={`${direction.name} — Marginalia`} description={direction.plain_description} bodyClass="page-direction">
+<BaseLayout title={`${direction.name} · Marginalia`} description={direction.plain_description} bodyClass="page-direction">
   <Sheet>
     <Masthead title={direction.name} tagline={branchLabel[direction.branch]} top="A direction" compact={true} />
     <MarginRow>
@@ -31,7 +31,7 @@ const branchLabel: Record<string, string> = { foundations: "Foundations", method
         <p class="read">{direction.plain_description}</p>
         {foundational.length > 0 && (
           <section style="margin-top:24px;">
-            <div class="section-label">Start here — foundational reads</div>
+            <div class="section-label">Start here, foundational reads</div>
             {foundational.map((a) => (
               <a class="note-row" href={`/article/${a.slug}`}><span class="nr-main"><span class="title">{a.plain_title}</span><br /><span class="meta">{a.difficulty}</span></span><span class="arr">→</span></a>
             ))}
@@ -41,7 +41,7 @@ const branchLabel: Record<string, string> = { foundations: "Foundations", method
           <div class="section-label">Latest in {direction.name}</div>
           {latest.length > 0 ? latest.map((a) => (
             <a class="note-row" href={`/article/${a.slug}`}><span class="nr-main"><span class="title">{a.plain_title}</span><br /><span class="meta">{a.difficulty}</span></span><span class="arr">→</span></a>
-          )) : <p class="muted">No new papers tagged here yet — the pipeline will fill this in.</p>}
+          )) : <p class="muted">No new papers tagged here yet, the pipeline will fill this in.</p>}
         </section>
         {related.length > 0 && (
           <section style="margin-top:24px;">

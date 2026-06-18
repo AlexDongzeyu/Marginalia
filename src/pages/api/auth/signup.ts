@@ -1,5 +1,5 @@
 /**
- * POST /api/auth/signup — create an account.
+ * POST /api/auth/signup, create an account.
  * Hashes the password (PBKDF2) and sets a signed session cookie.
  */
 import type { APIContext } from "astro";

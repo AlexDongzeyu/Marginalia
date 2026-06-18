@@ -10,7 +10,7 @@ if (!userId) return Astro.redirect("/login");
 const user = await getUserById(env.DB, userId);
 if (!user) return Astro.redirect("/login");
 ---
-<BaseLayout title="Your library — Marginalia" bodyClass="page-dashboard">
+<BaseLayout title="Your library · Marginalia" bodyClass="page-dashboard">
   <Sheet>
     <Masthead title={`Hello, ${user.name}`} tagline="Your annotated library." top="Member desk" compact={true} />
     <div style="max-width:620px; margin:0 auto;">

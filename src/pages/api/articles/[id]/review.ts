@@ -1,5 +1,5 @@
 /**
- * POST /api/articles/[id]/review — editorial actions on an AI draft.
+ * POST /api/articles/[id]/review, editorial actions on an AI draft.
  * Admin-gated. Actions: publish, reject, set-aotd, update (edit fields).
  * This is the quality bar + anti-hallucination check: nothing goes live
  * without a human here.

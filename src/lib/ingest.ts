@@ -28,7 +28,7 @@ function slugify(s: string): string {
     .slice(0, 80);
 }
 
-/** Lightweight heuristic score for ordering candidates (0–1). */
+/** Lightweight heuristic score for ordering candidates (0-1). */
 function recencyScore(paper: ArxivPaper): number {
   if (!paper.published) return 0.5;
   const days = (Date.now() - new Date(paper.published).getTime()) / 86_400_000;
