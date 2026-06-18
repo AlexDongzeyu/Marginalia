@@ -34,12 +34,29 @@ const annotations = (annRes.results ?? []) as {
   body: string;
   created_at: string;
 }[];
+
+// Glossary terms tied to this paper, shown as plain-language explanations in
+// the margin so the jargon stays out of the reading column.
+let terms: { term: string; definition: string }[] = [];
+try {
+  const tr = await env.DB
+    .prepare(
+      `SELECT g.term, g.definition FROM glossary_terms g
+       JOIN article_terms t ON t.term_id = g.id
+       WHERE t.article_id = ? AND g.status = 'approved'
+       ORDER BY g.term LIMIT 8`,
+    )
+    .bind(article.id)
+    .all<{ term: string; definition: string }>();
+  terms = tr.results ?? [];
+} catch {
+  terms = [];
+}
 const initialsOf = (n: string) =>
   n.split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
 
 const whatsGoingOn = renderMarkdown(article.whats_going_on);
 const whyItMatters = renderMarkdown(article.why_it_matters);
-const dateNice = new Date(article.published_at ?? article.day_date ?? Date.now()).toLocaleDateString("en-US", { month: "long", day: "numeric" });
 const diffClass = article.difficulty === "Beginner" ? "tag-beginner" : article.difficulty === "Advanced" ? "tag-advanced" : "tag-intermediate";
 const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${article.arxiv_id}` : null);
 ---
@@ -49,7 +66,6 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
     <div class="sheet-pad">
       <!-- HEADER -->
       <div style="max-width:680px; margin:18px auto 8px; text-align:center;">
-        <div class="section-label">Today, {dateNice} · The Annotated Paper</div>
         <h1 style="font-size:clamp(34px,5vw,52px); line-height:1.04; letter-spacing:-0.02em; font-weight:600; margin:0 0 12px;">{article.plain_title}</h1>
         <p style="margin:0 0 4px; font-style:italic; font-size:16px; color:var(--ink-soft);">orig. “{article.original_title}”{article.authors.length ? ` · ${article.authors.join(", ")}` : ""}</p>
         <div class="row wrap gap-8 center" style="margin-top:14px;">
@@ -71,12 +87,14 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
               <div class="mn-body"><b>{dirs[0].name}</b>, {dirs[0].plain_description}</div>
             </div>
           )}
+          {terms.map((t, i) => (
+            <div class={`mn-card ${i % 2 ? "mn-tilt-r" : "mn-tilt-l"}`} data-reveal>
+              <div class="mn-label">{t.term}</div>
+              <div class="mn-body">{t.definition}</div>
+            </div>
+          ))}
           <div class="mn-hand" data-reveal style="rotate:.6deg;">
-            translation: we read the hard version so this one stays simple
-          </div>
-          <div class="mn-card mn-tilt-r" data-reveal data-note="why">
-            <div class="mn-label">Why it matters</div>
-            <div class="mn-body">{article.is_ai4good === 1 ? "this is AI pointed at a real-world problem, health, climate, access." : "understanding this is a building block for the rest of the field."}</div>
+            we keep the jargon out here so the middle stays easy to read
           </div>
         </div>
 
@@ -113,7 +131,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
             </div>
 
             <!-- explain-simpler assistant -->
-            <div style="margin-top:18px; background:var(--card); border:1px solid var(--line); border-top:3px solid var(--accent-2); padding:18px 20px;">
+            <div style="margin-top:18px; background:var(--card); border:1px solid var(--line); padding:18px 20px;">
               <div class="section-label" style="color:var(--accent-2);">Still fuzzy on a sentence?</div>
               <p style="margin:0 0 8px; font-size:14px; color:var(--ink-soft);">Paste it and we'll explain it even more simply.</p>
               <textarea id="explainInput" class="paper-textarea" rows="2" placeholder="Paste a sentence…"></textarea>
@@ -136,7 +154,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
           </div>
 
           <!-- QUIZ -->
-          <div id="quizCard" style="margin-top:30px; background:var(--card); border:1px solid rgba(33,28,22,.13); border-top:3px solid var(--accent); padding:26px 28px; position:relative;">
+          <div id="quizCard" style="margin-top:30px; background:var(--card); border:1px solid rgba(33,28,22,.13); padding:26px 28px; position:relative;">
             <div class="section-label">Test your understanding</div>
             <p style="margin:0 0 18px; font-size:14px; color:var(--ink-soft); font-style:italic;">Pass all three to earn the “read &amp; understood” stamp (+10 pts).</p>
             <div id="quizQuestions"></div>
