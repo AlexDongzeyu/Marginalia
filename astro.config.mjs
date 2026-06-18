@@ -19,9 +19,15 @@ export default defineConfig({
   integrations: [react()],
   site: "https://marginalia.pages.dev",
   vite: {
-    ssr: {
-      // reactflow ships ESM that Cloudflare's bundler handles best when external
-      external: [],
+    resolve: {
+      // Cloudflare's Workers runtime doesn't expose the DOM `MessageChannel`
+      // that `react-dom/server.browser` touches at module load, which crashes
+      // the Pages Function. The `.edge` build (Web Streams based) avoids it and
+      // works in Node dev too. https://github.com/facebook/react/issues/26906
+      alias: [
+        { find: /^react-dom\/server$/, replacement: "react-dom/server.edge" },
+        { find: /^react-dom\/server\.browser$/, replacement: "react-dom/server.edge" },
+      ],
     },
   },
 });

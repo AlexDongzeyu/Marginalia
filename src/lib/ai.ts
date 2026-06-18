@@ -11,7 +11,8 @@ import type { ArxivPaper } from "./arxiv";
 import type { Difficulty } from "./types";
 
 // Instruct model available on Workers AI.
-const MODEL = "@cf/meta/llama-3.1-8b-instruct";
+// llama-3.3-70b-instruct-fp8-fast: current, high quality, good at JSON + speed.
+const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 export interface ExplainerDraft {
   plain_title: string;
@@ -66,10 +67,13 @@ PAPER ABSTRACT: ${paper.abstract}
 JSON:`;
 }
 
-function extractJson(text: string): unknown {
+function extractJson(text: unknown): unknown {
+  // Some models return the JSON already parsed as an object; pass it through.
+  if (text && typeof text === "object") return text;
+  const str = typeof text === "string" ? text : String(text ?? "");
   // Models sometimes wrap JSON in prose/fences. Grab the first {...} block.
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const candidate = fenced ? fenced[1] : text;
+  const fenced = str.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const candidate = fenced ? fenced[1] : str;
   const start = candidate.indexOf("{");
   const end = candidate.lastIndexOf("}");
   if (start === -1 || end === -1) throw new Error("No JSON object in model output");
@@ -122,10 +126,12 @@ export async function explainPaper(ai: Ai, paper: ArxivPaper): Promise<ExplainRe
     ],
     max_tokens: 1100,
     temperature: 0.4,
-  } as any)) as { response?: string };
+  } as any)) as any;
 
-  const text = response?.response ?? "";
-  const raw = extractJson(text);
+  // Workers AI models vary: some return { response: "...string..." }, some
+  // return { response: {...object...} }, some put text under `output`.
+  const out = response?.response ?? response?.output ?? response;
+  const raw = extractJson(out);
   return { draft: coerceDraft(raw), model: MODEL };
 }
 
@@ -149,7 +155,8 @@ Simpler explanation:`;
     ],
     max_tokens: 220,
     temperature: 0.5,
-  } as any)) as { response?: string };
+  } as any)) as any;
 
-  return (response?.response ?? "").trim();
+  const out = response?.response ?? response?.output ?? "";
+  return (typeof out === "string" ? out : String(out ?? "")).trim();
 }

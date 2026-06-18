@@ -28,12 +28,18 @@ export default {
     );
   },
 
-  // A manual HTTP entrypoint for testing (no secret here — protect via Cloudflare
-  // Access or remove before exposing publicly).
-  async fetch(_req: Request, env: CronEnv): Promise<Response> {
-    const result = await runIngest(env.DB, env.AI, { maxFetch: 10, maxDraft: 2 });
-    return new Response(JSON.stringify(result, null, 2), {
-      headers: { "Content-Type": "application/json" },
-    });
+  // Health/status endpoint only. The daily ingest runs via scheduled() above;
+  // manual runs go through the admin-gated /api/cron/ingest on the site. This
+  // keeps the public Worker URL from being used to burn Workers AI quota.
+  async fetch(): Promise<Response> {
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        worker: "marginalia-cron",
+        schedule: "0 6 * * * (UTC)",
+        note: "Ingestion runs on schedule. Use the admin-gated /api/cron/ingest for manual runs.",
+      }),
+      { headers: { "Content-Type": "application/json" } },
+    );
   },
 };

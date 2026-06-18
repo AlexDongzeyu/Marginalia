@@ -12,7 +12,7 @@ pages_build_output_dir = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "marginalia-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "860514d8-8abc-493f-b9f2-c17ed9a12052"
 
 # Workers AI — used by the ingest pipeline to write plain-language explainers
 # and by the on-page "Explain it simpler" assistant. No external API key needed.
@@ -29,7 +29,7 @@ binding = "AI"
 
 [vars]
 ENVIRONMENT = "production"
-# Admin token gate for the editorial review API + manual ingest trigger.
-# Override in the Cloudflare dashboard (Settings → Environment variables) with
-# a real secret; never commit the real value.
-ADMIN_TOKEN = "change-me-in-cloudflare-dashboard"
+# ADMIN_TOKEN is set as a SECRET (not a plaintext var), via:
+#   wrangler pages secret put ADMIN_TOKEN --project-name marginalia
+# It gates the /admin review actions and the manual ingest trigger.
+# Until it's set, all admin actions are safely disabled.
