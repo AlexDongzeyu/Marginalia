@@ -31,10 +31,11 @@ function inline(text: string): string {
 }
 
 /**
- * Some models cram a whole bullet list onto one line, separating the points
- * with " - " instead of real line breaks. When a line is already a bullet,
- * split those inline separators back into one bullet per line so the list
- * renders as a list, not a paragraph full of stray dashes.
+ * Repair bullet lists that models format badly. Two common cases:
+ *  - bullets indented with leading spaces, which breaks list detection;
+ *  - a whole list crammed onto one line with " - " between points.
+ * Normalise the leading marker and split inline separators so each point is a
+ * clean "- " line.
  */
 function normalizeBullets(src: string): string {
   return src
@@ -42,10 +43,8 @@ function normalizeBullets(src: string): string {
     .split("\n")
     .map((ln) => {
       const m = ln.match(/^\s*[-*]\s+(.*)$/);
-      if (m && /\s-\s/.test(m[1])) {
-        return ("- " + m[1]).replace(/\s+-\s+/g, "\n- ");
-      }
-      return ln;
+      if (!m) return ln;
+      return ("- " + m[1]).replace(/\s+-\s+/g, "\n- ");
     })
     .join("\n");
 }
@@ -85,8 +84,8 @@ export function renderMarkdown(src: string): string {
       html.push(`<h${level}>${inline(h[2])}</h${level}>`);
       continue;
     }
-    const ul = line.match(/^[-*]\s+(.*)$/);
-    const ol = line.match(/^\d+\.\s+(.*)$/);
+    const ul = line.match(/^\s*[-*]\s+(.*)$/);
+    const ol = line.match(/^\s*\d+\.\s+(.*)$/);
     if (ul) {
       flushPara();
       if (listType !== "ul") {
