@@ -1,9 +1,8 @@
 ---
 /**
- * BaseLayout — the page shell for every Marginalia page.
- * Loads fonts + the ported design system, renders header/footer, and mounts
- * the Comfort Settings widget. Keeps the ECHOE look while being SSR-rendered
- * on Cloudflare Pages.
+ * BaseLayout — the page shell for the "Living Margin" design.
+ * Desk background, tri-voice fonts, paper-tab nav, contact-sheet footer,
+ * Comfort widget, and the scroll-reveal / anchor-hover behaviours.
  */
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
@@ -14,15 +13,13 @@ import "../styles/comfort.css";
 interface Props {
   title?: string;
   description?: string;
-  /** Adds a body class like `page-feed` for page-specific tweaks. */
   bodyClass?: string;
-  /** Hide the floating Comfort widget (rarely needed). */
   hideComfort?: boolean;
 }
 
 const {
-  title = "Marginalia — AI research, explained for newcomers",
-  description = "A free, student-run guide to AI research. Plain-language explainers, an interactive map of research directions, and learning tracks — built around AI for good.",
+  title = "Marginalia — Notes on the AI research that matters",
+  description = "A daily, plain-language guide to the AI research that matters — read it in the center, understand it in the margins. Student-run.",
   bodyClass = "",
   hideComfort = false,
 } = Astro.props;
@@ -39,18 +36,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
 
-    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:site_name" content="Marginalia" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- Fonts: carried over from ECHOE design system -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Serif+Display&family=Sriracha&family=Namdhinggo:wght@700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;700&family=Caveat:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -62,5 +57,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     </main>
     <Footer />
     {!hideComfort && <ComfortSettings />}
+
+    <script>
+      import { initLivingMargin } from "../scripts/living-margin.ts";
+      initLivingMargin();
+    </script>
   </body>
 </html>

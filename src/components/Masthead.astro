@@ -1,0 +1,31 @@
+---
+/**
+ * Masthead — newspaper nameplate with rules above/below.
+ */
+interface Props {
+  title: string;
+  tagline?: string;
+  top?: string;
+  bottom?: string;
+  compact?: boolean;
+}
+const { title, tagline, top, bottom, compact = false } = Astro.props;
+---
+<section class={`masthead ${compact ? "compact" : ""}`}>
+  {top && (
+    <div class="mast-rule">
+      <span class="bar"></span>
+      <span>{top}</span>
+      <span class="bar"></span>
+    </div>
+  )}
+  <h1>{title}</h1>
+  {tagline && <p class="tagline">{tagline}</p>}
+  {bottom && (
+    <div class="mast-rule lower">
+      <span class="bar"></span>
+      <span>{bottom}</span>
+      <span class="bar"></span>
+    </div>
+  )}
+</section>

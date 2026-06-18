@@ -1,59 +1,45 @@
 ---
 /**
- * Site footer with quick-link columns + newsletter nudge.
- * Layout carried over from ECHOE; content swapped for Marginalia.
+ * Footer — contact sheet. Four columns of links + a base line.
  */
 const year = new Date().getFullYear();
 ---
 
-<footer class="site-footer">
-  <div class="footer-content">
-    <div class="footer-section">
-      <h4>Marginalia</h4>
-      <p style="opacity:.85; max-width:36ch;">
-        AI research, explained for newcomers. A free, student-run guide to the
-        field — built around AI for good.
-      </p>
-      <p class="footer-extra" style="margin-top:12px; font-size:.85rem; opacity:.7;">
-        AI-assisted summaries, reviewed by people. We link to every source.
-      </p>
+<footer class="contact-footer">
+  <div class="contact-grid">
+    <div>
+      <div class="brand">Marginalia</div>
+      <p class="brand-note">Notes on the AI research that matters. Made by students, in the margins.</p>
     </div>
-
-    <div class="footer-section">
+    <div class="contact-col">
       <h4>Read</h4>
-      <ul>
-        <li><a href="/today">Article of the Day</a></li>
-        <li><a href="/feed">The feed</a></li>
-        <li><a href="/glossary">Glossary</a></li>
-      </ul>
+      <div class="links">
+        <a href="/today">Today's paper</a>
+        <a href="/feed">The feed</a>
+        <a href="/map">The research map</a>
+        <a href="/glossary">Glossary</a>
+      </div>
     </div>
-
-    <div class="footer-section">
-      <h4>Explore</h4>
-      <ul>
-        <li><a href="/map">Research map</a></li>
-        <li><a href="/directions">Directions</a></li>
-        <li><a href="/learn">Learning tracks</a></li>
-        <li><a href="/projects">Projects</a></li>
-      </ul>
+    <div class="contact-col">
+      <h4>Take part</h4>
+      <div class="links">
+        <a href="/chapters/start">Start a chapter</a>
+        <a href="/dashboard">Your library</a>
+        <a href="/join">Contribute a note</a>
+        <a href="/newsletter">Newsletter</a>
+      </div>
     </div>
-
-    <div class="footer-section">
-      <h4>Community</h4>
-      <ul>
-        <li><a href="/chapters">Chapters</a></li>
-        <li><a href="/newsletter">Newsletter</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/join">Join us</a></li>
-        <li><a href="/login">Login</a></li>
-      </ul>
+    <div class="contact-col">
+      <h4>Org</h4>
+      <div class="links">
+        <a href="/about">About &amp; team</a>
+        <a href="/about#integrity">How we work</a>
+        <a href="/login">Sign in</a>
+      </div>
     </div>
   </div>
-
-  <div class="footer-bottom">
-    <p>
-      &copy; {year} Marginalia &middot; A student-run, mission-driven project &middot;
-      <a href="/about#integrity">Integrity &amp; sources</a>
-    </p>
+  <div class="contact-base">
+    <span>&copy; {year} Marginalia · a student-run reading room</span>
+    <span>We link to arXiv. We never republish. We just explain.</span>
   </div>
 </footer>

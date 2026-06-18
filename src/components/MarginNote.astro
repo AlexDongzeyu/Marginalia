@@ -1,0 +1,40 @@
+---
+/**
+ * MarginNote — a single note in the margin.
+ * variant:
+ *   hand   — handwriting personality note (Caveat)
+ *   def    — typewriter definition card (with optional tape)
+ *   why    — typewriter "why it matters" card
+ *   member — community note with avatar + handwriting
+ */
+interface Props {
+  variant?: "hand" | "def" | "why" | "member";
+  label?: string;
+  anchor?: string;
+  taped?: boolean;
+  tilt?: "l" | "r";
+  initials?: string;
+}
+const { variant = "hand", label, anchor, taped = false, tilt, initials } = Astro.props;
+const tiltClass = tilt === "l" ? "mn-tilt-l" : tilt === "r" ? "mn-tilt-r" : "";
+const noteAttr = anchor ? { "data-note": anchor } : {};
+---
+{variant === "hand" && (
+  <div class="mn mn-hand" data-reveal {...noteAttr}>
+    <slot />
+  </div>
+)}
+
+{(variant === "def" || variant === "why") && (
+  <div class={`mn-card ${taped ? "taped" : ""} ${tiltClass}`} data-reveal {...noteAttr}>
+    <div class="mn-label">{label ?? (variant === "def" ? "Def." : "Why it matters")}</div>
+    <div class="mn-body"><slot /></div>
+  </div>
+)}
+
+{variant === "member" && (
+  <div class="mn-member" data-reveal {...noteAttr}>
+    <div class="mn-avatar">{initials ?? "AK"}</div>
+    <div class="mn-quote"><slot /></div>
+  </div>
+)}

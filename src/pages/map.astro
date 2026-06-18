@@ -1,137 +1,59 @@
 ---
-/**
- * /map — the Research Directions Mindmap (flagship).
- * Mounts the React Flow island client-side; provides a list fallback link for
- * keyboard/no-JS users (accessibility).
- */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
 import ResearchMap from "../components/ResearchMap.tsx";
 ---
-
-<BaseLayout
-  title="Research map — Marginalia"
-  description="An interactive, plain-language map of AI research directions for newcomers. Click a node to learn what an area is and why it matters."
-  bodyClass="page-map"
->
-  <div class="container">
-    <div class="page-header">
-      <p class="tagline">The whole field, mapped for newcomers</p>
-      <h1>Research map</h1>
-      <p class="muted" style="max-width:60ch;margin:0 auto;">
-        Not a citation graph — an editorial map of research <em>directions</em>.
-        Click any node to see what the area is, why it matters, and the explained
-        papers inside it.
-      </p>
-    </div>
-
-    <div class="map-wrapper">
+<BaseLayout title="The research map — Marginalia" description="An editorial, plain-language map of AI research directions for newcomers." bodyClass="page-map">
+  <Sheet>
+    <Masthead title="The Map" tagline="The whole field, pinned to the page." top="Research directions" compact={true} />
+    <p class="muted text-center" style="max-width:60ch; margin:0 auto 18px;">
+      Not a citation graph — an editorial map of research <em>directions</em>. Click any node
+      to see what an area is, why it matters, and the explained papers inside it.
+    </p>
+    <div class="map-frame">
       <ResearchMap client:only="react" />
     </div>
-
-    <p class="text-center muted mt-16">
-      Prefer a list? <a href="/directions">Browse all directions →</a>
-    </p>
-  </div>
+    <p class="text-center muted mt-16">Prefer a list? <a href="/directions">Browse all directions →</a></p>
+  </Sheet>
 </BaseLayout>
 
 <style is:global>
-  .map-wrapper {
-    border-radius: 20px;
+  .map-frame {
+    border: 1px solid #211c16;
+    background: #fcfaf4;
+    box-shadow: 0 20px 50px -26px rgba(40, 30, 20, 0.4);
     overflow: hidden;
-    border: 3px solid var(--deep-indigo);
-    box-shadow: 5px 5px 0 rgba(42, 61, 102, 0.25), 0 16px 40px rgba(42, 61, 102, 0.15);
-    background: #fdfbf7;
   }
   .map-shell { display: flex; flex-direction: column; }
   .map-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 18px;
-    background: var(--frame-cream);
-    border-bottom: 2px solid rgba(42, 61, 102, 0.12);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px;
+    padding: 12px 16px; background: #fbf7ec; border-bottom: 1px solid rgba(33,28,22,.12);
   }
   .map-search {
-    padding: 0.5rem 0.9rem;
-    border-radius: 50px;
-    border: 2.5px solid var(--deep-indigo);
-    font-family: "Nunito", sans-serif;
-    font-weight: 600;
-    min-width: 200px;
+    padding: 0.45rem 0.8rem; border: 1px solid rgba(33,28,22,.3); background: #fcfaf4;
+    font-family: "JetBrains Mono", monospace; font-size: 12px; min-width: 200px; outline: none;
   }
-  .map-hot {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 700;
-    color: var(--deep-indigo);
-  }
-  .map-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-left: auto;
-  }
-  .legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--deep-indigo);
-  }
-  .legend-dot {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 2px solid var(--deep-indigo);
-  }
-  .map-canvas {
-    position: relative;
-    height: 600px;
-  }
-  .map-canvas .react-flow { background: #fdfbf7; }
+  .map-search:focus { border-color: #c2410c; }
+  .map-hot { display: inline-flex; align-items: center; gap: 6px; font-family: "JetBrains Mono", monospace; font-size: 12px; color: #211c16; }
+  .map-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-left: auto; }
+  .legend-item { display: inline-flex; align-items: center; gap: 5px; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: #211c16; }
+  .legend-dot { width: 12px; height: 12px; border: 2px solid #211c16; }
+  .map-canvas { position: relative; height: 560px; }
+  .map-canvas .react-flow { background: #fcfaf4; }
   .map-panel {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 300px;
-    max-width: calc(100% - 32px);
-    background: var(--frame-cream);
-    border: 3px solid var(--deep-indigo);
-    border-radius: 16px;
-    padding: 18px;
-    box-shadow: 5px 5px 0 rgba(42, 61, 102, 0.3);
-    z-index: 10;
+    position: absolute; top: 16px; right: 16px; width: 300px; max-width: calc(100% - 32px);
+    background: #fcfaf4; border: 1px solid #211c16; padding: 18px;
+    box-shadow: 0 16px 40px -16px rgba(40,30,20,.5); z-index: 10;
   }
-  .map-panel h3 { margin: 8px 0 6px; font-size: 1.3rem; }
-  .map-panel p { font-size: 0.95rem; line-height: 1.6; color: #2a3d66; }
-  .map-panel-stat {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--brand-orange-darker);
-    margin: 10px 0 14px;
+  .map-panel h3 { margin: 8px 0 6px; font-size: 22px; font-weight: 500; }
+  .map-panel p { font-size: 14px; line-height: 1.55; color: #3a342b; }
+  .map-panel-stat { font-family: "JetBrains Mono", monospace; font-size: 11px; color: #c2410c; margin: 10px 0 14px; }
+  .map-panel-close { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 18px; cursor: pointer; color: #211c16; }
+  .map-panel .btn-primary {
+    display: inline-block; text-decoration: none; padding: 9px 16px; background: #211c16;
+    color: #fcfaf4; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
   }
-  .map-panel-close {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--deep-indigo);
-    line-height: 1;
-  }
-  .map-fallback {
-    padding: 40px;
-    text-align: center;
-    font-weight: 700;
-    color: var(--deep-indigo);
-  }
-  @media (max-width: 600px) {
-    .map-canvas { height: 480px; }
-    .map-legend { display: none; }
-  }
+  .map-fallback { padding: 40px; text-align: center; font-family: "JetBrains Mono", monospace; color: #211c16; }
+  @media (max-width: 600px) { .map-canvas { height: 460px; } .map-legend { display: none; } }
 </style>

@@ -1,53 +1,27 @@
 ---
-/**
- * /projects — applied AI-for-good project gallery (v1 curated placeholder set).
- * Real projects (live demo + GitHub + tags) get added as the community ships.
- */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
 
 const projects = [
-  {
-    title: "Plain-language paper explainers",
-    blurb: "The daily pipeline that powers this site: arXiv → Workers AI → human review.",
-    tags: ["NLP", "Pipeline", "Open"],
-    status: "Live",
-  },
-  {
-    title: "Research direction map",
-    blurb: "An editorial, clickable map of AI research directions for newcomers.",
-    tags: ["Visualization", "Education"],
-    status: "Live",
-  },
-  {
-    title: "Accessibility-first reading mode",
-    blurb: "Focus Mode, high contrast, text scaling — built in from day one.",
-    tags: ["Accessibility"],
-    status: "Live",
-  },
+  { title: "Plain-language paper explainers", blurb: "The morning pipeline: arXiv → Workers AI → human review.", tags: ["NLP", "Pipeline", "Open"], status: "Live" },
+  { title: "Research direction map", blurb: "An editorial, clickable map of AI research directions.", tags: ["Visualization", "Education"], status: "Live" },
+  { title: "Living-margin reading mode", blurb: "Notes, definitions, and jokes in the margins; Focus mode for clean reading.", tags: ["Accessibility", "Design"], status: "Live" },
 ];
 ---
-
 <BaseLayout title="Projects — Marginalia" bodyClass="page-projects">
-  <div class="container">
-    <div class="page-header">
-      <p class="tagline">Applied AI for good</p>
-      <h1>Project gallery</h1>
-      <p class="muted">Things we (and our chapters) build in the open. Want yours here? <a href="/join">Join us</a>.</p>
-    </div>
-
-    <div class="card-grid">
+  <Sheet>
+    <Masthead title="Projects" tagline="Things we build in the open." top="The workshop" compact={true} />
+    <div style="max-width:680px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:14px;">
       {projects.map((p) => (
-        <div class="card">
-          <div class="row between">
-            <span class="badge badge-ai4good">{p.status}</span>
-          </div>
-          <h3>{p.title}</h3>
-          <p class="muted" style="font-size:.95rem;">{p.blurb}</p>
-          <div class="card-meta">
-            {p.tags.map((t) => <span class="chip">{t}</span>)}
-          </div>
+        <div class="torn-card" data-reveal>
+          <span class="tag tag-good">{p.status}</span>
+          <h3 style="margin-top:8px;">{p.title}</h3>
+          <p style="margin-bottom:8px;">{p.blurb}</p>
+          <div class="row wrap gap-8">{p.tags.map((t) => <span class="tag">{t}</span>)}</div>
         </div>
       ))}
     </div>
-  </div>
+    <p class="text-center muted mt-24">Want yours here? <a href="/join">Join us</a>.</p>
+  </Sheet>
 </BaseLayout>

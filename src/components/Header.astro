@@ -1,88 +1,43 @@
 ---
 /**
- * Site header + primary navigation.
- * Mirrors ECHOE's fixed header with dropdown groups, restyled for Marginalia's
- * information architecture (Read / Explore / Learn / Community).
+ * Sticky paper-tab nav — rotated paper chips on the desk.
+ * Primary tabs mirror the mockup; everything else is reachable from the footer.
  */
 const path = Astro.url.pathname;
 const isActive = (href: string) =>
   href === "/" ? path === "/" : path.startsWith(href);
+
+const tabs = [
+  { href: "/today", label: "Today" },
+  { href: "/feed", label: "Feed" },
+  { href: "/map", label: "The Map" },
+  { href: "/learn", label: "Learn" },
+  { href: "/about", label: "About" },
+];
 ---
 
-<header class="site-header">
-  <nav class="site-nav" aria-label="Primary">
-    <a href="/" class="logo" aria-label="Marginalia home">
-      <span class="logo-mark" aria-hidden="true">¶</span>
-      <span>Marginalia</span>
+<div class="paper-nav">
+  <div class="paper-nav-inner">
+    <a href="/" class="nav-brand" aria-label="Marginalia home">
+      Marginalia<span class="daily">daily</span>
     </a>
 
-    <button
-      class="mobile-menu-toggle"
-      id="mobileMenuToggle"
-      aria-label="Toggle menu"
-      aria-expanded="false"
-    >
-      <span aria-hidden="true">&#9776;</span>
-    </button>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
 
-    <ul class="nav-menu" id="navMenu">
-      <li>
-        <a href="/today" class={isActive("/today") ? "active" : ""}>Today</a>
-      </li>
-
-      <li class="dropdown">
-        <a href="/feed" class={isActive("/feed") || isActive("/article") ? "active" : ""}>Read</a>
-        <div class="dropdown-content">
-          <a href="/feed">All explained papers</a>
-          <a href="/today">Article of the Day</a>
-          <a href="/glossary">Glossary</a>
-        </div>
-      </li>
-
-      <li class="dropdown">
-        <a href="/map" class={isActive("/map") || isActive("/directions") ? "active" : ""}>Explore</a>
-        <div class="dropdown-content">
-          <a href="/map">Research map</a>
-          <a href="/directions">All directions</a>
-          <a href="/projects">Project gallery</a>
-        </div>
-      </li>
-
-      <li>
-        <a href="/learn" class={isActive("/learn") ? "active" : ""}>Learn</a>
-      </li>
-
-      <li class="dropdown">
-        <a href="/chapters" class={isActive("/chapters") || isActive("/join") ? "active" : ""}>Community</a>
-        <div class="dropdown-content">
-          <a href="/chapters">Chapters</a>
-          <a href="/chapters/start">Start a chapter</a>
-          <a href="/newsletter">Newsletter</a>
-          <a href="/join">Join us</a>
-        </div>
-      </li>
-
-      <li>
-        <a href="/about" class={isActive("/about") ? "active" : ""}>About</a>
-      </li>
-
-      <li>
-        <a href="/login" class={`nav-login ${isActive("/login") || isActive("/signup") ? "active" : ""}`}>
-          <span aria-hidden="true">&#128100;</span> Login
-        </a>
-      </li>
-    </ul>
-  </nav>
-</header>
+    <nav class="nav-tabs" id="navTabs" aria-label="Primary">
+      {tabs.map((t) => (
+        <a href={t.href} class={`nav-tab ${isActive(t.href) ? "active" : ""}`}>{t.label}</a>
+      ))}
+      <a href="/login" class="nav-signin">Sign&nbsp;in</a>
+    </nav>
+  </div>
+</div>
 
 <script>
-  const toggle = document.getElementById("mobileMenuToggle");
-  const menu = document.getElementById("navMenu");
+  const toggle = document.getElementById("navToggle");
+  const tabs = document.getElementById("navTabs");
   toggle?.addEventListener("click", () => {
-    const open = menu?.classList.toggle("show");
+    const open = tabs?.classList.toggle("open");
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
-  });
-  window.addEventListener("resize", () => {
-    if (window.innerWidth > 768) menu?.classList.remove("show");
   });
 </script>

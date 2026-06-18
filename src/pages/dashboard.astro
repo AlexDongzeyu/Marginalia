@@ -1,52 +1,34 @@
 ---
-/**
- * /dashboard — the member area shown after login.
- * Reads the signed session cookie; redirects to /login if not signed in.
- */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
 import { getSessionUserId, getUserById } from "../lib/auth";
 
 const { env } = Astro.locals.runtime;
 const userId = await getSessionUserId(Astro.request.headers.get("cookie"), env);
-if (!userId) {
-  return Astro.redirect("/login");
-}
+if (!userId) return Astro.redirect("/login");
 const user = await getUserById(env.DB, userId);
-if (!user) {
-  return Astro.redirect("/login");
-}
+if (!user) return Astro.redirect("/login");
 ---
-
-<BaseLayout title="Dashboard — Marginalia" bodyClass="page-admin">
-  <div class="container">
-    <div class="page-header">
-      <p class="tagline">Your space</p>
-      <h1>Welcome, {user.name}</h1>
-    </div>
-
-    <div class="page-container">
-      <div class="content-section">
-        <h2>Your account</h2>
-        <p><strong>Name:</strong> {user.name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Role:</strong> {user.role}</p>
+<BaseLayout title="Your library — Marginalia" bodyClass="page-dashboard">
+  <Sheet>
+    <Masthead title={`Hello, ${user.name}`} tagline="Your annotated library." top="Member desk" compact={true} />
+    <div style="max-width:620px; margin:0 auto;">
+      <div class="mn-card" style="max-width:none; margin-bottom:16px;">
+        <div class="mn-label">Your account</div>
+        <div class="mn-body"><b>{user.name}</b> · {user.email} · {user.role}</div>
       </div>
-
-      <div class="content-section">
-        <h2>Contribute</h2>
-        <p>Help grow Marginalia — claim an AI-drafted explainer, write it up, and submit it for review.</p>
-        <div class="row wrap gap-12 mt-8">
-          <a href="/feed" class="btn btn-secondary">Browse the feed</a>
-          <a href="/map" class="btn btn-secondary">Explore the map</a>
-          {(user.role === "editor" || user.role === "admin") && (
-            <a href="/admin" class="btn btn-primary">Open review queue</a>
-          )}
+      <div class="read">
+        <div class="section-label">Contribute</div>
+        <p>Claim an AI-drafted explainer, write it up in the margins, and submit it
+          for review. Pass an article's quiz and you unlock the right to annotate it.</p>
+        <div class="cta-row">
+          <a href="/feed" class="btn-outline">Browse the feed</a>
+          <a href="/map" class="btn-outline">Explore the map</a>
+          {(user.role === "editor" || user.role === "admin") && <a href="/admin" class="btn-ink">Open review queue</a>}
         </div>
       </div>
-
-      <div class="content-section">
-        <a href="/api/auth/logout" class="btn btn-ghost">Sign out</a>
-      </div>
+      <div style="margin-top:24px;"><a href="/api/auth/logout" class="text-link">Sign out</a></div>
     </div>
-  </div>
+  </Sheet>
 </BaseLayout>

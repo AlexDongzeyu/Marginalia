@@ -32,10 +32,10 @@ type ApiNode = {
 type ApiResponse = { nodes: ApiNode[]; edges: { id: string; source: string; target: string }[] };
 
 const BRANCH_COLORS: Record<string, { bg: string; border: string; label: string }> = {
-  foundations: { bg: "#eef6f8", border: "#7aaeb6", label: "Foundations" },
-  methods: { bg: "#fcf0e6", border: "#e8bc6e", label: "Methods & Models" },
-  applied: { bg: "#f2f7f0", border: "#adcba4", label: "AI for Good" },
-  society: { bg: "#f6f3fa", border: "#9b8fc0", label: "Safety & Society" },
+  foundations: { bg: "#fbf7ec", border: "#1e3a5f", label: "Foundations" },
+  methods: { bg: "#fbf7ec", border: "#c2410c", label: "Methods & Models" },
+  applied: { bg: "#fbf7ec", border: "#2e6b36", label: "AI for Good" },
+  society: { bg: "#fbf7ec", border: "#7a5c3e", label: "Safety & Society" },
 };
 
 const BRANCH_ANGLE: Record<string, number> = {
@@ -53,17 +53,20 @@ function DirectionNode({ data }: NodeProps) {
     <div
       style={{
         background: data.isBranch ? color.border : color.bg,
-        border: `2.5px solid #2a3d66`,
-        borderRadius: 14,
+        border: `1.5px solid ${data.isBranch ? "#211c16" : color.border}`,
+        borderRadius: 3,
         padding: data.isBranch ? "12px 18px" : "9px 14px",
-        boxShadow: "3px 3px 0 rgba(42,61,102,0.3)",
-        fontWeight: data.isBranch ? 800 : 700,
-        fontSize: data.isBranch ? 15 : 13,
-        color: "#2a3d66",
+        boxShadow: "0 3px 8px -3px rgba(40,30,20,0.35)",
+        fontFamily:
+          "'JetBrains Mono', ui-monospace, monospace",
+        fontWeight: data.isBranch ? 700 : 500,
+        fontSize: data.isBranch ? 13 : 11,
+        letterSpacing: "0.02em",
+        color: data.isBranch ? "#fcfaf4" : "#211c16",
         minWidth: data.isBranch ? 150 : 110,
         textAlign: "center",
         cursor: "pointer",
-        outline: hot ? "3px solid #f8d29c" : "none",
+        outline: hot ? "3px solid #c2410c" : "none",
         outlineOffset: 2,
         opacity: data.dimmed ? 0.35 : 1,
         transition: "opacity .2s ease",

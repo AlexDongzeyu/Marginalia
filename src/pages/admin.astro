@@ -1,193 +1,91 @@
 ---
-/**
- * /admin — editorial review queue.
- * Lists AI drafts; an editor pastes the ADMIN_TOKEN (kept only in memory) and
- * can edit, publish, set as Article of the Day, or reject. Calls the
- * /api/articles/[id]/review endpoint. This is the human gate before publish.
- *
- * Note: token is entered in the browser and sent as a Bearer header per action;
- * it is never embedded server-side in the page.
- */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
 import { listDraftArticles } from "../lib/db";
 
 const { env } = Astro.locals.runtime;
 const drafts = await listDraftArticles(env.DB);
 ---
-
 <BaseLayout title="Review queue — Marginalia" bodyClass="page-admin" hideComfort={true}>
-  <div class="container">
-    <div class="page-header">
-      <p class="tagline">Editorial</p>
-      <h1>Review queue</h1>
-      <p class="muted">Nothing publishes without a human. Review each AI draft against its source.</p>
-    </div>
-
-    <div class="content-section token-bar">
-      <label for="adminToken" style="font-weight:800;">Admin token</label>
-      <input id="adminToken" type="password" placeholder="Paste ADMIN_TOKEN" class="token-input" autocomplete="off" />
-      <input id="reviewerName" type="text" placeholder="Your name (byline)" class="token-input" />
-      <button id="runIngest" class="btn btn-secondary">Run ingest now</button>
-      <span id="ingestStatus" class="muted"></span>
-    </div>
-
-    {drafts.length === 0 ? (
-      <div class="content-section text-center">
-        <h3>No drafts waiting</h3>
-        <p class="muted">Run the ingest to pull and explain fresh papers.</p>
+  <Sheet>
+    <Masthead title="Review queue" tagline="Nothing publishes without a human." top="Editorial" compact={true} />
+    <div style="max-width:720px; margin:0 auto;">
+      <div class="mn-card" style="max-width:none; display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:18px;">
+        <input id="adminToken" type="password" placeholder="Paste ADMIN_TOKEN" class="paper-input" style="width:auto; flex:1 1 180px;" autocomplete="off" />
+        <input id="reviewerName" type="text" placeholder="Your name (byline)" class="paper-input" style="width:auto; flex:1 1 140px;" />
+        <button id="runIngest" class="btn-outline" type="button">Run ingest now</button>
+        <span id="ingestStatus" class="muted" style="font-family:var(--mono); font-size:11px;"></span>
       </div>
-    ) : (
-      <div class="stack gap-16">
-        {drafts.map((d) => (
-          <div class="content-section draft-card" data-id={d.id}>
-            <div class="row between wrap gap-8">
-              <span class="chip">{d.status}</span>
-              <span class="muted" style="font-size:.82rem;">arXiv: {d.arxiv_id ?? "—"} · {d.ai_model}</span>
+
+      {drafts.length === 0 ? (
+        <div class="scrap"><h2>No drafts waiting</h2><p class="hook">Run the ingest to pull and explain fresh papers.</p></div>
+      ) : (
+        drafts.map((d) => (
+          <div class="mn-card draft-card" data-id={d.id} style="max-width:none; margin-bottom:16px;">
+            <div class="row wrap gap-8" style="justify-content:space-between;">
+              <span class="tag">{d.status}</span>
+              <span class="muted" style="font-family:var(--mono); font-size:10px;">arXiv: {d.arxiv_id ?? "—"} · {d.ai_model}</span>
             </div>
-
-            <label class="field-label">Plain title</label>
-            <input class="edit-input edit-plain_title" value={d.plain_title} />
-
-            <p class="muted" style="font-size:.85rem;">Original: <em>{d.original_title}</em></p>
-
-            <label class="field-label">Hook</label>
-            <textarea class="edit-input edit-hook" rows="2">{d.hook}</textarea>
-
-            <label class="field-label">What's going on</label>
-            <textarea class="edit-input edit-whats_going_on" rows="6">{d.whats_going_on}</textarea>
-
-            <label class="field-label">Why it matters</label>
-            <textarea class="edit-input edit-why_it_matters" rows="3">{d.why_it_matters}</textarea>
-
-            <div class="row wrap gap-8 mt-8">
-              <span class="badge badge-beginner">{d.difficulty}</span>
-              {d.is_ai4good === 1 && <span class="badge badge-ai4good">AI for Good</span>}
-              {d.source_url && <a class="chip" href={d.source_url} target="_blank" rel="noopener noreferrer">Check source ↗</a>}
+            <label class="field" style="margin:10px 0 0;"><span style="font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);">Plain title</span><input class="paper-input edit-plain_title" value={d.plain_title} /></label>
+            <p class="muted" style="font-size:12px; margin:8px 0;">orig: <em>{d.original_title}</em></p>
+            <label class="field" style="margin:0;"><span style="font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);">Hook</span><textarea class="paper-textarea edit-hook" rows="2">{d.hook}</textarea></label>
+            <label class="field" style="margin:8px 0 0;"><span style="font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);">What's going on</span><textarea class="paper-textarea edit-whats_going_on" rows="6">{d.whats_going_on}</textarea></label>
+            <label class="field" style="margin:8px 0 0;"><span style="font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint);">Why it matters</span><textarea class="paper-textarea edit-why_it_matters" rows="3">{d.why_it_matters}</textarea></label>
+            <div class="row wrap gap-8" style="margin-top:10px;">
+              <span class="tag tag-good">{d.difficulty}</span>
+              {d.is_ai4good === 1 && <span class="tag tag-good">AI for Good</span>}
+              {d.source_url && <a class="text-link" href={d.source_url} target="_blank" rel="noopener noreferrer">Check source ↗</a>}
             </div>
-
-            <div class="row wrap gap-8 mt-16 actions">
-              <button class="btn btn-ghost act-save">Save edits</button>
-              <button class="btn btn-primary act-publish">Publish</button>
-              <button class="btn btn-secondary act-aotd">Publish as Today</button>
-              <button class="btn btn-ghost act-reject" style="margin-left:auto;">Reject</button>
+            <div class="row wrap gap-8" style="margin-top:14px;">
+              <button class="btn-outline act-save" type="button">Save edits</button>
+              <button class="btn-ink act-publish" type="button">Publish</button>
+              <button class="btn-outline act-aotd" type="button">Publish as Today</button>
+              <button class="btn-outline act-reject" type="button" style="margin-left:auto;">Reject</button>
             </div>
-            <span class="row-status muted"></span>
+            <span class="row-status muted" style="display:block; margin-top:8px; font-family:var(--mono); font-size:11px;"></span>
           </div>
-        ))}
-      </div>
-    )}
-  </div>
-
+        ))
+      )}
+    </div>
+  </Sheet>
   <script>
     const tokenEl = document.getElementById("adminToken") as HTMLInputElement;
     const reviewerEl = document.getElementById("reviewerName") as HTMLInputElement;
-
-    function authHeaders() {
-      return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${tokenEl.value.trim()}`,
-      };
-    }
-
+    function authHeaders() { return { "Content-Type": "application/json", Authorization: `Bearer ${tokenEl.value.trim()}` }; }
     async function review(id: string, payload: Record<string, unknown>, statusEl: Element | null) {
-      if (!tokenEl.value.trim()) {
-        if (statusEl) statusEl.textContent = "Enter the admin token first.";
-        return;
-      }
+      if (!tokenEl.value.trim()) { if (statusEl) statusEl.textContent = "Enter the admin token first."; return; }
       if (statusEl) statusEl.textContent = "Working…";
       try {
-        const res = await fetch(`/api/articles/${id}/review`, {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ ...payload, reviewer: reviewerEl.value.trim() || "Editorial" }),
-        });
+        const res = await fetch(`/api/articles/${id}/review`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ ...payload, reviewer: reviewerEl.value.trim() || "Editorial" }) });
         const data = await res.json();
         if (statusEl) statusEl.textContent = res.ok ? `✓ ${data.status}` : `✗ ${data.error}`;
         if (res.ok && (payload.action === "publish" || payload.action === "reject" || payload.action === "set-aotd")) {
-          const card = document.querySelector(`.draft-card[data-id="${id}"]`);
-          if (card) (card as HTMLElement).style.opacity = "0.5";
+          const card = document.querySelector(`.draft-card[data-id="${id}"]`); if (card) (card as HTMLElement).style.opacity = "0.5";
         }
-      } catch {
-        if (statusEl) statusEl.textContent = "Network error.";
-      }
+      } catch { if (statusEl) statusEl.textContent = "Network error."; }
     }
-
     function fieldValues(card: Element) {
       const get = (cls: string) => (card.querySelector(cls) as HTMLInputElement | HTMLTextAreaElement)?.value ?? "";
-      return {
-        plain_title: get(".edit-plain_title"),
-        hook: get(".edit-hook"),
-        whats_going_on: get(".edit-whats_going_on"),
-        why_it_matters: get(".edit-why_it_matters"),
-      };
+      return { plain_title: get(".edit-plain_title"), hook: get(".edit-hook"), whats_going_on: get(".edit-whats_going_on"), why_it_matters: get(".edit-why_it_matters") };
     }
-
     document.querySelectorAll(".draft-card").forEach((card) => {
       const id = (card as HTMLElement).dataset.id!;
       const statusEl = card.querySelector(".row-status");
-      card.querySelector(".act-save")?.addEventListener("click", () =>
-        review(id, { action: "update", ...fieldValues(card) }, statusEl),
-      );
-      card.querySelector(".act-publish")?.addEventListener("click", async () => {
-        await review(id, { action: "update", ...fieldValues(card) }, statusEl);
-        await review(id, { action: "publish" }, statusEl);
-      });
-      card.querySelector(".act-aotd")?.addEventListener("click", async () => {
-        await review(id, { action: "update", ...fieldValues(card) }, statusEl);
-        await review(id, { action: "set-aotd" }, statusEl);
-      });
-      card.querySelector(".act-reject")?.addEventListener("click", () =>
-        review(id, { action: "reject" }, statusEl),
-      );
+      card.querySelector(".act-save")?.addEventListener("click", () => review(id, { action: "update", ...fieldValues(card) }, statusEl));
+      card.querySelector(".act-publish")?.addEventListener("click", async () => { await review(id, { action: "update", ...fieldValues(card) }, statusEl); await review(id, { action: "publish" }, statusEl); });
+      card.querySelector(".act-aotd")?.addEventListener("click", async () => { await review(id, { action: "update", ...fieldValues(card) }, statusEl); await review(id, { action: "set-aotd" }, statusEl); });
+      card.querySelector(".act-reject")?.addEventListener("click", () => review(id, { action: "reject" }, statusEl));
     });
-
     document.getElementById("runIngest")?.addEventListener("click", async () => {
       const statusEl = document.getElementById("ingestStatus");
-      if (!tokenEl.value.trim()) {
-        if (statusEl) statusEl.textContent = "Enter the admin token first.";
-        return;
-      }
-      if (statusEl) statusEl.textContent = "Fetching + explaining… this can take a minute.";
+      if (!tokenEl.value.trim()) { if (statusEl) statusEl.textContent = "Enter the admin token first."; return; }
+      if (statusEl) statusEl.textContent = "Fetching + explaining…";
       try {
         const res = await fetch(`/api/cron/ingest`, { method: "POST", headers: authHeaders() });
         const data = await res.json();
-        if (statusEl)
-          statusEl.textContent = res.ok
-            ? `Drafted ${data.drafted} (fetched ${data.fetched}, deduped ${data.deduped}). Reload to see them.`
-            : `✗ ${data.error}`;
-      } catch {
-        if (statusEl) statusEl.textContent = "Network error.";
-      }
+        if (statusEl) statusEl.textContent = res.ok ? `Drafted ${data.drafted} (fetched ${data.fetched}). Reload to see them.` : `✗ ${data.error}`;
+      } catch { if (statusEl) statusEl.textContent = "Network error."; }
     });
   </script>
 </BaseLayout>
-
-<style>
-  .token-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-  .token-input {
-    padding: 0.55rem 0.9rem;
-    border-radius: 12px;
-    border: 2.5px solid var(--deep-indigo);
-    font-family: "Nunito", sans-serif;
-    min-width: 200px;
-  }
-  .field-label {
-    display: block;
-    font-weight: 800;
-    font-size: 0.82rem;
-    color: var(--deep-indigo);
-    margin: 12px 0 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .edit-input {
-    width: 100%;
-    padding: 0.55rem 0.8rem;
-    border-radius: 10px;
-    border: 2px solid rgba(42, 61, 102, 0.25);
-    font-family: "Nunito", sans-serif;
-    font-size: 0.95rem;
-    resize: vertical;
-  }
-  .row-status { display: block; margin-top: 8px; font-weight: 700; }
-</style>

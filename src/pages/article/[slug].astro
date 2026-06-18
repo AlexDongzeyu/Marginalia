@@ -1,14 +1,13 @@
 ---
 /**
- * /article/[slug] — the explained-paper template (core content unit).
- * Renders plain-language fields produced by the AI pipeline + human review,
- * with a source box that links OUT to arXiv (we never republish the abstract).
+ * /article/[slug] — "The Annotated Paper".
+ * Center: explainer (from D1) with a Source-PDF toggle (arXiv embed).
+ * Left margin: team explainer notes. Right margin: member notes + leaderboard.
+ * Footer: an understanding quiz that awards a stamp (client-side demo).
  */
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import ArticleCard from "../../components/ArticleCard.astro";
 import { getPublishedArticleBySlug, getRelatedArticles } from "../../lib/db";
 import { renderMarkdown } from "../../lib/markdown";
-import { DIFFICULTY_CLASS } from "../../lib/types";
 
 const { slug } = Astro.params;
 const { env } = Astro.locals.runtime;
@@ -17,188 +16,253 @@ const article = slug ? await getPublishedArticleBySlug(env.DB, slug) : null;
 if (!article) {
   return new Response(null, { status: 404, statusText: "Not Found" });
 }
-
 const dirs = article.directions ?? [];
-const related = await getRelatedArticles(
-  env.DB,
-  article.id,
-  dirs.map((d) => d.id),
-  3,
-);
+const related = await getRelatedArticles(env.DB, article.id, dirs.map((d) => d.id), 3);
 
 const whatsGoingOn = renderMarkdown(article.whats_going_on);
 const whyItMatters = renderMarkdown(article.why_it_matters);
-const publishedNice = article.published_date
-  ? new Date(article.published_date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  : null;
+const dateNice = new Date(article.published_at ?? article.day_date ?? Date.now()).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+const diffClass = article.difficulty === "Beginner" ? "tag-beginner" : article.difficulty === "Advanced" ? "tag-advanced" : "tag-intermediate";
+const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${article.arxiv_id}` : null);
 ---
 
-<BaseLayout
-  title={`${article.plain_title} — Marginalia`}
-  description={article.hook}
-  bodyClass="page-article"
->
-  <article class="container article-wrap">
-    <a href="/feed" class="chip mb-16">← Back to the feed</a>
-
-    <div class="row wrap gap-8">
-      <span class={`badge ${DIFFICULTY_CLASS[article.difficulty]}`}>{article.difficulty}</span>
-      {article.is_ai4good === 1 && <span class="badge badge-ai4good">AI for Good</span>}
-      {article.is_foundational === 1 && <span class="chip">Foundational read</span>}
-      <span class="muted" style="font-size:.85rem;">{article.read_minutes} min read</span>
-    </div>
-
-    <h1 class="article-title">{article.plain_title}</h1>
-    <p class="original-title muted">
-      Original paper: <em>{article.original_title}</em>
-    </p>
-
-    <p class="hook">{article.hook}</p>
-
-    <!-- direction chips -->
-    {dirs.length > 0 && (
-      <div class="row wrap gap-8 mb-24">
-        {dirs.map((d) => (
-          <a class="chip" href={`/directions/${d.slug}`}>{d.name}</a>
-        ))}
+<BaseLayout title={`${article.plain_title} — Marginalia`} description={article.hook} bodyClass="page-article">
+  <div class="sheet">
+    <div class="sheet-pad">
+      <!-- HEADER -->
+      <div style="max-width:680px; margin:18px auto 8px; text-align:center;">
+        <div class="section-label">Today, {dateNice} · The Annotated Paper</div>
+        <h1 style="font-size:44px; line-height:1.08; margin:0 0 12px;">{article.plain_title}</h1>
+        <p style="margin:0 0 4px; font-style:italic; font-size:16px; color:var(--ink-soft);">orig. “{article.original_title}”{article.authors.length ? ` · ${article.authors.join(", ")}` : ""}</p>
+        <div class="row wrap gap-8 center" style="margin-top:14px;">
+          {dirs[0] && <span class="tag tag-lm">{dirs[0].name}</span>}
+          <span class={`tag ${diffClass}`}>{article.difficulty}</span>
+          <span class="tag">{article.read_minutes} min read</span>
+          <span class="tag" style="border:1px dashed var(--line-2);">✎ {article.ai_model === "hand-written" ? "Written" : "AI-assisted"}, reviewed by {article.reviewer_name ?? "the team"}</span>
+        </div>
       </div>
-    )}
 
-    <div class="content-section prose">
-      <h2>What's going on</h2>
-      <Fragment set:html={whatsGoingOn} />
-      <h2>Why it matters</h2>
-      <Fragment set:html={whyItMatters} />
-    </div>
+      <!-- 3-ZONE -->
+      <section class="lmrow" style="--read-w:620px; align-items:start;">
+        <!-- LEFT MARGIN: team explainer notes -->
+        <div class="lmside left" style="padding-top:30px;">
+          <div style="font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faintest);">In the margin</div>
+          {dirs[0] && (
+            <div class="mn-card mn-tilt-l" data-reveal data-note="area">
+              <div class="mn-label">Area</div>
+              <div class="mn-body"><b>{dirs[0].name}</b> — {dirs[0].plain_description}</div>
+            </div>
+          )}
+          <div class="mn-hand" data-reveal style="rotate:.6deg;">
+            translation: we read the hard version so this one stays simple ✏️
+          </div>
+          <div class="mn-card mn-tilt-r" data-reveal data-note="why">
+            <div class="mn-label">Why it matters</div>
+            <div class="mn-body">{article.is_ai4good === 1 ? "this is AI pointed at a real-world problem — health, climate, access." : "understanding this is a building block for the rest of the field."}</div>
+          </div>
+        </div>
 
-    <!-- Source box -->
-    <div class="content-section source-box">
-      <h3>Source</h3>
-      <p style="margin-bottom:.6rem;">
-        {article.authors.length > 0 && <span><strong>{article.authors.join(", ")}</strong></span>}
-        {article.institution && <span class="muted"> — {article.institution}</span>}
-        {publishedNice && <span class="muted"> · {publishedNice}</span>}
-      </p>
-      <div class="row wrap gap-8">
-        {article.source_url && (
-          <a class="btn btn-ghost" href={article.source_url} target="_blank" rel="noopener noreferrer">
-            View on arXiv ↗
-          </a>
-        )}
-        {article.pdf_url && (
-          <a class="btn btn-ghost" href={article.pdf_url} target="_blank" rel="noopener noreferrer">
-            PDF ↗
-          </a>
-        )}
-        {article.citation_count > 0 && (
-          <span class="chip">{article.citation_count.toLocaleString()} citations</span>
-        )}
-      </div>
-      <p class="transparency muted">
-        <span aria-hidden="true">🤖</span>
-        {article.ai_model === "hand-written"
-          ? `Written and reviewed by ${article.reviewer_name ?? "the Marginalia editorial team"}.`
-          : `AI-assisted summary, reviewed by ${article.reviewer_name ?? "the Marginalia editorial team"}. We link to the original; we don't republish it.`}
-      </p>
-    </div>
+        <!-- CENTER: reader -->
+        <div class="lmcenter">
+          <div class="row gap-8 center" style="margin-bottom:14px;">
+            <button id="modeExplainer" class="btn-ink" type="button">Explainer</button>
+            <button id="modeSource" class="btn-outline" type="button">Source PDF</button>
+          </div>
 
-    <!-- Explain-simpler assistant -->
-    <div class="content-section explain-box">
-      <h3>Still fuzzy on something?</h3>
-      <p class="muted" style="margin-bottom:.6rem;">
-        Paste a sentence from this article and we'll explain it even more simply.
-      </p>
-      <textarea id="explainInput" rows="2" placeholder="Paste a sentence you'd like explained more simply…"></textarea>
-      <div class="row gap-8 mt-8">
-        <button id="explainBtn" class="btn btn-secondary">Explain it simpler</button>
-      </div>
-      <div id="explainResult" class="explain-result hidden"></div>
-    </div>
+          <!-- EXPLAINER -->
+          <div id="explainerPane">
+            <div style="background:var(--paper); border:1px solid rgba(33,28,22,.1); padding:36px 40px; box-shadow:0 20px 50px -26px rgba(40,30,20,.4);">
+              <div class="section-label">What's going on</div>
+              <div class="read"><Fragment set:html={whatsGoingOn} /></div>
+              <div class="section-label" style="margin-top:24px;">Why it matters</div>
+              <div class="read"><Fragment set:html={whyItMatters} /></div>
+            </div>
 
-    {related.length > 0 && (
-      <section class="page-section">
-        <h2>Related reads</h2>
-        <div class="card-grid mt-16">
-          {related.map((a) => <ArticleCard article={a} />)}
+            <!-- source box -->
+            <div style="margin-top:18px; background:var(--card-2); border:1px solid rgba(122,92,62,.22); padding:16px 18px;">
+              <div class="mn-label" style="color:var(--accent);">Source</div>
+              <p style="margin:6px 0 10px; font-size:14px; color:var(--ink-soft);">
+                {article.authors.join(", ")}{article.institution ? ` — ${article.institution}` : ""}
+              </p>
+              <div class="row wrap gap-8">
+                {article.source_url && <a class="btn-outline" href={article.source_url} target="_blank" rel="noopener noreferrer">View on arXiv ↗</a>}
+                {pdfUrl && <a class="btn-outline" href={pdfUrl} target="_blank" rel="noopener noreferrer">PDF ↗</a>}
+              </div>
+              <p style="margin:12px 0 0; font-family:var(--mono); font-size:10px; color:var(--ink-faint); border-top:1px dashed var(--line-2); padding-top:10px;">
+                We write original plain-language summaries and link to the source. We never republish the paper.
+              </p>
+            </div>
+
+            <!-- explain-simpler assistant -->
+            <div style="margin-top:18px; background:var(--card); border:1px solid var(--line); border-top:3px solid var(--accent-2); padding:18px 20px;">
+              <div class="section-label" style="color:var(--accent-2);">Still fuzzy on a sentence?</div>
+              <p style="margin:0 0 8px; font-size:14px; color:var(--ink-soft);">Paste it and we'll explain it even more simply.</p>
+              <textarea id="explainInput" class="paper-textarea" rows="2" placeholder="Paste a sentence…"></textarea>
+              <div class="mt-8"><button id="explainBtn" class="btn-outline" type="button">Explain it simpler</button></div>
+              <div id="explainResult" class="hidden" style="margin-top:12px; background:var(--paper); border:1px solid var(--line); padding:14px; font-size:15px; line-height:1.6;"></div>
+            </div>
+          </div>
+
+          <!-- SOURCE PDF -->
+          <div id="sourcePane" class="hidden">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:#2B2620; color:#EAE3D5; padding:8px 12px; font-family:var(--mono); font-size:11px;">
+              <span style="opacity:.6;">arXiv:{article.arxiv_id ?? "—"}</span>
+              {article.source_url && <a href={article.source_url} target="_blank" rel="noopener noreferrer" style="color:#F0A878; text-decoration:none;">Open on arXiv ↗</a>}
+            </div>
+            {pdfUrl ? (
+              <iframe src={pdfUrl} title="arXiv PDF" style="width:100%; height:720px; border:1px solid rgba(33,28,22,.16); border-top:none; background:#fff;"></iframe>
+            ) : (
+              <div style="background:#fff; border:1px solid var(--line); padding:40px; text-align:center; color:var(--ink-soft);">No PDF available for this paper.</div>
+            )}
+          </div>
+
+          <!-- QUIZ -->
+          <div id="quizCard" style="margin-top:30px; background:var(--card); border:1px solid rgba(33,28,22,.13); border-top:3px solid var(--accent); padding:26px 28px; position:relative;">
+            <div class="section-label">Test your understanding</div>
+            <p style="margin:0 0 18px; font-size:14px; color:var(--ink-soft); font-style:italic;">Pass all three to earn the “read &amp; understood” stamp (+10 pts).</p>
+            <div id="quizQuestions"></div>
+            <div class="row center gap-12" style="margin-top:6px;">
+              <button id="quizCheck" class="btn-ink" type="button">Check answers</button>
+              <span id="quizMsg" style="font-family:var(--mono); font-size:12px; color:var(--ink-soft);"></span>
+            </div>
+            <div id="quizStamp" class="hidden" style="position:absolute; top:18px; right:20px; transform:rotate(-9deg); border:3px double var(--ok); color:var(--ok); padding:8px 12px; text-align:center; font-family:var(--mono); background:rgba(252,250,244,.7);">
+              <div style="font-size:13px; font-weight:700; letter-spacing:.12em;">UNDERSTOOD</div>
+              <div style="font-size:10px; letter-spacing:.1em;">+10 PTS</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT MARGIN: member notes + leaderboard -->
+        <div class="lmside right" style="padding-top:30px;">
+          <div>
+            <div class="row gap-8" style="justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <span style="font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faintest);">Member notes</span>
+              <a href="/login" style="font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); border:1px solid rgba(194,65,12,.4); padding:4px 9px; text-decoration:none;">+ contribute</a>
+            </div>
+            <div class="mn-card" data-reveal style="margin-bottom:12px;">
+              <div class="row gap-8" style="align-items:center; margin-bottom:6px;">
+                <span class="mn-avatar" style="width:22px; height:22px; font-size:9px; background:var(--accent);">{(article.reviewer_name ?? "MT").split(" ").map((w) => w[0]).join("").slice(0, 2)}</span>
+                <span style="font-family:var(--mono); font-size:10px; color:var(--ink-soft); flex:1;">{article.reviewer_name ?? "Marginalia team"}</span>
+                <span style="font-family:var(--mono); font-size:8px; letter-spacing:.1em; padding:2px 5px; color:var(--accent); border:1px solid rgba(194,65,12,.4);">TEAM</span>
+              </div>
+              <div class="mn-body">{article.hook}</div>
+            </div>
+            <div class="mn-hand" data-reveal>sign in to add your own note + save a copy to your library ↗</div>
+          </div>
+
+          <!-- leaderboard (demo) -->
+          <div class="mn-card" data-reveal style="rotate:.5deg;">
+            <div class="mn-label">Leaderboard · this week</div>
+            <div style="font-family:var(--mono); font-size:9px; color:var(--ink-faintest); margin-bottom:10px;">your chapter</div>
+            <div id="leaderboard" style="display:flex; flex-direction:column; gap:4px;"></div>
+          </div>
+          <div class="mn-hand" data-reveal>↑ pass the quiz and watch yourself climb. it's stupidly addictive.</div>
         </div>
       </section>
-    )}
-  </article>
+
+      {related.length > 0 && (
+        <div style="max-width:680px; margin:10px auto 0;">
+          <div class="section-label">Related reads</div>
+          {related.map((a) => (
+            <a class="note-row" href={`/article/${a.slug}`}>
+              <span class="nr-main"><span class="title">{a.plain_title}</span><br /><span class="meta">{a.directions?.[0]?.name ?? a.difficulty}</span></span>
+              <span class="arr">→</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+
+  <div id="toast" class="hidden" style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:80; background:var(--ink); color:var(--paper); padding:11px 20px; font-family:var(--mono); font-size:12px;"></div>
 
   <script define:vars={{ articleSlug: article.slug }}>
-    const btn = document.getElementById("explainBtn");
-    const input = document.getElementById("explainInput");
-    const result = document.getElementById("explainResult");
-    btn?.addEventListener("click", async () => {
-      const sentence = input.value.trim();
+    // ----- mode toggle -----
+    const exPane = document.getElementById("explainerPane");
+    const srcPane = document.getElementById("sourcePane");
+    const exBtn = document.getElementById("modeExplainer");
+    const srcBtn = document.getElementById("modeSource");
+    function setMode(src) {
+      exPane.classList.toggle("hidden", src);
+      srcPane.classList.toggle("hidden", !src);
+      exBtn.className = src ? "btn-outline" : "btn-ink";
+      srcBtn.className = src ? "btn-ink" : "btn-outline";
+    }
+    exBtn?.addEventListener("click", () => setMode(false));
+    srcBtn?.addEventListener("click", () => setMode(true));
+
+    // ----- explain simpler -----
+    const eBtn = document.getElementById("explainBtn");
+    const eIn = document.getElementById("explainInput");
+    const eRes = document.getElementById("explainResult");
+    eBtn?.addEventListener("click", async () => {
+      const sentence = eIn.value.trim();
       if (!sentence) return;
-      btn.disabled = true;
-      btn.textContent = "Thinking…";
-      result.classList.remove("hidden");
-      result.textContent = "";
+      eBtn.disabled = true; eBtn.textContent = "Thinking…";
+      eRes.classList.remove("hidden"); eRes.textContent = "";
       try {
-        const res = await fetch("/api/explain-simpler", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sentence, slug: articleSlug }),
+        const r = await fetch("/api/explain-simpler", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sentence, slug: articleSlug }) });
+        const d = await r.json();
+        eRes.textContent = d.explanation || d.error || "Couldn't explain that right now.";
+      } catch { eRes.textContent = "The assistant is unavailable right now."; }
+      finally { eBtn.disabled = false; eBtn.textContent = "Explain it simpler"; }
+    });
+
+    // ----- quiz (generic comprehension; awards a local stamp) -----
+    const QUESTIONS = [
+      { text: "What does Marginalia do with this paper?", opts: ["Republishes the PDF as its own", "Explains it in plain language and links to the source", "Sells a summary"], correct: 1 },
+      { text: "Where do you read the original?", opts: ["On arXiv — we link out, never republish", "Only here", "Nowhere"], correct: 0 },
+      { text: "What does the red-pen underline mark?", opts: ["A spelling mistake", "A phrase with a margin note or link", "Nothing"], correct: 2 - 1 },
+    ];
+    const sel = {};
+    const qWrap = document.getElementById("quizQuestions");
+    QUESTIONS.forEach((q, qi) => {
+      const block = document.createElement("div");
+      block.style.marginBottom = "18px";
+      const qt = document.createElement("div");
+      qt.style.cssText = "font-size:17px; line-height:1.4; margin-bottom:9px;";
+      qt.innerHTML = `<b style="color:#C2410C; font-family:var(--mono); font-size:13px;">${qi + 1}.</b> ${q.text}`;
+      block.appendChild(qt);
+      q.opts.forEach((label, oi) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = label;
+        b.style.cssText = "display:block; text-align:left; width:100%; padding:9px 13px; margin-bottom:7px; font-family:var(--serif); font-size:15px; cursor:pointer; background:#FCFAF4; border:1px solid rgba(33,28,22,.18); color:#211C16;";
+        b.addEventListener("click", () => {
+          sel[qi] = oi;
+          [...block.querySelectorAll("button")].forEach((x) => (x.style.borderColor = "rgba(33,28,22,.18)", x.style.background = "#FCFAF4"));
+          b.style.borderColor = "rgba(33,28,22,.5)"; b.style.background = "rgba(33,28,22,.05)";
         });
-        const data = await res.json();
-        result.textContent = data.explanation || data.error || "Sorry, couldn't explain that right now.";
-      } catch {
-        result.textContent = "Sorry, the assistant is unavailable right now.";
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Explain it simpler";
-      }
+        block.appendChild(b);
+      });
+      qWrap.appendChild(block);
+    });
+    const toast = (m) => { const t = document.getElementById("toast"); t.textContent = m; t.classList.remove("hidden"); setTimeout(() => t.classList.add("hidden"), 2200); };
+    document.getElementById("quizCheck")?.addEventListener("click", () => {
+      if ([0,1,2].some((i) => sel[i] === undefined)) { toast("Answer all three first"); return; }
+      const pass = QUESTIONS.every((q, qi) => sel[qi] === q.correct);
+      const msg = document.getElementById("quizMsg");
+      if (pass) {
+        msg.textContent = "Nailed it — stamp earned.";
+        document.getElementById("quizStamp").classList.remove("hidden");
+        try { localStorage.setItem("mg.stamp." + articleSlug, "1"); } catch {}
+        toast("✓ +10 — you understood this one");
+      } else { msg.textContent = "Not quite — try again."; }
+    });
+
+    // ----- leaderboard (demo) -----
+    const lb = [
+      { initials: "PD", name: "Priya D.", pts: 1480, you: false },
+      { initials: "JK", name: "Jordan K.", pts: 1355, you: false },
+      { initials: "YO", name: "You", pts: 1240, you: true },
+      { initials: "SB", name: "Sam B.", pts: 1190, you: false },
+    ];
+    const lbWrap = document.getElementById("leaderboard");
+    lb.forEach((r, i) => {
+      const row = document.createElement("div");
+      row.style.cssText = `display:flex; align-items:center; gap:8px; padding:5px 6px; ${r.you ? "background:rgba(194,65,12,.1); outline:1px solid rgba(194,65,12,.3);" : ""}`;
+      row.innerHTML = `<span style="width:16px; font-family:var(--mono); font-size:11px; color:#8a8073;">${i + 1}</span><span class="mn-avatar" style="width:20px; height:20px; font-size:8px; background:${r.you ? "#C2410C" : "#7A5C3E"};">${r.initials}</span><span style="flex:1; font-size:14px;">${r.name}</span><span style="font-family:var(--mono); font-size:11px; color:#3a342b;">${r.pts}</span>`;
+      lbWrap.appendChild(row);
     });
   </script>
 </BaseLayout>
-
-<style>
-  .article-wrap { max-width: 820px; }
-  .article-title { font-size: 2.4rem; margin: 10px 0 6px; }
-  .original-title { font-size: 0.95rem; margin-bottom: 14px; }
-  .hook {
-    font-family: "Sriracha", cursive;
-    font-size: 1.3rem;
-    color: var(--deep-indigo);
-    background: var(--frame-peach);
-    border-left: 5px solid var(--brand-orange);
-    padding: 14px 18px;
-    border-radius: 12px;
-    margin-bottom: 18px;
-  }
-  .source-box { background: var(--frame-blue); border-color: rgba(122, 174, 182, 0.5); }
-  .transparency {
-    margin-top: 14px;
-    font-size: 0.85rem;
-    padding-top: 12px;
-    border-top: 1px dashed rgba(42, 61, 102, 0.25);
-  }
-  .explain-box { background: var(--frame-green); border-color: rgba(173, 203, 164, 0.6); }
-  .explain-box textarea {
-    width: 100%;
-    border-radius: 12px;
-    border: 2.5px solid var(--deep-indigo);
-    padding: 10px 12px;
-    font-family: "Nunito", sans-serif;
-    font-size: 1rem;
-    resize: vertical;
-  }
-  .explain-result {
-    margin-top: 12px;
-    background: var(--frame-cream);
-    border: 2px solid rgba(42, 61, 102, 0.15);
-    border-radius: 12px;
-    padding: 14px;
-    font-size: 1.02rem;
-    line-height: 1.7;
-  }
-  @media (max-width: 600px) {
-    .article-title { font-size: 1.8rem; }
-  }
-</style>

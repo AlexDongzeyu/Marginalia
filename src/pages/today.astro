@@ -1,74 +1,47 @@
 ---
-/**
- * /today — the Article of the Day. Renders the current AOTD in a banner-topped
- * layout and links to the full article + yesterday's pick.
- */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
+import MarginRow from "../components/MarginRow.astro";
+import MarginNote from "../components/MarginNote.astro";
 import { getArticleOfDay } from "../lib/db";
-import { renderMarkdown } from "../lib/markdown";
-import { DIFFICULTY_CLASS } from "../lib/types";
 
 const { env } = Astro.locals.runtime;
 const article = await getArticleOfDay(env.DB);
-
-const todayNice = new Date().toLocaleDateString("en-US", {
-  weekday: "long",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+const diffClass = article?.difficulty === "Beginner" ? "tag-beginner" : article?.difficulty === "Advanced" ? "tag-advanced" : "tag-intermediate";
 ---
-
-<BaseLayout title="Article of the Day — Marginalia" bodyClass="page-today">
-  <div class="container">
-    <div class="page-header">
-      <p class="tagline">Today, {todayNice}</p>
-      <h1>Article of the Day</h1>
-    </div>
-
-    {article ? (
-      <div class="page-container today-feature">
-        <div class="row wrap gap-8">
-          <span class="chip">★ Today's pick</span>
-          <span class={`badge ${DIFFICULTY_CLASS[article.difficulty]}`}>{article.difficulty}</span>
-          {article.is_ai4good === 1 && <span class="badge badge-ai4good">AI for Good</span>}
-          <span class="muted" style="font-size:.85rem;">{article.read_minutes} min read</span>
-        </div>
-
-        <h2 class="feature-title">{article.plain_title}</h2>
-        <p class="feature-hook">{article.hook}</p>
-
-        <div class="prose feature-preview">
-          <Fragment set:html={renderMarkdown(article.whats_going_on.split("\n\n")[0] || "")} />
-        </div>
-
-        <div class="row wrap gap-12 mt-16">
-          <a href={`/article/${article.slug}`} class="btn btn-primary">Read the full explainer</a>
-          <a href="/feed" class="btn btn-ghost">Browse all papers</a>
-        </div>
+<BaseLayout title="Today — Marginalia" bodyClass="page-today">
+  <Sheet>
+    <Masthead title="Today's Margin" tagline={today} top="The paper worth understanding" compact={true} />
+    <MarginRow>
+      <Fragment slot="left">
+        <MarginNote variant="hand">fresh every morning before school. <span class="mn-arrow">↘</span></MarginNote>
+      </Fragment>
+      <div>
+        {article ? (
+          <div class="scrap">
+            <svg class="clip" width="34" height="64" viewBox="0 0 34 64"><path d="M17 8 C9 8 7 14 7 22 L7 46 C7 55 13 58 18 58 C24 58 28 53 28 46 L28 18 C28 13 24 11 21 11 C17 11 14 14 14 19 L14 44" fill="none" stroke="#9aa0a6" stroke-width="3.4" stroke-linecap="round"></path></svg>
+            <div class="scrap-tags">
+              {article.directions?.[0] && <span class="tag tag-lm">{article.directions[0].name}</span>}
+              <span class={`tag ${diffClass}`}>{article.difficulty}</span>
+              <span class="tag">{article.read_minutes} min read</span>
+            </div>
+            <h2>{article.plain_title}</h2>
+            <p class="orig">orig. “{article.original_title}”</p>
+            <p class="hook">{article.hook}</p>
+            <a href={`/article/${article.slug}`} class="more">Read the annotated version →</a>
+          </div>
+        ) : (
+          <div class="scrap"><h2>No pick yet today</h2><p class="hook">The morning pipeline hasn't published yet. Browse <a href="/feed">the feed</a>.</p></div>
+        )}
+        <div class="cta-row"><a href="/feed" class="btn-outline">Browse all papers</a></div>
       </div>
-    ) : (
-      <div class="page-container text-center">
-        <h2>No pick yet today</h2>
-        <p class="prose">The daily pipeline hasn't published today's article yet.
-          In the meantime, explore <a href="/feed">the feed</a> or
-          <a href="/map">the research map</a>.</p>
-      </div>
-    )}
-  </div>
+      <Fragment slot="right">
+        {article && (
+          <MarginNote variant="why" tilt="r">{article.is_ai4good === 1 ? "real-world stakes — AI pointed at a problem that matters." : "a foundational idea worth getting right."}</MarginNote>
+        )}
+      </Fragment>
+    </MarginRow>
+  </Sheet>
 </BaseLayout>
-
-<style>
-  .today-feature { background: var(--frame-peach); }
-  .feature-title { font-size: 2.2rem; margin: 12px 0 6px; }
-  .feature-hook {
-    font-family: "Sriracha", cursive;
-    font-size: 1.35rem;
-    color: var(--deep-indigo);
-    margin-bottom: 14px;
-  }
-  .feature-preview { font-size: 1.1rem; }
-  @media (max-width: 600px) {
-    .feature-title { font-size: 1.6rem; }
-  }
-</style>

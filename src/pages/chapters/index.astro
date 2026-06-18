@@ -1,10 +1,7 @@
 ---
-/**
- * /chapters — directory of student chapters + a call to start one.
- * v1 reads active chapters from D1 (none seeded yet) and always shows the
- * "start one" path.
- */
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sheet from "../../components/Sheet.astro";
+import Masthead from "../../components/Masthead.astro";
 
 const { env } = Astro.locals.runtime;
 const rows = await env.DB.prepare(
@@ -12,51 +9,19 @@ const rows = await env.DB.prepare(
 ).all<{ slug: string; name: string; region: string | null; description: string }>();
 const chapters = rows.results ?? [];
 ---
-
 <BaseLayout title="Chapters — Marginalia" bodyClass="page-chapters">
-  <div class="container">
-    <div class="page-header">
-      <p class="tagline">Student-run, everywhere</p>
-      <h1>Chapters</h1>
-      <p class="muted">Bring Marginalia to your school. Chapters write explainers, run events, and grow the map.</p>
+  <Sheet>
+    <Masthead title="Chapters" tagline="Student-run reading rooms, everywhere." top="The network" compact={true} />
+    <div style="max-width:680px; margin:0 auto;">
+      <div class="scrap" style="transform:rotate(.4deg); display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+        <div><h2 style="font-size:24px;">Start a chapter</h2><p class="muted" style="margin:0;">All you need is curiosity and a couple of friends.</p></div>
+        <a href="/chapters/start" class="btn-ink">Apply to start</a>
+      </div>
+      {chapters.length > 0 ? chapters.map((c) => (
+        <a class="note-row" href={`/chapters/${c.slug}`}><span class="nr-main"><span class="title">{c.name}</span><br /><span class="meta">{c.region ?? ""}</span></span><span class="arr">→</span></a>
+      )) : (
+        <p class="muted text-center" style="margin-top:24px;">No chapters yet — be the founding one. <a href="/chapters/start">Start a chapter →</a></p>
+      )}
     </div>
-
-    <div class="content-section start-banner">
-      <div>
-        <h2 style="margin-bottom:.2rem;">Start a chapter</h2>
-        <p class="muted">All you need is curiosity and a couple of friends.</p>
-      </div>
-      <a href="/chapters/start" class="btn btn-primary">Apply to start</a>
-    </div>
-
-    {chapters.length > 0 ? (
-      <div class="card-grid">
-        {chapters.map((c) => (
-          <a class="card" href={`/chapters/${c.slug}`}>
-            <h3>{c.name}</h3>
-            {c.region && <span class="chip">{c.region}</span>}
-            <p class="muted" style="font-size:.95rem;">{c.description}</p>
-          </a>
-        ))}
-      </div>
-    ) : (
-      <div class="content-section text-center">
-        <h3>No chapters yet — be the first</h3>
-        <p class="muted">Your school could be the founding chapter.</p>
-        <a href="/chapters/start" class="btn btn-secondary mt-16">Start a chapter</a>
-      </div>
-    )}
-  </div>
+  </Sheet>
 </BaseLayout>
-
-<style>
-  .start-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    background: var(--frame-peach);
-    border-color: var(--brand-orange);
-  }
-</style>

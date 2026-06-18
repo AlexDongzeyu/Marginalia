@@ -1,0 +1,12 @@
+---
+/**
+ * MarginRow — the three-zone Living Margin grid.
+ * Use named slots `left` and `right` for margin notes; default slot is the
+ * calm center reading column.
+ */
+---
+<section class="lmrow">
+  <div class="lmside left"><slot name="left" /></div>
+  <div class="lmcenter"><slot /></div>
+  <div class="lmside right"><slot name="right" /></div>
+</section>

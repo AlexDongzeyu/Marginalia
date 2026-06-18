@@ -1,78 +1,28 @@
 ---
-/**
- * /learn — learning hub. Track cards (Beginner Path, LLMs, etc.).
- * v1 is a curated overview; lessons are stubbed for the next content phase.
- */
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sheet from "../../components/Sheet.astro";
+import Masthead from "../../components/Masthead.astro";
 
 const tracks = [
-  {
-    slug: "beginner-path",
-    title: "Beginner Path",
-    emoji: "🌱",
-    blurb: "Zero background needed. From 'what is a model?' to reading real papers with confidence.",
-    lessons: 6,
-    level: "Beginner",
-  },
-  {
-    slug: "large-language-models",
-    title: "Large Language Models",
-    emoji: "💬",
-    blurb: "How models like ChatGPT actually work — tokens, attention, training, and limits.",
-    lessons: 5,
-    level: "Beginner",
-  },
-  {
-    slug: "computer-vision",
-    title: "Computer Vision",
-    emoji: "👁️",
-    blurb: "How machines learn to see, from pixels to recognising objects and scenes.",
-    lessons: 4,
-    level: "Intermediate",
-  },
-  {
-    slug: "ai-for-good",
-    title: "AI for Good",
-    emoji: "🌍",
-    blurb: "Real applications in health, climate, education and accessibility — and how to build responsibly.",
-    lessons: 5,
-    level: "Beginner",
-  },
-  {
-    slug: "build-and-deploy",
-    title: "Build & Deploy",
-    emoji: "🛠️",
-    blurb: "Go hands-on: run a model, ship a small project, and put it online.",
-    lessons: 6,
-    level: "Intermediate",
-  },
+  { slug: "beginner-path", title: "Beginner Path", num: "i.", blurb: "Zero background needed. From 'what is a model?' to reading real papers.", lessons: 6, level: "Beginner" },
+  { slug: "large-language-models", title: "Large Language Models", num: "ii.", blurb: "How models like ChatGPT actually work — tokens, attention, limits.", lessons: 5, level: "Beginner" },
+  { slug: "computer-vision", title: "Computer Vision", num: "iii.", blurb: "How machines learn to see, from pixels to recognising objects.", lessons: 4, level: "Intermediate" },
+  { slug: "ai-for-good", title: "AI for Good", num: "iv.", blurb: "Real applications in health, climate, education, accessibility.", lessons: 5, level: "Beginner" },
+  { slug: "build-and-deploy", title: "Build & Deploy", num: "v.", blurb: "Go hands-on: run a model, ship a small project, put it online.", lessons: 6, level: "Intermediate" },
 ];
 ---
-
 <BaseLayout title="Learn — Marginalia" bodyClass="page-learn">
-  <div class="container">
-    <div class="page-header">
-      <p class="tagline">Learn AI from the ground up</p>
-      <h1>Learning tracks</h1>
-      <p class="muted">Short, friendly lessons. Start anywhere — the Beginner Path needs no background.</p>
-    </div>
-
-    <div class="card-grid">
+  <Sheet>
+    <Masthead title="Learn" tagline="AI from the ground up — annotated textbook style." top="The lessons" compact={true} />
+    <div style="max-width:680px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:14px;">
       {tracks.map((t) => (
-        <a class="card track-card" href={`/learn/${t.slug}`}>
-          <div class="emoji" aria-hidden="true">{t.emoji}</div>
+        <a class="torn-card" href={`/learn/${t.slug}`} data-reveal style="text-decoration:none; color:inherit; display:block;">
+          <div class="roman">{t.num}</div>
           <h3>{t.title}</h3>
-          <p class="muted" style="font-size:.95rem;">{t.blurb}</p>
-          <div class="card-meta">
-            <span class="badge badge-beginner">{t.level}</span>
-            <span class="muted" style="font-size:.82rem;margin-left:auto;">{t.lessons} lessons</span>
-          </div>
+          <p style="margin-bottom:8px;">{t.blurb}</p>
+          <span class="tag tag-beginner">{t.level}</span> <span class="tag">{t.lessons} lessons</span>
         </a>
       ))}
     </div>
-  </div>
+  </Sheet>
 </BaseLayout>
-
-<style>
-  .track-card .emoji { font-size: 2.2rem; }
-</style>

@@ -1,128 +1,31 @@
 ---
-/**
- * /learn/[track] — a track's lesson list (v1 scaffold).
- * Lesson content is authored later (MDX phase); this renders the ordered
- * outline so the IA + navigation are real now.
- */
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sheet from "../../components/Sheet.astro";
+import Masthead from "../../components/Masthead.astro";
 
-const TRACKS: Record<string, { title: string; emoji: string; intro: string; lessons: string[] }> = {
-  "beginner-path": {
-    title: "Beginner Path",
-    emoji: "🌱",
-    intro: "Start here if AI is brand new to you. Each lesson is a short read with a check-yourself question.",
-    lessons: [
-      "What even is AI? (and what it isn't)",
-      "Data, models, and 'learning' explained",
-      "Neural networks without the maths",
-      "What a language model actually does",
-      "How to read an AI paper as a beginner",
-      "Where to go next",
-    ],
-  },
-  "large-language-models": {
-    title: "Large Language Models",
-    emoji: "💬",
-    intro: "How the models behind modern chatbots work — and where they break.",
-    lessons: [
-      "Tokens: how models see text",
-      "Attention, the key idea",
-      "Training vs. fine-tuning",
-      "Prompting and its limits",
-      "Hallucinations and safety",
-    ],
-  },
-  "computer-vision": {
-    title: "Computer Vision",
-    emoji: "👁️",
-    intro: "From pixels to perception.",
-    lessons: [
-      "How computers store images",
-      "Convolutions, simply",
-      "Recognising objects",
-      "Where vision meets language",
-    ],
-  },
-  "ai-for-good": {
-    title: "AI for Good",
-    emoji: "🌍",
-    intro: "Applications that help people — and how to build responsibly.",
-    lessons: [
-      "AI in health",
-      "AI for climate",
-      "AI for education & access",
-      "Fairness and bias",
-      "Building responsibly",
-    ],
-  },
-  "build-and-deploy": {
-    title: "Build & Deploy",
-    emoji: "🛠️",
-    intro: "Hands-on: run a model and ship something small.",
-    lessons: [
-      "Your first model run",
-      "Working with an API",
-      "Building a tiny app",
-      "Putting it online",
-      "Evaluating your results",
-      "Sharing your project",
-    ],
-  },
+const TRACKS: Record<string, { title: string; intro: string; lessons: string[] }> = {
+  "beginner-path": { title: "Beginner Path", intro: "Start here if AI is brand new. Each lesson is a short read with a check-yourself question.", lessons: ["What even is AI? (and what it isn't)", "Data, models, and 'learning' explained", "Neural networks without the maths", "What a language model actually does", "How to read an AI paper as a beginner", "Where to go next"] },
+  "large-language-models": { title: "Large Language Models", intro: "How the models behind modern chatbots work — and where they break.", lessons: ["Tokens: how models see text", "Attention, the key idea", "Training vs. fine-tuning", "Prompting and its limits", "Hallucinations and safety"] },
+  "computer-vision": { title: "Computer Vision", intro: "From pixels to perception.", lessons: ["How computers store images", "Convolutions, simply", "Recognising objects", "Where vision meets language"] },
+  "ai-for-good": { title: "AI for Good", intro: "Applications that help people — and how to build responsibly.", lessons: ["AI in health", "AI for climate", "AI for education & access", "Fairness and bias", "Building responsibly"] },
+  "build-and-deploy": { title: "Build & Deploy", intro: "Hands-on: run a model and ship something small.", lessons: ["Your first model run", "Working with an API", "Building a tiny app", "Putting it online", "Evaluating your results", "Sharing your project"] },
 };
-
 const { track } = Astro.params;
 const data = track ? TRACKS[track] : undefined;
-if (!data) {
-  return new Response(null, { status: 404, statusText: "Not Found" });
-}
+if (!data) return new Response(null, { status: 404, statusText: "Not Found" });
 ---
-
 <BaseLayout title={`${data.title} — Learn — Marginalia`} bodyClass="page-track">
-  <div class="container">
-    <a href="/learn" class="chip mb-16" style="margin-top:8px;display:inline-flex;">← All tracks</a>
-
-    <div class="page-container track-hero">
-      <div class="emoji" aria-hidden="true" style="font-size:2.4rem;">{data.emoji}</div>
-      <h1 style="margin:.2rem 0;">{data.title}</h1>
-      <p class="prose" style="margin-bottom:0;">{data.intro}</p>
-    </div>
-
-    <ol class="lesson-list">
+  <Sheet>
+    <Masthead title={data.title} tagline={data.intro} top="A track" compact={true} />
+    <div style="max-width:620px; margin:0 auto;">
       {data.lessons.map((lesson, i) => (
-        <li class="lesson-row">
-          <span class="lesson-num">{i + 1}</span>
-          <span class="lesson-title">{lesson}</span>
-          <span class="chip lesson-soon">Coming soon</span>
-        </li>
+        <div class="note-row" data-reveal>
+          <span class="mn-avatar" style="background:var(--accent); width:30px; height:30px;">{i + 1}</span>
+          <span class="nr-main"><span class="title">{lesson}</span></span>
+          <span class="tag">soon</span>
+        </div>
       ))}
-    </ol>
-  </div>
+      <p class="muted mt-16"><a href="/learn">← All tracks</a></p>
+    </div>
+  </Sheet>
 </BaseLayout>
-
-<style>
-  .track-hero { background: var(--frame-green); }
-  .lesson-list { list-style: none; display: flex; flex-direction: column; gap: 12px; padding: 0; }
-  .lesson-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--frame-cream);
-    border: 2px solid rgba(42, 61, 102, 0.12);
-    border-radius: 14px;
-    padding: 14px 18px;
-    box-shadow: 2px 2px 0 rgba(42, 61, 102, 0.12);
-  }
-  .lesson-num {
-    width: 34px;
-    height: 34px;
-    flex-shrink: 0;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: var(--brand-orange);
-    border: 2px solid var(--deep-indigo);
-    font-weight: 800;
-  }
-  .lesson-title { font-weight: 700; color: var(--deep-indigo); }
-  .lesson-soon { margin-left: auto; }
-</style>

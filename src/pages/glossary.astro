@@ -1,85 +1,38 @@
 ---
-/**
- * /glossary — searchable A–Z of plain-language AI terms.
- * Filtering is client-side (small list); content is human-approved terms.
- */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
 import { getApprovedGlossary } from "../lib/db";
 
 const { env } = Astro.locals.runtime;
 const terms = await getApprovedGlossary(env.DB);
 ---
-
 <BaseLayout title="Glossary — Marginalia" bodyClass="page-glossary">
-  <div class="container">
-    <div class="page-header">
-      <p class="tagline">Plain-language definitions</p>
-      <h1>Glossary</h1>
-      <p class="muted">Every bit of jargon, in one sentence.</p>
-    </div>
-
-    <div class="content-section">
-      <input
-        type="search"
-        id="glossarySearch"
-        placeholder="Search terms…"
-        class="glossary-search"
-        aria-label="Search glossary"
-      />
-
-      <dl class="glossary-list">
+  <Sheet>
+    <Masthead title="Glossary" tagline="Every bit of jargon, in one sentence." top="Definitions" compact={true} />
+    <div style="max-width:680px; margin:0 auto;">
+      <input type="search" id="glossarySearch" placeholder="Search terms…" class="paper-input" style="margin-bottom:20px;" aria-label="Search glossary" />
+      <dl id="glossaryList" style="margin:0;">
         {terms.map((t) => (
-          <div class="glossary-item" data-term={t.term.toLowerCase()}>
-            <dt>{t.term}</dt>
-            <dd>{t.definition}</dd>
+          <div class="mn-card glossary-item" data-term={t.term.toLowerCase()} style="max-width:none; margin-bottom:12px;">
+            <dt class="mn-label" style="font-size:11px;">{t.term}</dt>
+            <dd class="mn-body" style="margin:4px 0 0; font-size:14px;">{t.definition}</dd>
           </div>
         ))}
       </dl>
-
-      {terms.length === 0 && (
-        <p class="muted text-center">No terms yet — the pipeline proposes new ones as articles publish.</p>
-      )}
+      {terms.length === 0 && <p class="muted text-center">No terms yet — the pipeline proposes new ones as articles publish.</p>}
     </div>
-  </div>
-
+  </Sheet>
   <script>
     const search = document.getElementById("glossarySearch") as HTMLInputElement | null;
     const items = Array.from(document.querySelectorAll<HTMLElement>(".glossary-item"));
     search?.addEventListener("input", () => {
       const q = search.value.trim().toLowerCase();
-      for (const item of items) {
-        const term = item.dataset.term ?? "";
-        const text = item.textContent?.toLowerCase() ?? "";
-        item.style.display = !q || term.includes(q) || text.includes(q) ? "" : "none";
-      }
+      items.forEach((it) => {
+        const t = it.dataset.term ?? "";
+        const text = it.textContent?.toLowerCase() ?? "";
+        it.style.display = !q || t.includes(q) || text.includes(q) ? "" : "none";
+      });
     });
   </script>
 </BaseLayout>
-
-<style>
-  .glossary-search {
-    width: 100%;
-    padding: 0.7rem 1rem;
-    border-radius: 50px;
-    border: 2.5px solid var(--deep-indigo);
-    font-family: "Nunito", sans-serif;
-    font-size: 1rem;
-    margin-bottom: 20px;
-  }
-  .glossary-list { display: flex; flex-direction: column; gap: 14px; }
-  .glossary-item {
-    background: var(--frame-cream);
-    border: 2px solid rgba(42, 61, 102, 0.1);
-    border-radius: 14px;
-    padding: 14px 18px;
-    box-shadow: 2px 2px 0 rgba(42, 61, 102, 0.12);
-  }
-  .glossary-item dt {
-    font-family: "Namdhinggo", Georgia, serif;
-    font-weight: 800;
-    font-size: 1.1rem;
-    color: var(--deep-indigo);
-    margin-bottom: 4px;
-  }
-  .glossary-item dd { color: #2a3d66; margin: 0; }
-</style>

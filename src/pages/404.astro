@@ -1,21 +1,18 @@
 ---
-/**
- * 404 — friendly not-found page that keeps the design + points back into the IA.
- */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
 ---
-
 <BaseLayout title="Not found — Marginalia" bodyClass="page-404">
-  <div class="container" style="max-width:680px;">
-    <div class="page-container text-center" style="margin-top:24px;">
-      <div style="font-size:3rem;" aria-hidden="true">¶</div>
-      <h1 style="font-size:2.4rem;">Lost in the margins</h1>
-      <p class="prose">We couldn't find that page. Let's get you back to something useful.</p>
-      <div class="row center wrap gap-12 mt-16">
-        <a href="/" class="btn btn-primary">Home</a>
-        <a href="/today" class="btn btn-secondary">Today's paper</a>
-        <a href="/map" class="btn btn-ghost">The map</a>
+  <Sheet>
+    <Masthead title="Lost in the margins" tagline="We couldn't find that page." top="404" compact={true} />
+    <div class="text-center" style="padding-bottom:20px;">
+      <p class="read" style="max-width:46ch; margin:0 auto 18px;">That note seems to have been torn out. Let's get you back to something useful.</p>
+      <div class="cta-row" style="justify-content:center;">
+        <a href="/" class="btn-ink">Front page</a>
+        <a href="/today" class="btn-outline">Today's paper</a>
+        <a href="/map" class="btn-outline">The map</a>
       </div>
     </div>
-  </div>
+  </Sheet>
 </BaseLayout>

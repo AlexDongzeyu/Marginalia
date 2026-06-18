@@ -1,40 +1,23 @@
 ---
-/**
- * /chapters/start — application form to start a chapter.
- * Posts to /api/chapters/apply (stores a pending chapter for admin review).
- */
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sheet from "../../components/Sheet.astro";
+import Masthead from "../../components/Masthead.astro";
 ---
-
 <BaseLayout title="Start a chapter — Marginalia" bodyClass="page-chapter-start">
-  <div class="container" style="max-width:760px;">
-    <div class="page-header">
-      <p class="tagline">Bring it to your campus</p>
-      <h1>Start a chapter</h1>
-      <p class="muted">Tell us a little about you. We review applications and get back quickly.</p>
+  <Sheet>
+    <Masthead title="Start a chapter" tagline="Bring Marginalia to your campus." top="Application" compact={true} />
+    <div style="max-width:520px; margin:0 auto;">
+      <form id="chapterForm" class="stack">
+        <div class="field"><label for="cf-name">Your name</label><input id="cf-name" name="lead_name" class="paper-input" required /></div>
+        <div class="field"><label for="cf-email">Email</label><input id="cf-email" name="email" type="email" class="paper-input" required /></div>
+        <div class="field"><label for="cf-chapter">Chapter name</label><input id="cf-chapter" name="name" class="paper-input" placeholder="e.g. Riverside High Marginalia" required /></div>
+        <div class="field"><label for="cf-region">School / region</label><input id="cf-region" name="region" class="paper-input" placeholder="City, country" required /></div>
+        <div class="field"><label for="cf-why">Why do you want to start one?</label><textarea id="cf-why" name="description" class="paper-textarea" rows="4" required></textarea></div>
+        <button type="submit" class="btn-ink" style="justify-content:center;">Submit application</button>
+        <p id="cf-status" class="muted mt-16" style="text-align:center;"></p>
+      </form>
     </div>
-
-    <form class="content-section chapter-form" id="chapterForm">
-      <label class="field-label" for="cf-name">Your name</label>
-      <input id="cf-name" name="lead_name" class="form-input" required />
-
-      <label class="field-label" for="cf-email">Email</label>
-      <input id="cf-email" name="email" type="email" class="form-input" required />
-
-      <label class="field-label" for="cf-chapter">Chapter name</label>
-      <input id="cf-chapter" name="name" class="form-input" placeholder="e.g. Riverside High Marginalia" required />
-
-      <label class="field-label" for="cf-region">School / region</label>
-      <input id="cf-region" name="region" class="form-input" placeholder="City, country" required />
-
-      <label class="field-label" for="cf-why">Why do you want to start one?</label>
-      <textarea id="cf-why" name="description" class="form-input" rows="4" required></textarea>
-
-      <button type="submit" class="btn btn-primary mt-16">Submit application</button>
-      <p id="cf-status" class="muted mt-16"></p>
-    </form>
-  </div>
-
+  </Sheet>
   <script>
     const form = document.getElementById("chapterForm") as HTMLFormElement;
     const status = document.getElementById("cf-status");
@@ -43,39 +26,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       if (status) status.textContent = "Submitting…";
       const payload = Object.fromEntries(new FormData(form).entries());
       try {
-        const res = await fetch("/api/chapters/apply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const res = await fetch("/api/chapters/apply", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         const data = await res.json();
-        if (res.ok) {
-          form.innerHTML = `<h3>Thanks, ${"" + (payload.lead_name || "")}! 🎉</h3><p class="prose">Your application is in. We'll email you at ${"" + (payload.email || "")} once it's reviewed.</p>`;
-        } else if (status) {
-          status.textContent = data.error || "Something went wrong.";
-        }
-      } catch {
-        if (status) status.textContent = "Network error — please try again.";
-      }
+        if (res.ok) form.innerHTML = `<p class="read" style="font-family:var(--hand); font-size:26px; color:#2E6B36;">Thanks, ${"" + (payload.lead_name || "")}! Your application is in — we'll email ${"" + (payload.email || "")}.</p>`;
+        else if (status) status.textContent = data.error || "Something went wrong.";
+      } catch { if (status) status.textContent = "Network error — please try again."; }
     });
   </script>
 </BaseLayout>
-
-<style>
-  .field-label {
-    display: block;
-    font-weight: 800;
-    font-size: 0.85rem;
-    color: var(--deep-indigo);
-    margin: 14px 0 5px;
-  }
-  .form-input {
-    width: 100%;
-    padding: 0.65rem 0.9rem;
-    border-radius: 12px;
-    border: 2.5px solid var(--deep-indigo);
-    font-family: "Nunito", sans-serif;
-    font-size: 1rem;
-    resize: vertical;
-  }
-</style>

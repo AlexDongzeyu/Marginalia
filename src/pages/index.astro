@@ -1,170 +1,203 @@
 ---
 /**
- * Home — communicates "AI research, explained for you — free" in 5 seconds.
- * Sections mirror the spec: hero, today's pick, what we do, map teaser,
- * latest papers, learn entry, chapters, newsletter.
+ * Home — "The Front Page". The annotated intro is where the concept lands.
+ * Data-driven from D1 (Article of the Day + latest), wrapped in the paper sheet
+ * with living margins.
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
-import ArticleCard from "../components/ArticleCard.astro";
-import { getArticleOfDay, getLatestArticles, getDirectionsWithCounts } from "../lib/db";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
+import MarginRow from "../components/MarginRow.astro";
+import MarginNote from "../components/MarginNote.astro";
+import TornDivider from "../components/TornDivider.astro";
+import { getArticleOfDay, getLatestArticles } from "../lib/db";
 
 const { env } = Astro.locals.runtime;
-const [today, latest, directions] = await Promise.all([
+const [today, latest] = await Promise.all([
   getArticleOfDay(env.DB),
-  getLatestArticles(env.DB, 6),
-  getDirectionsWithCounts(env.DB),
+  getLatestArticles(env.DB, 4),
 ]);
 
-const branches = ["foundations", "methods", "applied", "society"] as const;
-const branchLabels: Record<string, string> = {
-  foundations: "Foundations",
-  methods: "Methods & Models",
-  applied: "AI for Good",
-  society: "Safety & Society",
-};
+const todayDate = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const issueNo = Math.floor((Date.now() - Date.UTC(2024, 0, 1)) / 86_400_000);
+const diffClass = (d: string) =>
+  d === "Beginner" ? "tag-beginner" : d === "Advanced" ? "tag-advanced" : "tag-intermediate";
 ---
 
 <BaseLayout bodyClass="page-home">
-  <!-- Hero -->
-  <section class="container">
-    <div class="hero">
-      <div class="hero-copy">
-        <p class="tagline" style="font-size:1.3rem;">A guide for newcomers</p>
-        <h1>Understand AI research.<br />No PhD required.</h1>
-        <p class="hero-sub">
-          Every day we find a notable AI paper and explain it in plain language —
-          then map the whole field so you can explore it. Free, student-run, and
-          built around <strong>AI for good</strong>.
+  <Sheet>
+    <Masthead
+      title="Marginalia"
+      tagline="Notes on the AI research that matters."
+      top={`Vol. I · No. ${issueNo}`}
+      bottom="A student-run reading room · est. 2024"
+    />
+
+    <!-- ANNOTATED INTRO -->
+    <MarginRow>
+      <Fragment slot="left">
+        <MarginNote variant="hand" anchor="who">
+          yes — a 16-year-old started this. no, we don't bite. <span class="mn-arrow">↘</span>
+        </MarginNote>
+        <MarginNote variant="hand" anchor="matters">
+          we read the papers so you don't have to. <span style="font-style:italic;">(yet.)</span> <span class="mn-arrow">↘</span>
+        </MarginNote>
+      </Fragment>
+
+      <div class="read">
+        <div class="section-label">What this is</div>
+        <p>
+          Marginalia is a daily, plain-language guide to
+          <span class="anchor" data-anchor="matters">the AI research that actually matters</span>.
+          Every day we pick one paper worth understanding, read it properly, and
+          <span class="anchor" data-anchor="margins">explain it in the margins</span> — the jargon,
+          the stakes, and the occasional joke.
         </p>
-        <div class="row wrap gap-12 mt-24">
-          <a href="/today" class="btn btn-primary">Read today's paper</a>
-          <a href="/map" class="btn btn-secondary">Explore the map</a>
+        <p>
+          No PhD required. You bring the curiosity; we bring
+          <span class="anchor" data-anchor="who">the red pen</span> — and once you understand
+          something, you can annotate it for the next person.
+        </p>
+        <div class="cta-row">
+          <a href="/today" class="btn-ink">Read today's paper →</a>
+          <a href="/map" class="btn-outline">Explore the map</a>
         </div>
       </div>
-      <div class="hero-art home-hero-art" aria-hidden="true">
-        <div class="float-card fc1">¶ attention</div>
-        <div class="float-card fc2">diffusion</div>
-        <div class="float-card fc3">alignment</div>
-        <div class="float-card fc4">embeddings</div>
-        <div class="hero-orb"></div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Today's pick -->
-  {today && (
-    <section class="container page-section">
-      <div class="content-section today-card">
-        <div class="row between wrap gap-12">
-          <span class="chip">★ Today's pick</span>
-          <a href="/today" class="muted" style="font-size:.9rem;">See full article →</a>
-        </div>
-        <h2 style="margin:.4rem 0;">{today.plain_title}</h2>
-        <p class="prose" style="margin-bottom:0;">{today.hook}</p>
-        <div class="row wrap gap-8 mt-16">
-          <span class={`badge ${today.difficulty === "Beginner" ? "badge-beginner" : today.difficulty === "Advanced" ? "badge-advanced" : "badge-intermediate"}`}>{today.difficulty}</span>
-          <span class="muted" style="font-size:.85rem;">{today.read_minutes} min read</span>
-          <a href={`/article/${today.slug}`} class="btn btn-ghost" style="margin-left:auto;">Read it</a>
-        </div>
-      </div>
-    </section>
-  )}
+      <Fragment slot="right">
+        <MarginNote variant="def" anchor="margins" taped={true} tilt="l">
+          <b>marginalia</b> (n.) — notes scribbled in the margins of a book. here, the whole point.
+        </MarginNote>
+        <MarginNote variant="member" anchor="member" initials="AK">
+          a member left this → "the red pen is my favorite part fr"
+        </MarginNote>
+      </Fragment>
+    </MarginRow>
 
-  <!-- What we do -->
-  <section class="container page-section">
-    <div class="card-grid">
-      <div class="card">
-        <div class="emoji" aria-hidden="true">📖</div>
-        <h3>Read</h3>
-        <p class="muted">Plain-language explainers of new and notable papers. One sentence on why it matters, then the gist — at a grade-9 reading level.</p>
-        <a href="/feed" class="chip" style="margin-top:auto;">Browse the feed →</a>
-      </div>
-      <div class="card">
-        <div class="emoji" aria-hidden="true">🗺️</div>
-        <h3>Explore</h3>
-        <p class="muted">An interactive map of research directions. Click a node to learn what an area is, why it matters, and where to start.</p>
-        <a href="/map" class="chip" style="margin-top:auto;">Open the map →</a>
-      </div>
-      <div class="card">
-        <div class="emoji" aria-hidden="true">🎓</div>
-        <h3>Learn</h3>
-        <p class="muted">Short tracks that teach AI from the ground up — built for people who are brand new to the field.</p>
-        <a href="/learn" class="chip" style="margin-top:auto;">Start learning →</a>
-      </div>
-    </div>
-  </section>
+    <TornDivider variant="a" />
 
-  <!-- Map teaser -->
-  <section class="container page-section">
-    <div class="content-section">
-      <div class="map-teaser">
-        <div>
-          <span class="chip">The map</span>
-          <h2 style="margin:.3rem 0;">See the whole field at a glance</h2>
-          <p class="prose">
-            Most tools draw citation graphs for researchers who already know a
-            paper. Ours is different: an editorial map of <em>research directions</em>,
-            each explained in plain English. Click in and start reading.
-          </p>
-          <a href="/map" class="btn btn-primary mt-8">Explore the map</a>
-        </div>
-        <div class="map-teaser-visual" aria-hidden="true">
-          {branches.map((b) => (
-            <div class={`teaser-branch tb-${b}`}>
-              <strong>{branchLabels[b]}</strong>
-              <div class="teaser-dots">
-                {directions.filter((d) => d.branch === b && d.parent_id).slice(0, 4).map((d) => (
-                  <span class="teaser-dot">{d.name}</span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
+    <!-- TODAY'S MARGIN -->
+    <MarginRow>
+      <Fragment slot="left">
+        <MarginNote variant="hand">
+          today's pick. updated every morning before school. <span class="mn-arrow">↘</span>
+        </MarginNote>
+      </Fragment>
 
-  <!-- Latest -->
-  {latest.length > 0 && (
-    <section class="container page-section">
-      <div class="row between wrap">
-        <h2>Latest explained papers</h2>
-        <a href="/feed" class="chip">View all →</a>
-      </div>
-      <div class="card-grid mt-16">
-        {latest.map((a) => <ArticleCard article={a} />)}
-      </div>
-    </section>
-  )}
-
-  <!-- Learn + chapters + newsletter -->
-  <section class="container page-section">
-    <div class="two-up">
-      <div class="content-section">
-        <h2>New to AI? Start here.</h2>
-        <p class="prose">No background needed. The Beginner Path walks you from
-          "what is a model?" to reading real papers with confidence.</p>
-        <a href="/learn" class="btn btn-secondary">See the tracks</a>
-      </div>
-      <div class="content-section">
-        <h2>Bring this to your school</h2>
-        <p class="prose">Start a Marginalia chapter, contribute explainers, and
-          put your campus on the map.</p>
-        <a href="/chapters/start" class="btn btn-secondary">Start a chapter</a>
-      </div>
-    </div>
-
-    <div class="content-section newsletter-cta mt-24">
       <div>
-        <h2 style="margin-bottom:.2rem;">Get the weekly digest</h2>
-        <p class="muted">The week's best explained papers, in your inbox. No spam.</p>
+        <div class="section-label">Today's Margin — {todayDate}</div>
+        {today ? (
+          <div class="scrap">
+            <svg class="clip" width="34" height="64" viewBox="0 0 34 64"><path d="M17 8 C9 8 7 14 7 22 L7 46 C7 55 13 58 18 58 C24 58 28 53 28 46 L28 18 C28 13 24 11 21 11 C17 11 14 14 14 19 L14 44" fill="none" stroke="#9aa0a6" stroke-width="3.4" stroke-linecap="round"></path></svg>
+            <div class="scrap-tags">
+              {today.directions?.[0] && <span class={`tag tag-lm`}>{today.directions[0].name}</span>}
+              <span class={`tag ${diffClass(today.difficulty)}`}>{today.difficulty}</span>
+              <span class="tag">{today.read_minutes} min read</span>
+            </div>
+            <h2>{today.plain_title}</h2>
+            <p class="orig">orig. “{today.original_title}”{today.authors[0] ? ` · ${today.authors[0]}${today.authors.length > 1 ? " et al." : ""}` : ""}</p>
+            <p class="hook">{today.hook}</p>
+            <a href={`/article/${today.slug}`} class="more">Read the annotated version →</a>
+          </div>
+        ) : (
+          <div class="scrap"><h2>No pick yet today</h2><p class="hook">Check back this morning — or browse <a href="/feed">the feed</a>.</p></div>
+        )}
       </div>
-      <form class="row gap-8 wrap" id="homeSubscribe">
-        <input type="email" name="email" required placeholder="you@email.com" class="email-input" aria-label="Email address" />
-        <button type="submit" class="btn btn-primary">Subscribe</button>
+
+      <Fragment slot="right">
+        {today && (
+          <MarginNote variant="why" anchor="why" tilt="r">
+            {today.is_ai4good === 1
+              ? "real-world stakes: this is AI pointed at a problem that actually matters."
+              : "a chatbot you can actually trust is one that knows what it doesn't know."}
+          </MarginNote>
+        )}
+        <MarginNote variant="hand">
+          ↖ pass the 3-question quiz on this one and you get the <span class="mn-arrow">+10 stamp</span>
+        </MarginNote>
+      </Fragment>
+    </MarginRow>
+
+    <TornDivider variant="b" />
+
+    <!-- WHAT WE DO -->
+    <MarginRow>
+      <div>
+        <div class="section-label" style="text-align:center;">What we do</div>
+        <div class="torn-cards">
+          <div class="torn-card" data-reveal>
+            <div class="roman">i.</div>
+            <h3>Read</h3>
+            <p>One paper a day, explained in the margins. No jargon left undefined.</p>
+          </div>
+          <div class="torn-card" data-reveal>
+            <div class="roman">ii.</div>
+            <h3>Learn</h3>
+            <p>Pass quizzes, earn stamps, climb the leaderboard with your chapter.</p>
+          </div>
+          <div class="torn-card" data-reveal>
+            <div class="roman">iii.</div>
+            <h3>Build</h3>
+            <p>Write your own marginalia. Edit it, keep a copy, help the next reader.</p>
+          </div>
+        </div>
+      </div>
+      <Fragment slot="right">
+        <MarginNote variant="hand">
+          ↖ understand it before you annotate it. the quiz is the gate.
+        </MarginNote>
+      </Fragment>
+    </MarginRow>
+
+    <TornDivider variant="c" />
+
+    <!-- LATEST ANNOTATIONS -->
+    <MarginRow>
+      <Fragment slot="left">
+        <MarginNote variant="hand">
+          the archive grows by one every day. <span class="mn-arrow">↘</span>
+        </MarginNote>
+      </Fragment>
+      <div>
+        <div class="section-label">Latest annotations</div>
+        {latest.map((a) => (
+          <a class="note-row" href={`/article/${a.slug}`} data-reveal>
+            <span class="date">{a.published_at || a.published_date ? new Date(a.published_at ?? a.published_date!).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}</span>
+            <span class="nr-main">
+              <span class="title">{a.plain_title}</span><br />
+              <span class="meta">{[a.directions?.[0]?.name, a.difficulty].filter(Boolean).join(" · ")}</span>
+            </span>
+            <span class="arr">→</span>
+          </a>
+        ))}
+        <a href="/feed" class="text-link" style="margin-top:18px;">Open the full archive →</a>
+      </div>
+      <Fragment slot="right" />
+    </MarginRow>
+
+    <!-- NEWSLETTER -->
+    <section style="max-width:560px; margin:42px auto 0; padding:30px 0 6px; text-align:center;">
+      <div class="ransom" aria-hidden="true">
+        <span style="font-family:var(--mono); font-size:24px; background:#211C16; color:#FCFAF4; transform:rotate(-4deg);">S</span>
+        <span style="font-family:var(--serif); font-size:25px; background:#FCFAF4; color:#211C16; border:1px solid var(--line-2); transform:rotate(3deg);">U</span>
+        <span style="font-family:var(--mono); font-size:23px; background:#C2410C; color:#FCFAF4; transform:rotate(-2deg);">B</span>
+        <span style="font-family:var(--hand); font-size:30px; background:#FCFAF4; color:#211C16; border:1px solid var(--line-2); transform:rotate(2.5deg);">s</span>
+        <span style="font-family:var(--serif); font-style:italic; font-size:25px; background:#1E3A5F; color:#FCFAF4; transform:rotate(-3deg);">c</span>
+        <span style="font-family:var(--mono); font-size:24px; background:#FCFAF4; color:#211C16; border:1px solid var(--line-2); transform:rotate(4deg);">R</span>
+        <span style="font-family:var(--serif); font-size:25px; background:#211C16; color:#FCFAF4; transform:rotate(-1.5deg);">I</span>
+        <span style="font-family:var(--mono); font-size:23px; background:#FCFAF4; color:#211C16; border:1px solid var(--line-2); transform:rotate(2deg);">B</span>
+        <span style="font-family:var(--serif); font-style:italic; font-size:25px; background:#C2410C; color:#FCFAF4; transform:rotate(-3.5deg);">e</span>
+      </div>
+      <p style="margin:0 auto 18px; max-width:380px; font-size:18px; line-height:1.5; color:var(--ink-soft); font-style:italic;">
+        One short letter each week — the papers worth your weekend, in plain language.
+      </p>
+      <form id="homeSubscribe" style="display:flex; gap:8px; justify-content:center; max-width:400px; margin:0 auto;">
+        <input type="email" name="email" required placeholder="you@school.edu" class="paper-input" style="flex:1;" aria-label="Email" />
+        <button type="submit" class="btn-ink">Join</button>
       </form>
-    </div>
-  </section>
+      <p style="margin:14px 0 0; font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--ink-faintest);">no spam · unsubscribe in one click · we're 17, we get it</p>
+    </section>
+  </Sheet>
 
   <script>
     const form = document.getElementById("homeSubscribe") as HTMLFormElement | null;
@@ -177,128 +210,9 @@ const branchLabels: Record<string, string> = {
         body: JSON.stringify({ email }),
       });
       const data = await res.json().catch(() => ({}));
-      form.innerHTML = `<p style="font-weight:700;color:#3d6b3a;">${
-        res.ok ? "You're in — thanks for subscribing! 🎉" : (data.error || "Something went wrong.")
+      form.innerHTML = `<p style="font-family:var(--hand); font-size:24px; color:#2E6B36;">${
+        res.ok ? "✓ you're on the list — check your inbox!" : (data.error || "Something went wrong.")
       }</p>`;
     });
   </script>
 </BaseLayout>
-
-<style>
-  .hero {
-    display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 28px;
-    align-items: center;
-    padding: 30px 0 10px;
-  }
-  .hero h1 {
-    font-size: 3.1rem;
-    line-height: 1.08;
-    margin: 6px 0 14px;
-  }
-  .hero-sub {
-    font-size: 1.2rem;
-    max-width: 52ch;
-    color: #2a3d66;
-  }
-  .hero-art {
-    position: relative;
-    min-height: 320px;
-  }
-  .hero-orb {
-    position: absolute;
-    inset: 18% 12%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #fbe6bf, #9fc5cb 70%);
-    box-shadow: 6px 6px 0 rgba(42, 61, 102, 0.25), 0 20px 50px rgba(42, 61, 102, 0.2);
-    border: 3px solid var(--deep-indigo);
-  }
-  .float-card {
-    position: absolute;
-    background: var(--frame-cream);
-    border: 2.5px solid var(--deep-indigo);
-    border-radius: 14px;
-    padding: 8px 14px;
-    font-weight: 800;
-    font-size: 0.95rem;
-    box-shadow: 3px 3px 0 rgba(42, 61, 102, 0.3);
-    z-index: 2;
-    animation: floaty 6s ease-in-out infinite;
-  }
-  .fc1 { top: 6%; left: 2%; }
-  .fc2 { top: 0; right: 8%; animation-delay: -2s; background: var(--frame-peach); }
-  .fc3 { bottom: 10%; left: 0; animation-delay: -3s; background: var(--frame-green); }
-  .fc4 { bottom: 2%; right: 4%; animation-delay: -1.5s; background: var(--frame-blue); }
-  @keyframes floaty {
-    0%, 100% { transform: translateY(0) rotate(-1deg); }
-    50% { transform: translateY(-12px) rotate(1deg); }
-  }
-
-  .emoji { font-size: 2rem; }
-
-  .today-card { border-color: var(--brand-orange); }
-
-  .map-teaser {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    align-items: center;
-  }
-  .map-teaser-visual {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  .teaser-branch {
-    background: var(--frame-cream);
-    border: 2.5px solid var(--deep-indigo);
-    border-radius: 14px;
-    padding: 12px;
-    box-shadow: 3px 3px 0 rgba(42, 61, 102, 0.2);
-  }
-  .tb-foundations { background: var(--frame-blue); }
-  .tb-methods { background: var(--frame-peach); }
-  .tb-applied { background: var(--frame-green); }
-  .tb-society { background: var(--frame-lavender); }
-  .teaser-dots { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .teaser-dot {
-    font-size: 0.72rem;
-    font-weight: 700;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1.5px solid rgba(42, 61, 102, 0.2);
-    border-radius: 50px;
-    padding: 2px 8px;
-  }
-
-  .two-up {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  .newsletter-cta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    flex-wrap: wrap;
-    background: var(--frame-peach);
-    border-color: var(--brand-orange);
-  }
-  .email-input {
-    padding: 0.7rem 1rem;
-    border-radius: 50px;
-    border: 2.5px solid var(--deep-indigo);
-    font-family: "Nunito", sans-serif;
-    font-size: 1rem;
-    min-width: 240px;
-  }
-
-  @media (max-width: 860px) {
-    .hero { grid-template-columns: 1fr; }
-    .hero h1 { font-size: 2.3rem; }
-    .hero-art { min-height: 220px; }
-    .map-teaser { grid-template-columns: 1fr; }
-    .two-up { grid-template-columns: 1fr; }
-  }
-</style>

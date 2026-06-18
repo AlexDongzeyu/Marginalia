@@ -1,46 +1,34 @@
 ---
-/**
- * /join — how to join the community (roles + expectations + ways to help).
- */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
 
 const roles = [
-  { emoji: "✍️", title: "Explainer writer", desc: "Claim an AI draft, check it against the source, and make it shine." },
-  { emoji: "🧭", title: "Map curator", desc: "Help shape the research-direction taxonomy and keep it newcomer-friendly." },
-  { emoji: "🛠️", title: "Builder", desc: "Improve the site, the pipeline, or the learning tracks." },
-  { emoji: "🏫", title: "Chapter lead", desc: "Start a chapter at your school and rally a few friends." },
+  { num: "i.", title: "Explainer writer", desc: "Claim an AI draft, check it against the source, make it shine." },
+  { num: "ii.", title: "Map curator", desc: "Shape the research-direction taxonomy; keep it newcomer-friendly." },
+  { num: "iii.", title: "Builder", desc: "Improve the site, the pipeline, or the learning tracks." },
+  { num: "iv.", title: "Chapter lead", desc: "Start a chapter at your school and rally a few friends." },
 ];
 ---
-
 <BaseLayout title="Join us — Marginalia" bodyClass="page-join">
-  <div class="container" style="max-width:860px;">
-    <div class="page-header">
-      <p class="tagline">Build the field's friendliest guide</p>
-      <h1>Join the community</h1>
-      <p class="muted">No experience required — just curiosity and care for getting things right.</p>
-    </div>
-
-    <div class="card-grid">
+  <Sheet>
+    <Masthead title="Join the margins" tagline="No experience required — just curiosity and care." top="Help wanted" compact={true} />
+    <div style="max-width:680px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:14px;">
       {roles.map((r) => (
-        <div class="card">
-          <div class="emoji" aria-hidden="true" style="font-size:2rem;">{r.emoji}</div>
+        <div class="torn-card" data-reveal>
+          <div class="roman">{r.num}</div>
           <h3>{r.title}</h3>
-          <p class="muted" style="font-size:.95rem;">{r.desc}</p>
+          <p>{r.desc}</p>
         </div>
       ))}
     </div>
-
-    <div class="content-section text-center mt-24 join-cta">
-      <h2>Ready?</h2>
-      <p class="prose">Start a chapter, or subscribe to follow along while we open more roles.</p>
-      <div class="row center wrap gap-12 mt-16">
-        <a href="/chapters/start" class="btn btn-primary">Start a chapter</a>
-        <a href="/newsletter" class="btn btn-secondary">Get the newsletter</a>
+    <div class="scrap text-center" style="max-width:560px; margin:26px auto 0; transform:rotate(-.4deg);">
+      <h2 style="font-size:24px;">Ready?</h2>
+      <p class="muted">Start a chapter, or subscribe to follow along while we open more roles.</p>
+      <div class="cta-row" style="justify-content:center;">
+        <a href="/chapters/start" class="btn-ink">Start a chapter</a>
+        <a href="/newsletter" class="btn-outline">Get the newsletter</a>
       </div>
     </div>
-  </div>
+  </Sheet>
 </BaseLayout>
-
-<style>
-  .join-cta { background: var(--frame-green); border-color: rgba(173, 203, 164, 0.6); }
-</style>
