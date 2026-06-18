@@ -59,6 +59,7 @@ const whatsGoingOn = renderMarkdown(article.whats_going_on);
 const whyItMatters = renderMarkdown(article.why_it_matters);
 const diffClass = article.difficulty === "Beginner" ? "tag-beginner" : article.difficulty === "Advanced" ? "tag-advanced" : "tag-intermediate";
 const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${article.arxiv_id}` : null);
+const hasPdf = !!pdfUrl;
 ---
 
 <BaseLayout title={`${article.plain_title} · Marginalia`} description={article.hook} bodyClass="page-article">
@@ -100,10 +101,12 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
 
         <!-- CENTER: reader -->
         <div class="lmcenter">
-          <div class="row gap-8 center" style="margin-bottom:14px;">
-            <button id="modeExplainer" class="btn-ink" type="button">Explainer</button>
-            <button id="modeSource" class="btn-outline" type="button">Source PDF</button>
-          </div>
+          {hasPdf && (
+            <div class="row gap-8 center" style="margin-bottom:14px;">
+              <button id="modeExplainer" class="btn-ink" type="button">Explainer</button>
+              <button id="modeSource" class="btn-outline" type="button">Source PDF</button>
+            </div>
+          )}
 
           <!-- EXPLAINER -->
           <div id="explainerPane">
@@ -122,7 +125,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
                 {article.authors.join(", ")}{article.institution ? `, ${article.institution}` : ""}
               </p>
               <div class="row wrap gap-8">
-                {article.source_url && <a class="btn-outline" href={article.source_url} target="_blank" rel="noopener noreferrer">View on arXiv ↗</a>}
+                {article.source_url && <a class="btn-outline" href={article.source_url} target="_blank" rel="noopener noreferrer">{article.arxiv_id ? "View on arXiv ↗" : "View the paper ↗"}</a>}
                 {pdfUrl && <a class="btn-outline" href={pdfUrl} target="_blank" rel="noopener noreferrer">PDF ↗</a>}
               </div>
               <p style="margin:12px 0 0; font-family:var(--mono); font-size:10px; color:var(--ink-faint); border-top:1px dashed var(--line-2); padding-top:10px;">
@@ -141,17 +144,15 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
           </div>
 
           <!-- SOURCE PDF -->
-          <div id="sourcePane" class="hidden">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:#2B2620; color:#EAE3D5; padding:8px 12px; font-family:var(--mono); font-size:11px;">
-              <span style="opacity:.6;">arXiv:{article.arxiv_id ?? "n/a"}</span>
-              {article.source_url && <a href={article.source_url} target="_blank" rel="noopener noreferrer" style="color:#F0A878; text-decoration:none;">Open on arXiv ↗</a>}
+          {hasPdf && (
+            <div id="sourcePane" class="hidden">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; background:#2B2620; color:#EAE3D5; padding:8px 12px; font-family:var(--mono); font-size:11px;">
+                <span style="opacity:.6;">{article.arxiv_id ? `arXiv:${article.arxiv_id}` : "Source paper"}</span>
+                {article.source_url && <a href={article.source_url} target="_blank" rel="noopener noreferrer" style="color:#F0A878; text-decoration:none;">Open on arXiv ↗</a>}
+              </div>
+              <iframe src={pdfUrl} title="Source PDF" style="width:100%; height:720px; border:1px solid rgba(33,28,22,.16); border-top:none; background:#fff;"></iframe>
             </div>
-            {pdfUrl ? (
-              <iframe src={pdfUrl} title="arXiv PDF" style="width:100%; height:720px; border:1px solid rgba(33,28,22,.16); border-top:none; background:#fff;"></iframe>
-            ) : (
-              <div style="background:#fff; border:1px solid var(--line); padding:40px; text-align:center; color:var(--ink-soft);">No PDF available for this paper.</div>
-            )}
-          </div>
+          )}
 
           <!-- QUIZ -->
           <div id="quizCard" style="margin-top:30px; background:var(--card); border:1px solid rgba(33,28,22,.13); padding:26px 28px; position:relative;">
@@ -182,7 +183,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
                 <span style="font-family:var(--mono); font-size:10px; color:var(--ink-soft); flex:1;">{article.reviewer_name ?? "Marginalia team"}</span>
                 <span style="font-family:var(--mono); font-size:8px; letter-spacing:.1em; padding:2px 5px; color:var(--accent); border:1px solid rgba(194,65,12,.4);">TEAM</span>
               </div>
-              <div class="mn-body">{article.hook}</div>
+              <div class="mn-body">We read the full paper and rewrote it in plain language. Leave your own note below.</div>
             </div>
 
             <div id="annList">
