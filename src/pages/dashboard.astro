@@ -9,6 +9,18 @@ const userId = await getSessionUserId(Astro.request.headers.get("cookie"), env);
 if (!userId) return Astro.redirect("/login");
 const user = await getUserById(env.DB, userId);
 if (!user) return Astro.redirect("/login");
+
+let username: string | null = null;
+try {
+  const row = await env.DB.prepare(`SELECT username FROM users WHERE id = ? LIMIT 1`)
+    .bind(userId)
+    .first<{ username: string | null }>();
+  username = row?.username ?? null;
+} catch {
+  username = null;
+}
+const profileHref = `/profile/${username ?? user.id}`;
+const isLead = user.role === "chapter_lead" || user.role === "admin";
 ---
 <BaseLayout title="Your library · Marginalia" bodyClass="page-dashboard">
   <Sheet>
@@ -17,12 +29,17 @@ if (!user) return Astro.redirect("/login");
       <div class="mn-card" style="max-width:none; margin-bottom:16px;">
         <div class="mn-label">Your account</div>
         <div class="mn-body"><b>{user.name}</b> · {user.email} · {user.role}</div>
+        <div class="cta-row" style="margin-top:12px;">
+          <a href={profileHref} class="btn-outline">View public profile</a>
+          {isLead && <a href="/dashboard/chapter" class="btn-outline">Chapter tools</a>}
+        </div>
       </div>
       <div class="read">
         <div class="section-label">Contribute</div>
         <p>Claim an AI-drafted explainer, write it up in the margins, and submit it
           for review. Pass an article's quiz and you unlock the right to annotate it.</p>
         <div class="cta-row">
+          <a href="/contribute" class="btn-ink">Ways to contribute</a>
           <a href="/feed" class="btn-outline">Browse the feed</a>
           <a href="/map" class="btn-outline">Explore the map</a>
           {(user.role === "editor" || user.role === "admin") && <a href="/admin" class="btn-ink">Open review queue</a>}

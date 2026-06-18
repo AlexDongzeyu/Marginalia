@@ -1,0 +1,164 @@
+---
+/**
+ * Public profile, "a member's reading room".
+ * A shareable portfolio: who they are, their chapter, and every margin note
+ * they have had approved. Resolves by handle OR numeric id, and degrades
+ * gracefully if the username column has not been migrated yet.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sheet from "../../components/Sheet.astro";
+import Masthead from "../../components/Masthead.astro";
+
+export const prerender = false;
+
+const { env } = Astro.locals.runtime;
+const db = env.DB;
+const handle = String(Astro.params.username ?? "").trim();
+const idGuess = Number(handle);
+const idBind = Number.isInteger(idGuess) ? idGuess : -1;
+
+interface Profile {
+  id: number;
+  name: string;
+  username: string | null;
+  role: string;
+  chapter_id: number | null;
+}
+
+let profile: Profile | null = null;
+try {
+  profile = await db
+    .prepare(`SELECT id, name, username, role, chapter_id FROM users WHERE username = ? OR id = ? LIMIT 1`)
+    .bind(handle, idBind)
+    .first<Profile>();
+} catch {
+  try {
+    const fallback = await db
+      .prepare(`SELECT id, name, role, chapter_id FROM users WHERE id = ? LIMIT 1`)
+      .bind(idBind)
+      .first<{ id: number; name: string; role: string; chapter_id: number | null }>();
+    profile = fallback ? { ...fallback, username: null } : null;
+  } catch {
+    profile = null;
+  }
+}
+
+let chapter: { name: string; slug: string } | null = null;
+let notes: { slug: string; plain_title: string; body: string; created_at: string }[] = [];
+let noteCount = 0;
+
+if (profile) {
+  if (profile.chapter_id) {
+    chapter = await db
+      .prepare(`SELECT name, slug FROM chapters WHERE id = ? LIMIT 1`)
+      .bind(profile.chapter_id)
+      .first<{ name: string; slug: string }>()
+      .catch(() => null);
+  }
+  try {
+    const r = await db
+      .prepare(
+        `SELECT a.slug, a.plain_title, an.body, an.created_at
+         FROM annotations an JOIN articles a ON a.id = an.article_id
+         WHERE an.author_id = ? AND an.status = 'approved'
+         ORDER BY an.created_at DESC LIMIT 24`,
+      )
+      .bind(profile.id)
+      .all<{ slug: string; plain_title: string; body: string; created_at: string }>();
+    notes = r.results ?? [];
+  } catch {
+    notes = [];
+  }
+  noteCount = notes.length;
+}
+
+const roleLabel: Record<string, string> = {
+  admin: "Editor",
+  editor: "Editor",
+  chapter_lead: "Chapter lead",
+  member: "Member",
+};
+const handleText = profile?.username ?? (profile ? `member-${profile.id}` : "");
+---
+{profile ? (
+  <BaseLayout
+    title={`${profile.name} · Marginalia`}
+    description={`${profile.name}'s reading room on Marginalia: ${noteCount} approved margin notes.`}
+    bodyClass="page-profile"
+  >
+    <Sheet>
+      <Masthead title={profile.name} tagline={`@${handleText}`} top="Member" compact={true} />
+      <div class="pf-wrap">
+        <div class="pf-meta" data-reveal>
+          <span class="tag tag-good">{roleLabel[profile.role] ?? "Member"}</span>
+          {chapter && (
+            <span class="pf-chapter">
+              Chapter: <a href={`/chapters/${chapter.slug}`}>{chapter.name}</a>
+            </span>
+          )}
+          <span class="pf-stat"><b>{noteCount}</b> approved {noteCount === 1 ? "note" : "notes"}</span>
+        </div>
+
+        <div class="section-label">Margin notes</div>
+        {notes.length > 0 ? (
+          notes.map((n) => (
+            <a class="pf-note" href={`/article/${n.slug}`} data-reveal>
+              <div class="pf-note-body">"{n.body}"</div>
+              <div class="pf-note-src">on <span>{n.plain_title}</span> <span class="arr">→</span></div>
+            </a>
+          ))
+        ) : (
+          <p class="muted" style="font-family:var(--mono); font-size:12px;">
+            No approved notes yet. Read a paper, pass its check, and leave the first one.
+          </p>
+        )}
+      </div>
+    </Sheet>
+  </BaseLayout>
+) : (
+  <BaseLayout title="Member not found · Marginalia" bodyClass="page-profile">
+    <Sheet>
+      <Masthead title="No such member" tagline="This reading room is empty." top="404" compact={true} />
+      <p class="text-center muted" style="max-width:520px; margin:0 auto;">
+        We could not find that member. Browse the <a href="/chapters">chapters</a> or
+        <a href="/feed"> read today's paper</a>.
+      </p>
+    </Sheet>
+  </BaseLayout>
+)}
+
+<style>
+  .pf-wrap { max-width: 640px; margin: 0 auto; }
+  .pf-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pf-chapter, .pf-stat { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+  .pf-stat b { font-family: var(--serif); font-size: 18px; color: var(--ink); }
+
+  .pf-note {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .pf-note:hover { background: rgba(33, 28, 22, 0.03); }
+  .pf-note-body { font-size: 15.5px; line-height: 1.55; color: #3a342b; }
+  .pf-note-src {
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .pf-note-src span { color: var(--accent-2); }
+  .pf-note-src .arr { color: var(--accent); }
+</style>

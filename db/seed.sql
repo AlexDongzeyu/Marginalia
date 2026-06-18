@@ -15,11 +15,11 @@
 -- Top-level branch anchors
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, sort_order) VALUES
 ('foundations', 'Foundations', 'foundations',
- 'The core ideas that make modern AI work — how machines learn patterns from data.', 1),
+ 'The core ideas that make modern AI work: how machines learn patterns from data.', 1),
 ('methods', 'Methods & Models', 'methods',
  'The building blocks researchers combine to build AI systems: architectures, training tricks, and ways to make models efficient.', 2),
 ('applied', 'AI for Good', 'applied',
- 'Where AI meets real-world problems — health, climate, education, accessibility, and more.', 3),
+ 'Where AI meets real-world problems: health, climate, education, accessibility, and more.', 3),
 ('society', 'Safety & Society', 'society',
  'Making AI trustworthy: alignment, fairness, interpretability, and the human side of the technology.', 4);
 
@@ -31,7 +31,7 @@ SELECT 'machine-learning', 'Machine Learning', 'foundations',
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
 SELECT 'deep-learning', 'Deep Learning', 'foundations',
- 'A family of methods that stack many simple layers so a model can learn rich patterns — the engine behind most modern AI.',
+ 'A family of methods that stack many simple layers so a model can learn rich patterns, the engine behind most modern AI.',
  d.id, 2 FROM directions d WHERE d.slug = 'foundations';
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
@@ -47,12 +47,12 @@ SELECT 'large-language-models', 'Large Language Models', 'methods',
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
 SELECT 'computer-vision', 'Computer Vision', 'methods',
- 'Getting computers to understand images and video — recognising objects, scenes, and actions.',
+ 'Getting computers to understand images and video: recognising objects, scenes, and actions.',
  d.id, 2 FROM directions d WHERE d.slug = 'methods';
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
 SELECT 'generative-models', 'Generative Models', 'methods',
- 'Models that create new things — images, text, audio, or video — rather than just classifying what already exists.',
+ 'Models that create new things (images, text, audio, or video) rather than just classifying what already exists.',
  d.id, 3 FROM directions d WHERE d.slug = 'methods';
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
@@ -68,7 +68,7 @@ SELECT 'efficient-ai', 'Efficient AI', 'methods',
 -- Applied (AI for Good) children
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
 SELECT 'ai-for-health', 'AI for Health', 'applied',
- 'Helping doctors and patients — from spotting disease in scans to discovering new medicines.',
+ 'Helping doctors and patients, from spotting disease in scans to discovering new medicines.',
  d.id, 1 FROM directions d WHERE d.slug = 'applied';
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
@@ -83,7 +83,7 @@ SELECT 'ai-for-education', 'AI for Education', 'applied',
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
 SELECT 'ai-for-accessibility', 'AI for Accessibility', 'applied',
- 'Technology that opens the world up — live captions, image descriptions, and assistive communication.',
+ 'Technology that opens the world up: live captions, image descriptions, and assistive communication.',
  d.id, 4 FROM directions d WHERE d.slug = 'applied';
 
 -- Society children
@@ -94,7 +94,7 @@ SELECT 'ai-alignment', 'Alignment', 'society',
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
 SELECT 'interpretability', 'Interpretability', 'society',
- 'Opening the black box — understanding why a model made a particular decision.',
+ 'Opening the black box: understanding why a model made a particular decision.',
  d.id, 2 FROM directions d WHERE d.slug = 'society';
 
 INSERT OR IGNORE INTO directions (slug, name, branch, plain_description, parent_id, sort_order)
@@ -137,7 +137,7 @@ VALUES
   'Attention Is All You Need',
   'The idea that taught machines to read: meet the Transformer',
   'Almost every chatbot, translator, and AI writing tool you have used is built on the one idea introduced in this paper.',
-  'Before 2017, computers read sentences one word at a time, in order, which made them slow and forgetful over long passages. This paper introduced the **Transformer**, a design built around an idea called *attention*: instead of reading strictly left to right, the model looks at every word at once and learns which other words matter most for understanding each one. When you read "the trophy did not fit in the suitcase because it was too big," you instantly know "it" means the trophy — attention lets a model make that kind of connection. Removing the slow step-by-step reading also meant these models could be trained on far more text, far faster.',
+  'Before 2017, computers read sentences one word at a time, in order, which made them slow and forgetful over long passages. This paper introduced the **Transformer**, a design built around an idea called *attention*: instead of reading strictly left to right, the model looks at every word at once and learns which other words matter most for understanding each one. When you read "the trophy did not fit in the suitcase because it was too big," you instantly know "it" means the trophy. Attention lets a model make that kind of connection. Removing the slow step-by-step reading also meant these models could be trained on far more text, far faster.',
   'The Transformer is the foundation under large language models like the ones powering today''s AI assistants. Understanding it is the single biggest "aha" for a newcomer, because once you see how attention works, the rest of modern AI starts to make sense. It is also a great example of how one clean idea, shared openly, can reshape an entire field within a few years.',
   'Beginner', 4, 0, 1,
   'https://arxiv.org/abs/1706.03762',
@@ -156,8 +156,8 @@ VALUES
   'ImageNet Classification with Deep Convolutional Neural Networks',
   'The moment computers learned to see',
   'In 2012, one model cut image-recognition errors so dramatically that it kicked off the entire deep-learning boom.',
-  'For decades, getting a computer to tell a cat from a dog in a photo was painfully hard. This work trained a deep **convolutional neural network** — a model that scans an image in small patches and gradually builds up from edges, to shapes, to whole objects — on a million labelled pictures. It crushed the previous record in a famous contest called ImageNet. Two things made it possible: a huge labelled dataset, and using graphics cards (GPUs) to do the heavy maths fast. The result was so far ahead of everything else that the whole research community pivoted to deep learning almost overnight.',
-  'This is the spark that lit the modern AI era. It showed that with enough data and computing power, neural networks could beat hand-crafted methods at real perception tasks. Everything from medical-image analysis to self-driving-car vision traces back to this turning point — making it essential context for anyone trying to understand why AI suddenly got so good around the 2010s.',
+  'For decades, getting a computer to tell a cat from a dog in a photo was painfully hard. This work trained a deep **convolutional neural network**, a model that scans an image in small patches and gradually builds up from edges, to shapes, to whole objects, on a million labelled pictures. It crushed the previous record in a famous contest called ImageNet. Two things made it possible: a huge labelled dataset, and using graphics cards (GPUs) to do the heavy maths fast. The result was so far ahead of everything else that the whole research community pivoted to deep learning almost overnight.',
+  'This is the spark that lit the modern AI era. It showed that with enough data and computing power, neural networks could beat hand-crafted methods at real perception tasks. Everything from medical-image analysis to self-driving-car vision traces back to this turning point. That makes it essential context for anyone trying to understand why AI suddenly got so good around the 2010s.',
   'Beginner', 4, 1, 1,
   'https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html',
   '',

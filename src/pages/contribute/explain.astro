@@ -1,0 +1,124 @@
+---
+/**
+ * Contribute · Explain, "the explainer queue".
+ * Members claim a published paper to write a deeper community explainer.
+ * Claims are recorded for editors. Read-only and safe before login; claiming
+ * requires a member.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sheet from "../../components/Sheet.astro";
+import Masthead from "../../components/Masthead.astro";
+import { listPublishedArticles } from "../../lib/db";
+import { getSessionUser } from "../../lib/auth";
+
+export const prerender = false;
+
+const { env } = Astro.locals.runtime;
+const db = env.DB;
+const me = await getSessionUser(Astro.request.headers.get("cookie"), env, db).catch(() => null);
+
+const articles = await listPublishedArticles(db, { limit: 24 }).catch(() => []);
+
+let claims: Record<number, string> = {};
+try {
+  const r = await db
+    .prepare(`SELECT article_id, author_name FROM explainer_claims`)
+    .all<{ article_id: number; author_name: string }>();
+  for (const row of r.results ?? []) claims[row.article_id] = row.author_name;
+} catch {
+  claims = {};
+}
+---
+<BaseLayout
+  title="Explain · Contribute · Marginalia"
+  description="Claim a paper and write the plain-language explainer. The best community write-ups get published."
+  bodyClass="page-explain"
+>
+  <Sheet>
+    <Masthead
+      title="Explain"
+      tagline="Claim a paper. Write it for the next newcomer."
+      top="The explainer queue"
+      compact={true}
+    />
+
+    <div class="ex-wrap">
+      <p class="ex-intro">
+        Pick a paper you understand well and claim it. Write a clearer, deeper
+        plain-language explainer at three depths, an editor reviews your draft,
+        and the strongest write-ups publish under your name.
+        {!me && (<span> <a href="/login">Sign in</a> to claim one.</span>)}
+      </p>
+
+      {articles.length > 0 ? (
+        <div id="exList">
+          {articles.map((a) => (
+            <div class="ex-row" data-slug={a.slug}>
+              <div class="ex-main">
+                <a class="ex-title" href={`/article/${a.slug}`}>{a.plain_title}</a>
+                <div class="ex-meta">{a.difficulty} · {a.read_minutes} min</div>
+              </div>
+              {claims[a.id] ? (
+                <span class="ex-claimed">Claimed by {claims[a.id]}</span>
+              ) : (
+                <span class="ex-actions">
+                  <button class="btn-outline act-claim" type="button" disabled={!me}>Claim</button>
+                  <span class="ex-status" aria-live="polite"></span>
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p class="muted" style="font-family:var(--mono); font-size:12px;">
+          No papers to claim yet. Check back after the next morning run.
+        </p>
+      )}
+    </div>
+
+    <script>
+      document.querySelectorAll<HTMLElement>(".ex-row").forEach((row) => {
+        const slug = row.dataset.slug!;
+        const btn = row.querySelector<HTMLButtonElement>(".act-claim");
+        const statusEl = row.querySelector(".ex-status");
+        btn?.addEventListener("click", async () => {
+          btn.disabled = true;
+          if (statusEl) statusEl.textContent = "Claiming…";
+          try {
+            const res = await fetch("/api/explainers/claim", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ slug }),
+            });
+            const data = await res.json();
+            if (statusEl) statusEl.textContent = res.ok ? "Claimed ✓ — an editor will be in touch." : data.error || "Could not claim.";
+            if (!res.ok) btn.disabled = false;
+          } catch {
+            if (statusEl) statusEl.textContent = "Network error.";
+            btn.disabled = false;
+          }
+        });
+      });
+    </script>
+
+    <style>
+      .ex-wrap { max-width: 640px; margin: 0 auto; }
+      .ex-intro { font-size: 16px; line-height: 1.6; color: #3a342b; text-wrap: pretty; margin: 0 0 22px; }
+      .ex-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 6px;
+        border-bottom: 1px solid var(--line);
+      }
+      .ex-main { flex: 1; }
+      .ex-title { text-decoration: none; color: var(--ink); font-size: 18px; line-height: 1.3; }
+      .ex-title:hover { color: var(--accent); }
+      .ex-meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); margin-top: 3px; }
+      .ex-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+      .ex-actions .btn-outline { padding: 7px 14px; font-size: 10px; }
+      .ex-status { font-family: var(--mono); font-size: 10px; color: var(--ok); max-width: 160px; text-align: right; }
+      .ex-claimed { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); flex: none; }
+    </style>
+  </Sheet>
+</BaseLayout>

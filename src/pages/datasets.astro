@@ -1,0 +1,227 @@
+---
+/**
+ * Datasets, "Open data, built by the community".
+ * Showcases the real artefacts Marginalia produces. Counts are read live from
+ * D1, we never invent download figures. Where a public Hugging Face mirror is
+ * not live yet we say so plainly rather than faking a link, and every card
+ * points to a real, browsable surface on the site.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
+import TornDivider from "../components/TornDivider.astro";
+
+const { env } = Astro.locals.runtime;
+const db = env.DB;
+
+const num = async (sql: string): Promise<number> => {
+  try {
+    const r = await db.prepare(sql).first<{ n: number }>();
+    return r?.n ?? 0;
+  } catch {
+    return 0;
+  }
+};
+
+const articleCount = await num(`SELECT COUNT(*) n FROM articles WHERE status='published'`);
+const annCount = await num(`SELECT COUNT(*) n FROM annotations WHERE status='approved'`);
+const directionCount = await num(`SELECT COUNT(*) n FROM directions`);
+const glossaryCount = await num(`SELECT COUNT(*) n FROM glossary_terms WHERE status='approved'`);
+
+const datasets = [
+  {
+    name: "Plain-language paper explainers",
+    kind: "Text / NLP",
+    count: articleCount,
+    unit: "entries",
+    inside:
+      "Original arXiv titles paired with a plain-language explainer at three depths (ELI15 · Student · Researcher), plus difficulty and AI-for-good labels.",
+    made: "Drafted by Workers AI from the abstract, then reviewed and corrected by a human editor before publishing.",
+    license: "CC BY 4.0",
+    browse: "/feed",
+    browseLabel: "Browse the explainers",
+  },
+  {
+    name: "Community margin notes",
+    kind: "Annotations",
+    count: annCount,
+    unit: "approved notes",
+    inside:
+      "Plain-language annotations readers left on specific sentences, anchored to the paper they explain. The raw material of a 'how people explain research' dataset.",
+    made: "Written by members, each one read and approved by an editor before it goes live.",
+    license: "CC BY 4.0",
+    browse: "/feed",
+    browseLabel: "See annotated papers",
+  },
+  {
+    name: "AI research direction map",
+    kind: "Taxonomy",
+    count: directionCount,
+    unit: "directions",
+    inside:
+      "A curated, hierarchical taxonomy of AI research directions with plain-language descriptions and momentum (recent-activity) scores.",
+    made: "Hand-curated by editors and kept fresh by the nightly ingest job.",
+    license: "CC BY 4.0",
+    browse: "/map",
+    browseLabel: "Open the map",
+  },
+  {
+    name: "Plain-language AI glossary",
+    kind: "Text / NLP",
+    count: glossaryCount,
+    unit: "terms",
+    inside:
+      "AI terms with short, jargon-free definitions, the human-approved glossary that grows as new papers are explained.",
+    made: "Suggested by the pipeline and by members, approved by an editor.",
+    license: "CC BY 4.0",
+    browse: "/glossary",
+    browseLabel: "Read the glossary",
+  },
+];
+---
+<BaseLayout
+  title="Datasets · Open data, built by the community · Marginalia"
+  description="Free, openly-licensed datasets built by the Marginalia community: plain-language explainers, margin notes, a research taxonomy, and an AI glossary."
+  bodyClass="page-datasets"
+>
+  <Sheet>
+    <Masthead
+      title="Datasets"
+      tagline="Open data, built by the community."
+      top="The open archive"
+      compact={true}
+    />
+
+    <div class="ds-wrap">
+      <p class="ds-intro">
+        Everything we make is openly licensed and documented. These datasets are
+        built as a by-product of reading and annotating papers together, free to
+        download, study, and build on.
+      </p>
+
+      <div class="ds-grid">
+        {datasets.map((d) => (
+          <article class="ds-card" data-reveal>
+            <div class="ds-head">
+              <span class="tag">{d.kind}</span>
+              <span class="ds-license">{d.license}</span>
+            </div>
+            <h2>{d.name}</h2>
+            <div class="ds-count">
+              <b>{d.count.toLocaleString()}</b> {d.unit}
+            </div>
+            <p class="ds-inside">{d.inside}</p>
+            <dl class="ds-meta">
+              <dt>How it's made</dt>
+              <dd>{d.made}</dd>
+            </dl>
+            <div class="ds-actions">
+              <a class="btn-outline" href={d.browse}>{d.browseLabel}</a>
+              <span class="ds-hf" title="A public Hugging Face mirror is being prepared.">
+                Hugging Face mirror · in progress
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <TornDivider variant="a" />
+
+      {/* ---- Datasheet (Datasheets for Datasets, Gebru et al. 2018) ----- */}
+      <section class="ds-sheet" id="datasheet" data-reveal>
+        <div class="section-label">Datasheet · how we document our data</div>
+        <p class="muted ds-sheet-sub">
+          We follow the "Datasheets for Datasets" standard so anyone can judge
+          whether a dataset is right for their work.
+        </p>
+        <dl class="ds-q">
+          <dt>Why was it collected?</dt>
+          <dd>To make AI research legible to newcomers and to study the gap between academic and plain language.</dd>
+          <dt>How was it collected?</dt>
+          <dd>Papers are sourced from arXiv and Hugging Face Daily Papers; explainers are AI-drafted and human-reviewed; notes are member-written and editor-approved.</dd>
+          <dt>How is quality assured?</dt>
+          <dd>Every published item passes human editorial review. We never present unreviewed AI output as verified.</dd>
+          <dt>Who are the contributors?</dt>
+          <dd>Marginalia members and editors. Contributors are credited; no personal data beyond a chosen display name is included.</dd>
+          <dt>What are the limits?</dt>
+          <dd>The collection skews toward beginner-friendly and social-good work, and toward recent papers. It is not a representative sample of all AI research.</dd>
+          <dt>How can it be used?</dt>
+          <dd>Freely, under CC BY 4.0, with attribution to Marginalia. Read more in <a href="/about#integrity">how we work</a>.</dd>
+        </dl>
+      </section>
+
+      <p class="text-center muted mt-24">
+        Want to help build these? <a href="/contribute">Contribute a note or a label →</a>
+      </p>
+    </div>
+  </Sheet>
+</BaseLayout>
+
+<style>
+  .ds-wrap { max-width: 720px; margin: 0 auto; }
+  .ds-intro {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #3a342b;
+    text-wrap: pretty;
+    margin: 0 0 22px;
+  }
+  .ds-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ds-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px 22px;
+    box-shadow: 0 8px 22px -16px rgba(40, 30, 20, 0.4);
+    display: flex;
+    flex-direction: column;
+  }
+  .ds-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .ds-license {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ok);
+  }
+  .ds-card h2 { font-size: 22px; font-weight: 500; margin: 0 0 6px; line-height: 1.12; }
+  .ds-count { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); margin-bottom: 10px; }
+  .ds-count b { font-family: var(--serif); font-size: 22px; color: var(--ink); }
+  .ds-inside { font-size: 14.5px; line-height: 1.55; color: #3a342b; margin: 0 0 12px; }
+  .ds-meta { margin: 0 0 16px; }
+  .ds-meta dt {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 3px;
+  }
+  .ds-meta dd { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+  .ds-actions { margin-top: auto; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .ds-hf {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faintest);
+  }
+
+  .ds-sheet {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 22px 24px;
+  }
+  .ds-sheet-sub { font-size: 13px; margin: 2px 0 14px; }
+  .ds-q dt {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--ink);
+    margin-top: 12px;
+  }
+  .ds-q dd { margin: 2px 0 0; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+
+  @media (max-width: 720px) {
+    .ds-grid { grid-template-columns: 1fr; }
+  }
+</style>

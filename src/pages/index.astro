@@ -163,6 +163,33 @@ const ransom = [..."FIELD NOTES"];
       </p>
     </section>
 
+    {/* ---- Three doors ------------------------------------------------- */}
+    <MarginRow>
+      <div>
+        <div class="section-label">Where to start</div>
+        <div class="torn-cards">
+          <a class="torn-card" href="/feed" data-reveal style="text-decoration:none;color:inherit;display:block;">
+            <div class="roman">→</div>
+            <h3>Read</h3>
+            <p>Daily explainers. Every paper, made readable, no PhD required.</p>
+          </a>
+          <a class="torn-card" href="/learn" data-reveal style="text-decoration:none;color:inherit;display:block;">
+            <div class="roman">✎</div>
+            <h3>Learn</h3>
+            <p>From "what is AI" to reading a paper. Interactive, no installs.</p>
+          </a>
+          <a class="torn-card" href="/contribute" data-reveal style="text-decoration:none;color:inherit;display:block;">
+            <div class="roman">✦</div>
+            <h3>Contribute</h3>
+            <p>Annotate a paper or label a dataset. Anyone can help.</p>
+          </a>
+        </div>
+        <p class="text-center" style="margin-top:14px;">
+          <a class="text-link" href="/pulse">See what's hot in AI this week on Pulse →</a>
+        </p>
+      </div>
+    </MarginRow>
+
     <TornDivider variant="c" />
 
     {/* ---- Latest annotations ------------------------------------------ */}
@@ -222,7 +249,7 @@ const ransom = [..."FIELD NOTES"];
         One short letter each week: the papers worth your weekend, in plain
         language. No spam, no hype.
       </p>
-      <form id="subscribe-form" style="display:flex;gap:8px;justify-content:center;max-width:420px;margin:18px auto 0;flex-wrap:wrap;">
+      <form id="subscribe-form" style="display:flex;gap:8px;justify-content:center;align-items:stretch;max-width:420px;margin:18px auto 0;flex-wrap:wrap;">
         <input
           class="paper-input"
           type="email"

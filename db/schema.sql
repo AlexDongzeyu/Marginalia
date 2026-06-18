@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   email         TEXT UNIQUE NOT NULL,
   name          TEXT NOT NULL,
+  username      TEXT UNIQUE,                 -- public handle for /profile/[username]
   password_hash TEXT,
   role          TEXT NOT NULL DEFAULT 'member'
                   CHECK (role IN ('member','chapter_lead','editor','admin')),
@@ -189,3 +190,53 @@ CREATE TABLE IF NOT EXISTS annotations (
 );
 
 CREATE INDEX IF NOT EXISTS idx_annotations_article ON annotations(article_id, status);
+
+-- ---------------------------------------------------------------------------
+-- Member layer (migration 0003): chapter joins, classify campaigns, claims.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS chapter_join_requests (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  chapter_id INTEGER NOT NULL REFERENCES chapters(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status     TEXT NOT NULL DEFAULT 'pending'
+               CHECK (status IN ('pending','approved','rejected')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (chapter_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS dataset_campaigns (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug         TEXT UNIQUE NOT NULL,
+  title        TEXT NOT NULL,
+  question     TEXT NOT NULL,
+  instructions TEXT NOT NULL DEFAULT '',
+  options_json TEXT NOT NULL DEFAULT '[]',
+  items_json   TEXT NOT NULL DEFAULT '[]',
+  status       TEXT NOT NULL DEFAULT 'open'
+                 CHECK (status IN ('open','closed')),
+  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS dataset_labels (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  campaign_id INTEGER NOT NULL REFERENCES dataset_campaigns(id) ON DELETE CASCADE,
+  item_id     TEXT NOT NULL,
+  user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  value       TEXT NOT NULL,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_labels_campaign ON dataset_labels(campaign_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_labels_unique
+  ON dataset_labels(campaign_id, item_id, user_id);
+
+CREATE TABLE IF NOT EXISTS explainer_claims (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  article_id  INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  author_name TEXT NOT NULL DEFAULT 'Member',
+  status      TEXT NOT NULL DEFAULT 'claimed'
+                CHECK (status IN ('claimed','submitted','done')),
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (article_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_claims_article ON explainer_claims(article_id);

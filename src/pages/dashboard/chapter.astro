@@ -1,0 +1,189 @@
+---
+/**
+ * Chapter tools, "the lead's desk".
+ * For chapter leads: see members, approve or reject pending join requests.
+ * Degrades to a friendly empty state if the viewer leads no chapter.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sheet from "../../components/Sheet.astro";
+import Masthead from "../../components/Masthead.astro";
+import { getSessionUser } from "../../lib/auth";
+
+export const prerender = false;
+
+const { env } = Astro.locals.runtime;
+const db = env.DB;
+const me = await getSessionUser(Astro.request.headers.get("cookie"), env, db);
+if (!me) return Astro.redirect("/login");
+
+interface Chapter {
+  id: number;
+  slug: string;
+  name: string;
+  region: string | null;
+  status: string;
+}
+
+const chapter = await db
+  .prepare(`SELECT id, slug, name, region, status FROM chapters WHERE lead_id = ? ORDER BY created_at LIMIT 1`)
+  .bind(me.id)
+  .first<Chapter>()
+  .catch(() => null);
+
+let requests: { id: number; name: string; created_at: string }[] = [];
+let members: { id: number; name: string; username: string | null }[] = [];
+
+if (chapter) {
+  try {
+    const r = await db
+      .prepare(
+        `SELECT r.id, u.name, r.created_at FROM chapter_join_requests r
+         JOIN users u ON u.id = r.user_id
+         WHERE r.chapter_id = ? AND r.status = 'pending' ORDER BY r.created_at`,
+      )
+      .bind(chapter.id)
+      .all<{ id: number; name: string; created_at: string }>();
+    requests = r.results ?? [];
+  } catch {
+    requests = [];
+  }
+  try {
+    const m = await db
+      .prepare(
+        `SELECT DISTINCT u.id, u.name, u.username FROM users u
+         WHERE u.chapter_id = ?1 OR u.id IN (SELECT user_id FROM chapter_members WHERE chapter_id = ?1)
+         ORDER BY u.name LIMIT 100`,
+      )
+      .bind(chapter.id)
+      .all<{ id: number; name: string; username: string | null }>();
+    members = m.results ?? [];
+  } catch {
+    members = [];
+  }
+}
+---
+<BaseLayout title="Chapter tools · Marginalia" bodyClass="page-chapter-tools" hideComfort={true}>
+  <Sheet>
+    {chapter ? (
+      <>
+        <Masthead title={chapter.name} tagline="Chapter tools" top="Lead desk" compact={true} />
+        <div class="lead-wrap">
+          <div class="lead-stats" data-reveal>
+            <div class="lead-stat"><b>{members.length}</b><span>members</span></div>
+            <div class="lead-stat"><b>{requests.length}</b><span>pending</span></div>
+            <a class="lead-stat lead-link" href={`/chapters/${chapter.slug}`}><b>↗</b><span>public page</span></a>
+          </div>
+
+          <div class="section-label">Join requests</div>
+          {requests.length > 0 ? (
+            <div id="reqList">
+              {requests.map((r) => (
+                <div class="lead-req" data-id={r.id}>
+                  <span class="lead-req-name">{r.name}</span>
+                  <span class="lead-req-actions">
+                    <button class="btn-ink act-approve" type="button">Approve</button>
+                    <button class="btn-outline act-reject" type="button">Reject</button>
+                  </span>
+                  <span class="lead-req-status" aria-live="polite"></span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p class="muted" style="font-family:var(--mono); font-size:12px;">No pending requests right now.</p>
+          )}
+
+          <div class="section-label" style="margin-top:28px;">Members</div>
+          {members.length > 0 ? (
+            <div class="lead-members">
+              {members.map((m) => (
+                <a class="lead-member" href={`/profile/${m.username ?? m.id}`}>{m.name}</a>
+              ))}
+            </div>
+          ) : (
+            <p class="muted" style="font-family:var(--mono); font-size:12px;">No members yet.</p>
+          )}
+        </div>
+
+        <script>
+          async function review(id: string, action: "approve" | "reject", row: Element, statusEl: Element | null) {
+            if (statusEl) statusEl.textContent = "Working…";
+            try {
+              const res = await fetch("/api/chapters/review", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ requestId: Number(id), action }),
+              });
+              const data = await res.json();
+              if (res.ok) {
+                (row as HTMLElement).style.opacity = "0.45";
+                if (statusEl) statusEl.textContent = action === "approve" ? "Approved ✓" : "Rejected";
+              } else if (statusEl) {
+                statusEl.textContent = data.error || "Failed.";
+              }
+            } catch {
+              if (statusEl) statusEl.textContent = "Network error.";
+            }
+          }
+          document.querySelectorAll<HTMLElement>(".lead-req").forEach((row) => {
+            const id = row.dataset.id!;
+            const statusEl = row.querySelector(".lead-req-status");
+            row.querySelector(".act-approve")?.addEventListener("click", () => review(id, "approve", row, statusEl));
+            row.querySelector(".act-reject")?.addEventListener("click", () => review(id, "reject", row, statusEl));
+          });
+        </script>
+      </>
+    ) : (
+      <>
+        <Masthead title="No chapter yet" tagline="You are not leading a chapter." top="Lead desk" compact={true} />
+        <p class="text-center muted" style="max-width:520px; margin:0 auto;">
+          Chapter tools appear here once you lead a chapter.
+          <a href="/chapters/start"> Apply to start one →</a>
+        </p>
+      </>
+    )}
+  </Sheet>
+</BaseLayout>
+
+<style>
+  .lead-wrap { max-width: 640px; margin: 0 auto; }
+  .lead-stats { display: flex; gap: 12px; margin-bottom: 24px; }
+  .lead-stat {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 14px;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+  }
+  .lead-stat b { display: block; font-family: var(--serif); font-size: 26px; color: var(--ink); }
+  .lead-stat span { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
+  .lead-link:hover { border-color: var(--accent); }
+
+  .lead-req {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    margin-bottom: 10px;
+  }
+  .lead-req-name { flex: 1; font-size: 16px; }
+  .lead-req-actions { display: flex; gap: 8px; }
+  .lead-req-actions .btn-ink, .lead-req-actions .btn-outline { padding: 7px 14px; font-size: 10px; }
+  .lead-req-status { width: 100%; font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+
+  .lead-members { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lead-member {
+    text-decoration: none;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 6px 12px;
+  }
+  .lead-member:hover { border-color: var(--accent); }
+</style>

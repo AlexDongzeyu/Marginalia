@@ -1,0 +1,232 @@
+---
+/**
+ * Contribute, "the citizen-science hub".
+ * Routes anyone to the right way to help by barrier-to-entry: annotate,
+ * classify, explain, build. Impact counters are read live from D1. CTAs only
+ * ever point at real, working surfaces, no dead-ends.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
+import TornDivider from "../components/TornDivider.astro";
+import { getSessionUserId, getUserById } from "../lib/auth";
+
+const { env } = Astro.locals.runtime;
+const db = env.DB;
+
+let user: { id: number; name: string; role: string } | null = null;
+try {
+  const uid = await getSessionUserId(Astro.request.headers.get("cookie"), env);
+  if (uid) user = await getUserById(db, uid);
+} catch {
+  user = null;
+}
+
+const num = async (sql: string): Promise<number> => {
+  try {
+    const r = await db.prepare(sql).first<{ n: number }>();
+    return r?.n ?? 0;
+  } catch {
+    return 0;
+  }
+};
+
+const articleCount = await num(`SELECT COUNT(*) n FROM articles WHERE status='published'`);
+const annCount = await num(`SELECT COUNT(*) n FROM annotations WHERE status='approved'`);
+const directionCount = await num(`SELECT COUNT(*) n FROM directions`);
+const glossaryCount = await num(`SELECT COUNT(*) n FROM glossary_terms WHERE status='approved'`);
+
+const stations = [
+  {
+    roman: "i.",
+    title: "Annotate",
+    time: "5 minutes · no experience",
+    body:
+      "See a sentence that confused you, or that you could explain better? Leave a plain-language margin note. Every submission is read by an editor before it goes live.",
+    note: `${articleCount.toLocaleString()} ${articleCount === 1 ? "paper" : "papers"} open to annotate`,
+    cta: "Find a paper to annotate",
+    href: "/feed",
+  },
+  {
+    roman: "ii.",
+    title: "Classify",
+    time: "10 minutes · no experience",
+    body:
+      "Help build an open dataset with simple micro-tasks: is this summary accurate? which direction does this paper belong to? Your answers, combined with others', become real data.",
+    note: "Open micro-tasks, ready now",
+    cta: "Start classifying",
+    href: "/contribute/classify",
+  },
+  {
+    roman: "iii.",
+    title: "Explain",
+    time: "30–60 minutes · some reading",
+    body:
+      "Claim a paper from the queue and write the full plain-language explainer, at three depths. An editor reviews your draft, and the best ones publish under your name.",
+    note: "Papers open to claim",
+    cta: "Browse the explainer queue",
+    href: "/contribute/explain",
+  },
+  {
+    roman: "iv.",
+    title: "Build",
+    time: "Ongoing · coding",
+    body:
+      "Join a team working on a real, deployed AI-for-good project, in health, education, language, or accessibility, and ship something that helps people.",
+    note: "Open projects looking for hands",
+    cta: "Browse open projects",
+    href: "/projects",
+  },
+];
+
+const impact = [
+  { n: annCount, label: "margin notes written" },
+  { n: articleCount, label: "papers explained" },
+  { n: glossaryCount, label: "glossary terms" },
+  { n: directionCount, label: "directions mapped" },
+];
+---
+<BaseLayout
+  title="Contribute · Help build AI for good · Marginalia"
+  description="You don't need a PhD to help. Annotate a paper, label a dataset, write an explainer, or build a project. Everyone contributes."
+  bodyClass="page-contribute"
+>
+  <Sheet>
+    <Masthead
+      title="Contribute"
+      tagline="You don't need a PhD. You need five minutes and curiosity."
+      top="The citizen-science hub"
+      compact={true}
+    />
+
+    <div class="ct-wrap">
+      {user ? (
+        <p class="ct-hello">
+          Signed in as <b>{user.name}</b>. Pick a way to help below, everything
+          you contribute is credited to you.
+        </p>
+      ) : (
+        <p class="ct-hello">
+          Anyone can help, no account needed to start reading and annotating.
+          <a href="/join"> Join</a> when you want your work credited.
+        </p>
+      )}
+
+      <div class="ct-grid">
+        {stations.map((s) => (
+          <article class="ct-station" data-reveal>
+            <div class="ct-roman">{s.roman}</div>
+            <h2>{s.title}</h2>
+            <div class="ct-time">{s.time}</div>
+            <p class="ct-body">{s.body}</p>
+            <div class="ct-live">{s.note}</div>
+            <a class="btn-ink ct-cta" href={s.href}>{s.cta} →</a>
+          </article>
+        ))}
+      </div>
+
+      <TornDivider variant="b" />
+
+      <section class="ct-impact" data-reveal>
+        <div class="section-label text-center">What we've built together</div>
+        <div class="ct-counters">
+          {impact.map((i) => (
+            <div class="ct-counter">
+              <div class="ct-num">{i.n.toLocaleString()}</div>
+              <div class="ct-label">{i.label}</div>
+            </div>
+          ))}
+        </div>
+        <p class="text-center muted ct-foot">
+          Every contribution is credited and reviewed. See the live numbers on
+          <a href="/pulse"> Pulse</a>, or the data itself on
+          <a href="/datasets"> Datasets</a>.
+        </p>
+      </section>
+    </div>
+  </Sheet>
+</BaseLayout>
+
+<style>
+  .ct-wrap { max-width: 720px; margin: 0 auto; }
+  .ct-hello {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 0 0 22px;
+  }
+
+  .ct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ct-station {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 22px 24px 24px;
+    box-shadow: 0 8px 22px -16px rgba(40, 30, 20, 0.4);
+    display: flex;
+    flex-direction: column;
+  }
+  .ct-roman {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 28px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .ct-station h2 { font-size: 24px; font-weight: 500; margin: 0; line-height: 1.1; }
+  .ct-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 6px 0 12px;
+  }
+  .ct-body { font-size: 14.5px; line-height: 1.55; color: #3a342b; margin: 0 0 14px; }
+  .ct-live {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-2);
+    background: rgba(30, 58, 95, 0.07);
+    padding: 6px 10px;
+    margin-bottom: 16px;
+  }
+  .ct-cta { margin-top: auto; align-self: flex-start; }
+
+  .ct-impact { max-width: 620px; margin: 0 auto; }
+  .ct-counters {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .ct-counter {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 16px 10px;
+    text-align: center;
+  }
+  .ct-counter:nth-child(odd) { transform: rotate(-0.5deg); }
+  .ct-counter:nth-child(even) { transform: rotate(0.5deg); }
+  .ct-num { font-family: var(--serif); font-size: 28px; line-height: 1; color: var(--ink); }
+  .ct-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 6px;
+    line-height: 1.3;
+  }
+  .ct-foot { margin-top: 20px; font-size: 14px; }
+
+  @media (max-width: 720px) {
+    .ct-grid { grid-template-columns: 1fr; }
+    .ct-counters { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>

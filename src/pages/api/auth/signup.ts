@@ -42,6 +42,18 @@ export async function POST({ request, locals }: APIContext) {
     return json({ error: "Could not create the account." }, 500);
   }
 
+  // Assign a public handle for /profile/[username]. Best-effort: the column may
+  // not exist before migration 0003 is applied, so failures are ignored.
+  try {
+    const base =
+      name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "member";
+    await env.DB.prepare(`UPDATE users SET username = ? WHERE id = ?`)
+      .bind(`${base}-${userId}`, userId)
+      .run();
+  } catch {
+    /* username column not migrated yet — safe to skip */
+  }
+
   const cookie = await createSessionCookie(userId, env);
   if (!cookie) {
     // Account created but sessions aren't configured (no secret set).

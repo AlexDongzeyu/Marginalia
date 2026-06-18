@@ -1,0 +1,192 @@
+---
+/**
+ * Contribute · Classify, "the labelling bench".
+ * Real micro-tasks from an open dataset campaign. Each answer is one labelled
+ * data point. Degrades to a calm "opening soon" state if no campaign is live
+ * (or the table is not migrated yet).
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Sheet from "../../components/Sheet.astro";
+import Masthead from "../../components/Masthead.astro";
+import { getSessionUser } from "../../lib/auth";
+
+export const prerender = false;
+
+const { env } = Astro.locals.runtime;
+const db = env.DB;
+const me = await getSessionUser(Astro.request.headers.get("cookie"), env, db).catch(() => null);
+
+interface Campaign {
+  slug: string;
+  title: string;
+  question: string;
+  instructions: string;
+  options_json: string;
+  items_json: string;
+}
+
+const campaign = await db
+  .prepare(`SELECT slug, title, question, instructions, options_json, items_json
+            FROM dataset_campaigns WHERE status = 'open' ORDER BY created_at LIMIT 1`)
+  .first<Campaign>()
+  .catch(() => null);
+
+function parseJson<T>(s: string | undefined, fallback: T): T {
+  if (!s) return fallback;
+  try {
+    return JSON.parse(s) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+const options = campaign ? parseJson<{ value: string; label: string }[]>(campaign.options_json, []) : [];
+const items = campaign ? parseJson<{ id: string; title: string; text: string }[]>(campaign.items_json, []) : [];
+---
+<BaseLayout
+  title="Classify · Contribute · Marginalia"
+  description="Help build an open dataset with simple micro-tasks. No experience needed."
+  bodyClass="page-classify"
+>
+  <Sheet>
+    <Masthead
+      title="Classify"
+      tagline="Answer a few quick questions. Build real data."
+      top="The labelling bench"
+      compact={true}
+    />
+
+    {campaign && items.length > 0 ? (
+      <div class="cl-wrap" data-campaign={campaign.slug} data-signedin={me ? "1" : "0"}>
+        <div class="cl-head">
+          <h2>{campaign.title}</h2>
+          <p class="cl-instructions">{campaign.instructions}</p>
+          {!me && (
+            <p class="cl-signin"><a href="/login">Sign in</a> to have your labels saved and credited.</p>
+          )}
+          <div class="cl-progress"><span id="clDone">0</span> / {items.length} labelled</div>
+        </div>
+
+        {items.map((item) => (
+          <div class="cl-task" data-item={item.id}>
+            <div class="cl-q">{campaign.question}</div>
+            <div class="cl-title">{item.title}</div>
+            <p class="cl-text">{item.text}</p>
+            <div class="cl-options">
+              {options.map((o) => (
+                <button class="cl-opt" type="button" data-value={o.value}>{o.label}</button>
+              ))}
+            </div>
+            <span class="cl-status" aria-live="polite"></span>
+          </div>
+        ))}
+
+        <p class="cl-foot muted">
+          Every label is one data point in an open dataset. See the artefacts on
+          <a href="/datasets"> Datasets</a>.
+        </p>
+      </div>
+    ) : (
+      <div style="max-width:560px; margin:0 auto; text-align:center;">
+        <div class="scrap" style="text-align:left;">
+          <h2>The first campaign is being prepared</h2>
+          <p class="hook">Labelling tasks open here shortly. Subscribe and we will tell you the moment the bench is open.</p>
+          <a class="more" href="/join">Get notified →</a>
+        </div>
+      </div>
+    )}
+  </Sheet>
+
+  <script>
+    const wrap = document.querySelector<HTMLElement>(".cl-wrap");
+    if (wrap) {
+      const slug = wrap.dataset.campaign!;
+      const signedIn = wrap.dataset.signedin === "1";
+      const doneEl = document.getElementById("clDone");
+      let done = 0;
+      wrap.querySelectorAll<HTMLElement>(".cl-task").forEach((task) => {
+        const itemId = task.dataset.item!;
+        const statusEl = task.querySelector(".cl-status");
+        task.querySelectorAll<HTMLButtonElement>(".cl-opt").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            if (!signedIn) {
+              if (statusEl) statusEl.textContent = "Please sign in to save this label.";
+              return;
+            }
+            task.querySelectorAll<HTMLButtonElement>(".cl-opt").forEach((b) => (b.disabled = true));
+            btn.classList.add("chosen");
+            if (statusEl) statusEl.textContent = "Saving…";
+            try {
+              const res = await fetch("/api/labels", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ slug, itemId, value: btn.dataset.value }),
+              });
+              const data = await res.json();
+              if (res.ok) {
+                if (statusEl) statusEl.textContent = "Saved ✓";
+                done += 1;
+                if (doneEl) doneEl.textContent = String(done);
+              } else {
+                if (statusEl) statusEl.textContent = data.error || "Could not save.";
+                task.querySelectorAll<HTMLButtonElement>(".cl-opt").forEach((b) => (b.disabled = false));
+                btn.classList.remove("chosen");
+              }
+            } catch {
+              if (statusEl) statusEl.textContent = "Network error.";
+              task.querySelectorAll<HTMLButtonElement>(".cl-opt").forEach((b) => (b.disabled = false));
+              btn.classList.remove("chosen");
+            }
+          });
+        });
+      });
+    }
+  </script>
+
+  <style>
+    .cl-wrap { max-width: 600px; margin: 0 auto; }
+    .cl-head { margin-bottom: 22px; }
+    .cl-head h2 { font-size: 26px; font-weight: 500; margin: 0 0 6px; }
+    .cl-instructions { font-size: 15px; line-height: 1.55; color: #3a342b; margin: 0 0 10px; }
+    .cl-signin { font-family: var(--mono); font-size: 12px; color: var(--accent-2); margin: 0 0 10px; }
+    .cl-progress {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .cl-task {
+      background: var(--card);
+      border: 1px solid var(--line);
+      padding: 18px 20px;
+      margin-bottom: 14px;
+    }
+    .cl-q {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 8px;
+    }
+    .cl-title { font-family: var(--serif); font-size: 18px; color: var(--ink); margin-bottom: 4px; }
+    .cl-text { font-size: 14.5px; line-height: 1.55; color: #3a342b; margin: 0 0 14px; }
+    .cl-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cl-opt {
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 8px 16px;
+      background: var(--paper);
+      border: 1.5px solid var(--line-2);
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease;
+    }
+    .cl-opt:hover:not(:disabled) { transform: translateY(-2px); }
+    .cl-opt:disabled { opacity: 0.6; cursor: default; }
+    .cl-opt.chosen { background: var(--accent); color: var(--paper); border-color: var(--accent); opacity: 1; }
+    .cl-status { display: inline-block; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--ok); }
+    .cl-foot { margin-top: 20px; font-family: var(--mono); font-size: 12px; }
+  </style>
+</BaseLayout>

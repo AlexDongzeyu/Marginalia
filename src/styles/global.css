@@ -51,7 +51,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-::selection { background: var(--accent-soft); }
+::selection { background: var(--accent-soft); color: var(--ink); }
 
 /* Fine paper-fibre grain over the whole desk (decorative). */
 body::before {
@@ -285,28 +285,49 @@ main {
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--ink-faint);
+  animation: mast-fade 0.7s ease both;
+  animation-delay: 0.05s;
 }
-.mast-rule .bar { flex: 1; height: 1px; background: var(--line-2); }
+.mast-rule .bar {
+  flex: 1;
+  height: 1px;
+  background: var(--line-2);
+  transform-origin: center;
+  animation: mast-draw 0.85s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: 0.12s;
+}
 .masthead h1 {
   margin: 18px 0 8px;
   font-weight: 600;
-  font-size: clamp(44px, 11vw, 132px);
+  font-size: clamp(46px, 11.5vw, 132px);
   line-height: 0.9;
   letter-spacing: -0.04em;
   animation: mast-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: 0.16s;
 }
 @keyframes mast-rise {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+@keyframes mast-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mast-draw {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
 .masthead .tagline {
   margin: 0;
   font-style: italic;
-  font-size: 20px;
+  font-size: clamp(16px, 4.6vw, 20px);
   color: var(--ink-soft);
   font-family: var(--serif);
+  animation: mast-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: 0.34s;
 }
-.masthead .mast-rule.lower { margin-top: 18px; letter-spacing: 0.22em; }
+.masthead .mast-rule.lower { margin-top: 18px; letter-spacing: 0.22em; animation-delay: 0.46s; }
+.masthead .mast-rule.lower .bar { animation-delay: 0.52s; }
 
 /* Smaller masthead variant for inner pages */
 .masthead.compact { padding: 48px 0 18px; }
@@ -478,13 +499,13 @@ main {
   color: var(--paper);
   box-shadow: 0 4px 12px -4px rgba(40, 30, 20, 0.5);
 }
-.btn-ink:hover { transform: translateY(-2px); }
+.btn-ink:hover { transform: translateY(-2px); box-shadow: 0 9px 20px -6px rgba(40, 30, 20, 0.55); }
 .btn-outline {
   background: transparent;
   color: var(--ink);
   border: 1.5px solid var(--line-2);
 }
-.btn-outline:hover { background: rgba(33, 28, 22, 0.06); }
+.btn-outline:hover { background: rgba(33, 28, 22, 0.06); transform: translateY(-2px); border-color: var(--ink); }
 
 .cta-row { margin-top: 26px; display: flex; gap: 12px; flex-wrap: wrap; }
 
@@ -526,6 +547,7 @@ main {
   font-weight: 500;
   font-size: 31px;
   line-height: 1.08;
+  text-wrap: balance;
 }
 .scrap .orig {
   margin: 0 0 4px;
@@ -552,6 +574,11 @@ main {
   padding-bottom: 1px;
 }
 .scrap-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.scrap-tags .tag {
+  background: rgba(122, 92, 62, 0.08);
+  border: 1px solid rgba(122, 92, 62, 0.2);
+  color: var(--margin-ink);
+}
 
 /* three torn cards (what we do) */
 .torn-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
@@ -921,6 +948,7 @@ select:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }

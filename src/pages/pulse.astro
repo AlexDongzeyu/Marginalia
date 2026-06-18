@@ -1,0 +1,362 @@
+---
+/**
+ * Pulse, "The State of AI Research".
+ * A live, data-science view of everything the pipeline + community have built.
+ * Every number is read straight from D1 at request time, no fabricated stats.
+ * Charts are server-rendered SVG/CSS bars (no chart dependency) so the page is
+ * fast, accessible, and matches the paper aesthetic.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
+import TornDivider from "../components/TornDivider.astro";
+import { getDirectionsWithCounts, getLatestArticles } from "../lib/db";
+
+const { env } = Astro.locals.runtime;
+const db = env.DB;
+
+/** Small typed helper for the single-number aggregate queries. */
+const num = async (sql: string): Promise<number> => {
+  try {
+    const r = await db.prepare(sql).first<{ n: number }>();
+    return r?.n ?? 0;
+  } catch {
+    return 0;
+  }
+};
+
+const directions = await getDirectionsWithCounts(db).catch(() => []);
+const latest = await getLatestArticles(db, 6).catch(() => []);
+
+const totalArticles = await num(`SELECT COUNT(*) n FROM articles WHERE status='published'`);
+const goodArticles = await num(
+  `SELECT COALESCE(SUM(is_ai4good),0) n FROM articles WHERE status='published'`,
+);
+const annCount = await num(`SELECT COUNT(*) n FROM annotations WHERE status='approved'`);
+const glossaryCount = await num(`SELECT COUNT(*) n FROM glossary_terms WHERE status='approved'`);
+const subCount = await num(`SELECT COUNT(*) n FROM subscribers`);
+const chapterCount = await num(`SELECT COUNT(*) n FROM chapters WHERE status='active'`);
+
+let diffRows: { difficulty: string; c: number }[] = [];
+try {
+  const r = await db
+    .prepare(`SELECT difficulty, COUNT(*) c FROM articles WHERE status='published' GROUP BY difficulty`)
+    .all<{ difficulty: string; c: number }>();
+  diffRows = r.results ?? [];
+} catch {
+  diffRows = [];
+}
+
+let mostAnnotated: { slug: string; plain_title: string; n: number }[] = [];
+try {
+  const r = await db
+    .prepare(
+      `SELECT a.slug, a.plain_title, COUNT(an.id) n
+       FROM articles a
+       JOIN annotations an ON an.article_id = a.id AND an.status='approved'
+       WHERE a.status='published'
+       GROUP BY a.id ORDER BY n DESC LIMIT 5`,
+    )
+    .all<{ slug: string; plain_title: string; n: number }>();
+  mostAnnotated = r.results ?? [];
+} catch {
+  mostAnnotated = [];
+}
+
+// --- shape the data for the charts ---------------------------------------
+const topDirections = [...directions]
+  .filter((d) => d.article_count > 0)
+  .sort((a, b) => b.article_count - a.article_count)
+  .slice(0, 8);
+const maxDir = topDirections[0]?.article_count ?? 1;
+
+const levels = ["Beginner", "Intermediate", "Advanced"] as const;
+const diffCounts = levels.map((lvl) => ({
+  level: lvl,
+  count: diffRows.find((d) => d.difficulty === lvl)?.c ?? 0,
+}));
+const maxDiff = Math.max(1, ...diffCounts.map((d) => d.count));
+
+const goodPct = totalArticles > 0 ? Math.round((goodArticles / totalArticles) * 100) : 0;
+
+const updated = new Date().toLocaleDateString("en-US", {
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+});
+
+const counters = [
+  { n: totalArticles, label: "papers explained" },
+  { n: directions.length, label: "research directions" },
+  { n: annCount, label: "margin notes" },
+  { n: glossaryCount, label: "glossary terms" },
+  { n: chapterCount, label: "active chapters" },
+  { n: subCount, label: "readers subscribed" },
+];
+---
+<BaseLayout
+  title="Pulse · The State of AI Research · Marginalia"
+  description="A live dashboard of what's happening in AI research, built from the Marginalia pipeline and community. Real numbers, updated continuously."
+  bodyClass="page-pulse"
+>
+  <Sheet>
+    <Masthead
+      title="Pulse"
+      tagline="The state of AI research, in numbers."
+      top="The dashboard"
+      bottom={`Updated ${updated}`}
+      compact={true}
+    />
+
+    <div class="pulse-wrap">
+      <p class="pulse-note">
+        Everything below is read live from our own data, the papers the pipeline
+        surfaces and the notes the community leaves. No estimates, no fabricated
+        figures. Empty bars just mean we are early.
+      </p>
+
+      {/* ---- Community impact counters ---------------------------------- */}
+      <div class="pulse-counters" data-reveal>
+        {counters.map((c) => (
+          <div class="pulse-counter">
+            <div class="pc-num">{c.n.toLocaleString()}</div>
+            <div class="pc-label">{c.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <TornDivider variant="a" />
+
+      {/* ---- Chart 1: papers by direction ------------------------------- */}
+      <section class="pulse-card" data-reveal>
+        <div class="section-label">Where the writing is going</div>
+        <p class="muted pulse-sub">Published explainers, by research direction.</p>
+        {topDirections.length > 0 ? (
+          <div role="img" aria-label={`Papers by direction. ${topDirections
+            .map((d) => `${d.name}: ${d.article_count}`)
+            .join(", ")}.`}>
+            {topDirections.map((d) => (
+              <a class="pbar" href={`/directions/${d.slug}`}>
+                <span class="pbar-label">{d.name}</span>
+                <span class="pbar-track">
+                  <span
+                    class="pbar-fill"
+                    style={`width:${Math.max(4, Math.round((d.article_count / maxDir) * 100))}%`}
+                  ></span>
+                </span>
+                <span class="pbar-num">{d.article_count}</span>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <p class="pulse-empty">No published papers yet, the first ones land after the next morning run.</p>
+        )}
+      </section>
+
+      {/* ---- Chart 2 + 3: difficulty + AI-for-good --------------------- */}
+      <div class="pulse-duo">
+        <section class="pulse-card" data-reveal>
+          <div class="section-label">How hard the reading is</div>
+          <p class="muted pulse-sub">Explainers by difficulty level.</p>
+          <div role="img" aria-label={`Papers by difficulty. ${diffCounts
+            .map((d) => `${d.level}: ${d.count}`)
+            .join(", ")}.`}>
+            {diffCounts.map((d) => (
+              <div class="pbar">
+                <span class="pbar-label">{d.level}</span>
+                <span class="pbar-track">
+                  <span
+                    class={`pbar-fill lvl-${d.level.toLowerCase()}`}
+                    style={`width:${Math.max(4, Math.round((d.count / maxDiff) * 100))}%`}
+                  ></span>
+                </span>
+                <span class="pbar-num">{d.count}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section class="pulse-card pulse-good" data-reveal>
+          <div class="section-label">AI for good</div>
+          <p class="muted pulse-sub">Share of papers we tagged as social-good work.</p>
+          <div class="donut-wrap">
+            <div
+              class="donut"
+              style={`--pct:${goodPct}`}
+              role="img"
+              aria-label={`${goodPct}% of ${totalArticles} explained papers are tagged AI for Good.`}
+            >
+              <span class="donut-num">{goodPct}%</span>
+            </div>
+            <p class="donut-cap">{goodArticles.toLocaleString()} of {totalArticles.toLocaleString()} papers</p>
+          </div>
+        </section>
+      </div>
+
+      <TornDivider variant="b" />
+
+      {/* ---- Most annotated + latest ----------------------------------- */}
+      <div class="pulse-duo">
+        <section class="pulse-card" data-reveal>
+          <div class="section-label">Most annotated</div>
+          <p class="muted pulse-sub">Papers the community marked up the most.</p>
+          {mostAnnotated.length > 0 ? (
+            mostAnnotated.map((a) => (
+              <a class="note-row" href={`/article/${a.slug}`}>
+                <span class="nr-main">
+                  <span class="title">{a.plain_title}</span><br />
+                  <span class="meta">{a.n} {a.n === 1 ? "note" : "notes"}</span>
+                </span>
+                <span class="arr">→</span>
+              </a>
+            ))
+          ) : (
+            <p class="pulse-empty">No annotations yet. Be the first to leave a note.</p>
+          )}
+        </section>
+
+        <section class="pulse-card" data-reveal>
+          <div class="section-label">Freshly explained</div>
+          <p class="muted pulse-sub">The latest papers off the line.</p>
+          {latest.length > 0 ? (
+            latest.map((a) => (
+              <a class="note-row" href={`/article/${a.slug}`}>
+                <span class="nr-main">
+                  <span class="title">{a.plain_title}</span><br />
+                  <span class="meta">{a.difficulty} · {a.read_minutes} min</span>
+                </span>
+                <span class="arr">→</span>
+              </a>
+            ))
+          ) : (
+            <p class="pulse-empty">The archive is just getting started.</p>
+          )}
+        </section>
+      </div>
+
+      <p class="text-center muted mt-24">
+        This data also powers the <a href="/map">research map</a> and the
+        <a href="/datasets"> open datasets</a> the community builds.
+      </p>
+    </div>
+  </Sheet>
+</BaseLayout>
+
+<style>
+  .pulse-wrap { max-width: 720px; margin: 0 auto; }
+  .pulse-note {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 0 0 22px;
+  }
+  .pulse-sub { font-size: 13px; margin: 2px 0 14px; }
+
+  .pulse-counters {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .pulse-counter {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 16px 14px;
+    text-align: center;
+    box-shadow: 0 6px 16px -12px rgba(40, 30, 20, 0.35);
+  }
+  .pulse-counter:nth-child(odd) { transform: rotate(-0.5deg); }
+  .pulse-counter:nth-child(even) { transform: rotate(0.5deg); }
+  .pc-num { font-family: var(--serif); font-size: 30px; line-height: 1; color: var(--ink); }
+  .pc-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 6px;
+  }
+
+  .pulse-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 22px -16px rgba(40, 30, 20, 0.4);
+  }
+  .pulse-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .pbar {
+    display: grid;
+    grid-template-columns: 132px 1fr 40px;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  a.pbar:hover .pbar-fill { opacity: 1; }
+  .pbar-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    line-height: 1.2;
+    color: var(--ink);
+    text-align: right;
+  }
+  .pbar-track {
+    height: 18px;
+    background: rgba(33, 28, 22, 0.07);
+    position: relative;
+    overflow: hidden;
+  }
+  .pbar-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--accent);
+    opacity: 0.82;
+    transition: opacity 0.15s ease;
+  }
+  .pbar-fill.lvl-beginner { background: var(--ok); }
+  .pbar-fill.lvl-intermediate { background: var(--accent); }
+  .pbar-fill.lvl-advanced { background: var(--accent-2); }
+  .pbar-num { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+
+  .pulse-good { display: flex; flex-direction: column; }
+  .donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 8px; }
+  .donut {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    background: conic-gradient(var(--ok) calc(var(--pct) * 1%), rgba(33, 28, 22, 0.1) 0);
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+  .donut::after {
+    content: "";
+    position: absolute;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: var(--card);
+  }
+  .donut-num { position: relative; z-index: 1; font-family: var(--serif); font-size: 26px; color: var(--ink); }
+  .donut-cap { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin: 0; }
+
+  .pulse-empty {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    padding: 8px 0;
+  }
+
+  @media (max-width: 720px) {
+    .pulse-counters { grid-template-columns: repeat(2, 1fr); }
+    .pulse-duo { grid-template-columns: 1fr; }
+    .pbar { grid-template-columns: 104px 1fr 34px; }
+  }
+</style>
