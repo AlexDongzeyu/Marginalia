@@ -18,10 +18,25 @@ body.mode-calm .scrap,
 body.mode-calm .torn-card,
 body.mode-calm .mn-card { transform: none !important; rotate: 0deg !important; }
 
-/* ---- Focus Mode: clean center column only ---- */
-body.mode-focus .lmside { display: none !important; }
-body.mode-focus .lmrow { grid-template-columns: 1fr !important; }
-body.mode-focus .lmcenter { padding: 6px 0 !important; }
+/* ---- Focus Mode: clean center column; annotations stay, reflowed below ----
+   Focus Mode used to hide every margin with display:none, which also hid the
+   member notes, the whole point of the site. Now it collapses to one column
+   with the reading copy first and the member notes flowing underneath. The
+   decorative left-margin quips stay tucked away for a calmer read. */
+body.mode-focus .lmrow { grid-template-columns: 1fr !important; gap: 16px !important; }
+body.mode-focus .lmcenter { order: -1; padding: 6px 0 !important; }
+body.mode-focus .lmside.left { display: none !important; }
+body.mode-focus .lmside.right {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch !important;
+  padding: 0 !important;
+  gap: 12px;
+}
+body.mode-focus .lmside.right .mn,
+body.mode-focus .lmside.right .mn-hand,
+body.mode-focus .lmside.right .mn-member,
+body.mode-focus .lmside.right .mn-card { max-width: 100% !important; text-align: left !important; }
 body.mode-focus .read p { line-height: 1.9; }
 body.mode-focus .torn { opacity: 0.5; }
 
