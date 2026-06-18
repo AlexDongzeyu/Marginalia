@@ -21,6 +21,44 @@ const tabs = [
   { href: "/chapters", label: "Chapters" },
 ];
 
+// Every public page, grouped, for the "All pages" dropdown directory.
+const moreGroups = [
+  {
+    title: "Read",
+    links: [
+      { href: "/", label: "Home" },
+      { href: "/today", label: "Today" },
+      { href: "/feed", label: "The feed" },
+      { href: "/map", label: "The map" },
+      { href: "/glossary", label: "Glossary" },
+      { href: "/pulse", label: "Pulse" },
+      { href: "/datasets", label: "Datasets" },
+    ],
+  },
+  {
+    title: "Take part",
+    links: [
+      { href: "/learn", label: "Learn" },
+      { href: "/contribute", label: "Contribute" },
+      { href: "/contribute/classify", label: "Classify" },
+      { href: "/contribute/explain", label: "Explain" },
+      { href: "/projects", label: "Projects" },
+      { href: "/chapters", label: "Chapters" },
+      { href: "/chapters/start", label: "Start a chapter" },
+      { href: "/newsletter", label: "Newsletter" },
+    ],
+  },
+  {
+    title: "Org & you",
+    links: [
+      { href: "/about", label: "About & team" },
+      { href: "/join", label: "Join" },
+      { href: "/dashboard", label: "Your library" },
+      { href: "/login", label: "Sign in" },
+    ],
+  },
+];
+
 let user: { id: number; name: string; role: string } | null = null;
 try {
   const env = Astro.locals.runtime?.env;
@@ -55,6 +93,32 @@ const initials = user
       {tabs.map((t) => (
         <a href={t.href} class={`nav-tab ${isActive(t.href) ? "active" : ""}`}>{t.label}</a>
       ))}
+
+      <div class="nav-more" id="navMore">
+        <button
+          class="nav-tab nav-more-btn"
+          id="navMoreBtn"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="navDropdown"
+        >All pages <span class="nav-more-caret" aria-hidden="true">▾</span></button>
+        <div class="nav-dropdown" id="navDropdown" role="menu" aria-label="All pages">
+          {moreGroups.map((g) => (
+            <div class="nav-dd-group">
+              <div class="nav-dd-title">{g.title}</div>
+              {g.links.map((l) => (
+                <a
+                  href={l.href}
+                  class={`nav-dd-link ${path === l.href ? "active" : ""}`}
+                  role="menuitem"
+                >{l.label}</a>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {user ? (
         <span class="nav-account">
           <a
@@ -83,5 +147,29 @@ const initials = user
   toggle?.addEventListener("click", () => {
     const open = tabs?.classList.toggle("open");
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+
+  // "All pages" dropdown: tap to toggle, click-away or Escape to close.
+  const more = document.getElementById("navMore");
+  const moreBtn = document.getElementById("navMoreBtn");
+  const closeMore = () => {
+    more?.classList.remove("open");
+    moreBtn?.setAttribute("aria-expanded", "false");
+  };
+  moreBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = more?.classList.toggle("open");
+    moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  document.addEventListener("click", (e) => {
+    if (more?.classList.contains("open") && e.target instanceof Node && !more.contains(e.target)) {
+      closeMore();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && more?.classList.contains("open")) {
+      closeMore();
+      moreBtn?.focus();
+    }
   });
 </script>

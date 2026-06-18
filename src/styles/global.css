@@ -234,6 +234,69 @@ h1, h2, h3, h4 {
 }
 
 /* ---------------------------------------------------------------------------
+   Nav "All pages" dropdown, a little paper table of contents
+   --------------------------------------------------------------------------- */
+.nav-more { position: relative; }
+.nav-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.nav-more-caret { font-size: 8px; transition: transform 0.2s ease; }
+.nav-more.open .nav-more-caret { transform: rotate(180deg); }
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  min-width: 480px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 5px 5px 0 rgba(33, 28, 22, 0.12),
+    0 24px 46px -20px rgba(40, 30, 20, 0.5);
+  padding: 18px 22px 20px;
+}
+/* invisible bridge so hover does not drop in the gap above the panel */
+.nav-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+.nav-more.open .nav-dropdown,
+.nav-more:focus-within .nav-dropdown { display: grid; }
+@media (hover: hover) and (pointer: fine) {
+  .nav-more:hover .nav-dropdown { display: grid; }
+}
+.nav-dd-title {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 9px;
+}
+.nav-dd-link {
+  display: block;
+  text-decoration: none;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.25;
+  color: var(--ink);
+  padding: 4px 0;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.nav-dd-link:hover { color: var(--accent); transform: translateX(3px); }
+.nav-dd-link.active { color: var(--accent); }
+.nav-dd-link.active::before { content: "\203A\00a0"; color: var(--accent); }
+
+/* ---------------------------------------------------------------------------
    The paper sheet + masthead
    --------------------------------------------------------------------------- */
 main {
@@ -462,19 +525,11 @@ main {
 }
 
 /* ---------------------------------------------------------------------------
-   Torn-paper divider
+   Section break (the hand-torn paper strips were removed; quiet spacing only)
    --------------------------------------------------------------------------- */
-.torn {
-  position: relative;
-  z-index: 1;
-  max-width: 640px;
-  margin: 30px auto 26px;
-  filter: drop-shadow(0 4px 5px rgba(40, 30, 20, 0.1));
+.section-break {
+  height: clamp(30px, 5vw, 54px);
 }
-.torn svg { display: block; width: 100%; height: 38px; }
-.torn-a { transform: rotate(-0.5deg); }
-.torn-b { transform: rotate(0.6deg); }
-.torn-c { transform: rotate(-0.4deg); }
 
 /* ---------------------------------------------------------------------------
    Buttons
@@ -935,6 +990,23 @@ select:focus-visible,
   }
   .nav-tabs.open .nav-tab { transform: none; text-align: center; }
   .nav-toggle { display: inline-block; }
+  /* dropdown becomes an inline, single-column list inside the mobile menu */
+  .nav-more { width: 100%; }
+  .nav-more-btn { width: 100%; justify-content: center; }
+  .nav-dropdown {
+    position: static;
+    min-width: 0;
+    grid-template-columns: 1fr;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 6px 0 2px;
+    gap: 12px;
+  }
+  .nav-dropdown::before { display: none; }
+  .nav-dd-title { text-align: center; }
+  .nav-dd-link { text-align: center; padding: 9px 0; }
+  .nav-dd-link:hover { transform: none; }
   .sheet-pad { padding: 0 18px 50px; }
   .contact-grid { grid-template-columns: 1fr 1fr; }
 }
