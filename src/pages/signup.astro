@@ -1,0 +1,110 @@
+---
+/**
+ * /signup — create-account page. Matches ECHOE's auth layout in the
+ * Marginalia context.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Create account — Marginalia" bodyClass="page-signup">
+  <div class="container">
+    <div class="auth-wrap">
+      <div class="page-container">
+        <div class="page-header">
+          <h1>Join Marginalia</h1>
+          <p>Create your account to contribute</p>
+        </div>
+
+        <form id="signupForm" class="auth-form">
+          <div class="field">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required placeholder="Your name" autocomplete="name" />
+          </div>
+
+          <div class="field">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="you@email.com" autocomplete="email" />
+          </div>
+
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required minlength="8" placeholder="At least 8 characters" autocomplete="new-password" />
+          </div>
+
+          <button type="submit" class="btn btn-primary auth-submit">
+            <span aria-hidden="true">&#10133;</span> Create Account
+          </button>
+          <p id="signupStatus" class="auth-status"></p>
+        </form>
+
+        <div class="auth-divider">
+          <p>Already have an account?</p>
+          <a href="/login" class="btn btn-secondary">
+            <span aria-hidden="true">&#128274;</span> Sign In
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("signupForm") as HTMLFormElement;
+    const status = document.getElementById("signupStatus");
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (status) status.textContent = "Creating your account…";
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const out = await res.json();
+        if (res.ok) {
+          window.location.href = "/dashboard";
+        } else if (status) {
+          status.textContent = out.error || "Could not create account.";
+        }
+      } catch {
+        if (status) status.textContent = "Network error — please try again.";
+      }
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .auth-wrap { max-width: 520px; margin: 0 auto; }
+  .auth-form { margin-top: 10px; }
+  .field { margin-bottom: 22px; }
+  .field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--deep-indigo);
+    font-size: 1.05rem;
+  }
+  .field input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid rgba(42, 61, 102, 0.2);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: "Nunito", sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--soft-yellow);
+    box-shadow: 0 0 0 3px rgba(248, 210, 156, 0.3);
+  }
+  .auth-submit { width: 100%; justify-content: center; padding: 14px; }
+  .auth-status { margin-top: 12px; font-weight: 700; color: #b3402f; text-align: center; }
+  .auth-divider {
+    text-align: center;
+    padding: 24px 0 4px;
+    margin-top: 18px;
+    border-top: 1px solid rgba(42, 61, 102, 0.15);
+  }
+  .auth-divider p { margin-bottom: 14px; color: var(--deep-indigo); }
+</style>

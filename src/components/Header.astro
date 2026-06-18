@@ -65,6 +65,12 @@ const isActive = (href: string) =>
       <li>
         <a href="/about" class={isActive("/about") ? "active" : ""}>About</a>
       </li>
+
+      <li>
+        <a href="/login" class={`nav-login ${isActive("/login") || isActive("/signup") ? "active" : ""}`}>
+          <span aria-hidden="true">&#128100;</span> Login
+        </a>
+      </li>
     </ul>
   </nav>
 </header>

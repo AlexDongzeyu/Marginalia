@@ -1,0 +1,52 @@
+---
+/**
+ * /dashboard — the member area shown after login.
+ * Reads the signed session cookie; redirects to /login if not signed in.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getSessionUserId, getUserById } from "../lib/auth";
+
+const { env } = Astro.locals.runtime;
+const userId = await getSessionUserId(Astro.request.headers.get("cookie"), env);
+if (!userId) {
+  return Astro.redirect("/login");
+}
+const user = await getUserById(env.DB, userId);
+if (!user) {
+  return Astro.redirect("/login");
+}
+---
+
+<BaseLayout title="Dashboard — Marginalia" bodyClass="page-admin">
+  <div class="container">
+    <div class="page-header">
+      <p class="tagline">Your space</p>
+      <h1>Welcome, {user.name}</h1>
+    </div>
+
+    <div class="page-container">
+      <div class="content-section">
+        <h2>Your account</h2>
+        <p><strong>Name:</strong> {user.name}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <p><strong>Role:</strong> {user.role}</p>
+      </div>
+
+      <div class="content-section">
+        <h2>Contribute</h2>
+        <p>Help grow Marginalia — claim an AI-drafted explainer, write it up, and submit it for review.</p>
+        <div class="row wrap gap-12 mt-8">
+          <a href="/feed" class="btn btn-secondary">Browse the feed</a>
+          <a href="/map" class="btn btn-secondary">Explore the map</a>
+          {(user.role === "editor" || user.role === "admin") && (
+            <a href="/admin" class="btn btn-primary">Open review queue</a>
+          )}
+        </div>
+      </div>
+
+      <div class="content-section">
+        <a href="/api/auth/logout" class="btn btn-ghost">Sign out</a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

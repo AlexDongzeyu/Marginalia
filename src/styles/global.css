@@ -57,14 +57,33 @@ body {
   font-family: "Nunito", system-ui, sans-serif;
   line-height: 1.6;
   color: var(--deep-indigo);
-  background: var(--brand-blue);
-  background-image:
-    radial-gradient(1200px 600px at 12% -8%, rgba(248, 210, 156, 0.55), transparent 60%),
-    radial-gradient(1000px 560px at 100% 0%, rgba(159, 197, 203, 0.6), transparent 55%),
-    radial-gradient(900px 600px at 50% 120%, rgba(173, 203, 164, 0.55), transparent 60%);
-  background-attachment: fixed;
+  /* ECHOE image-background system: a full-bleed fixed photo backdrop. */
+  --site-bg: url("/img/bg1.jpg");
+  background: var(--site-bg) center/cover fixed no-repeat;
   min-height: 100vh;
 }
+
+/* Per-page backdrops (mirrors ECHOE's body.page-* assignments) */
+body.page-home { --site-bg: url("/img/bg2.jpg"); }
+body.page-feed { --site-bg: url("/img/bg2.jpg"); }
+body.page-today { --site-bg: url("/img/bg4.jpg"); }
+body.page-article { --site-bg: url("/img/bg3.jpg"); }
+body.page-map { --site-bg: url("/img/bg1.jpg"); }
+body.page-directions { --site-bg: url("/img/bg1.jpg"); }
+body.page-direction { --site-bg: url("/img/bg1.jpg"); }
+body.page-glossary { --site-bg: url("/img/bg3.jpg"); }
+body.page-learn { --site-bg: url("/img/bg2.jpg"); }
+body.page-track { --site-bg: url("/img/bg2.jpg"); }
+body.page-chapters { --site-bg: url("/img/bg4.jpg"); }
+body.page-chapter-start { --site-bg: url("/img/bg4.jpg"); }
+body.page-newsletter { --site-bg: url("/img/bg4.jpg"); }
+body.page-projects { --site-bg: url("/img/bg2.jpg"); }
+body.page-about { --site-bg: url("/img/bg4.jpg"); }
+body.page-join { --site-bg: url("/img/bg4.jpg"); }
+body.page-admin { --site-bg: url("/img/bg2.jpg"); }
+body.page-login,
+body.page-signup { --site-bg: url("/img/bg3.jpg"); }
+body.page-404 { --site-bg: url("/img/bg1.jpg"); }
 
 /* ---- Typography: brand fonts ---- */
 h1, h2, h3,
@@ -110,7 +129,8 @@ main {
   padding: 28px 0;
 }
 
-/* Paper-style content panel with color overlay (matches ECHOE page-container) */
+/* Paper-style content panel: paper-photo texture + soft color overlay.
+   Exact port of ECHOE's .page-container system. */
 .page-container {
   position: relative;
   overflow: hidden;
@@ -119,16 +139,83 @@ main {
   padding: 40px;
   box-shadow: 0 8px 32px var(--shadow-deep);
   margin-bottom: 40px;
-  background: var(--frame-cream);
+
+  --page-texture: url("/img/bg2.jpg");
+  --page-overlay-color: #a8c99e;
+  --page-overlay-opacity: 0.4;
+
+  background-image: var(--page-texture);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: transparent;
 }
 
-.content-section {
-  background: var(--frame-cream);
+.page-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: var(--page-overlay-color);
+  opacity: var(--page-overlay-opacity);
+  pointer-events: none;
+  z-index: 1;
   border-radius: var(--radius);
-  padding: 32px;
-  margin: 22px 0;
-  box-shadow: 3px 3px 0 var(--shadow-offset), 0 10px 28px var(--shadow-deep);
-  border: 2px solid rgba(42, 61, 102, 0.08);
+}
+
+.page-container > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Per-page page-container tints (mirrors ECHOE) */
+body.page-today .page-container { --page-texture: url("/img/bg4.jpg"); --page-overlay-color: #e8c99b; }
+body.page-article .page-container { --page-texture: url("/img/bg3.jpg"); --page-overlay-color: #8daeb5; }
+body.page-map .page-container,
+body.page-directions .page-container,
+body.page-direction .page-container { --page-texture: url("/img/bg1.jpg"); --page-overlay-color: #9fc5cb; }
+body.page-glossary .page-container { --page-texture: url("/img/bg3.jpg"); --page-overlay-color: #8daeb5; }
+body.page-about .page-container { --page-texture: url("/img/bg4.jpg"); --page-overlay-color: #e8b864; }
+body.page-join .page-container,
+body.page-chapters .page-container,
+body.page-chapter-start .page-container,
+body.page-newsletter .page-container { --page-texture: url("/img/bg4.jpg"); --page-overlay-color: #fdf4c5; }
+body.page-login .page-container,
+body.page-signup .page-container { --page-texture: url("/img/bg3.jpg"); --page-overlay-color: #8daeb5; }
+
+/* Content section: semi-opaque card with a colored accent border.
+   Cycles accent colors like ECHOE's nth-of-type rules. */
+.content-section {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 18px;
+  padding: 30px;
+  margin: 0 0 25px;
+  border: 1px solid rgba(42, 61, 102, 0.08);
+  border-left: 3px solid var(--soft-yellow);
+  box-shadow: 0 4px 16px rgba(42, 61, 102, 0.06);
+  position: relative;
+  z-index: 2;
+}
+
+.content-section:nth-of-type(odd) { border-left-color: var(--gentle-lavender); }
+.content-section:nth-of-type(even) { border-left-color: var(--soft-yellow); }
+.content-section:nth-of-type(3n) { border-left-color: var(--brand-green); }
+.content-section:nth-of-type(4n) { border-left-color: var(--brand-orange-dark); }
+
+.content-section h2 {
+  display: inline-block;
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.content-section h2::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 3px;
+  background: var(--soft-yellow);
+  margin-top: 10px;
+  border-radius: 2px;
+  opacity: 0.75;
 }
 
 /* ---------------------------------------------------------------------------
@@ -229,6 +316,20 @@ nav .nav-menu a.active {
   border-color: var(--deep-indigo);
   font-weight: 800;
   box-shadow: 3px 3px 0 rgba(42, 61, 102, 0.3);
+}
+
+/* Login button in the nav (ECHOE login-btn pill style) */
+nav .nav-menu a.nav-login {
+  background: var(--soft-yellow);
+  border: 2.5px solid var(--deep-indigo);
+  border-radius: 50px;
+  font-weight: 800;
+  box-shadow: 2px 2px 0 rgba(42, 61, 102, 0.3);
+}
+
+nav .nav-menu a.nav-login:hover {
+  background: var(--light-yellow);
+  transform: translateY(-2px);
 }
 
 /* Dropdown */
@@ -403,18 +504,35 @@ nav .nav-menu a.active {
    --------------------------------------------------------------------------- */
 .page-header {
   text-align: center;
-  padding: 8px 0 24px;
+  margin-bottom: 40px;
+  padding: 40px 30px 50px;
+  position: relative;
 }
 
 .page-header h1 {
   font-size: 2.6rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 15px;
+  letter-spacing: 0.5px;
+  position: relative;
+  display: inline-block;
+}
+
+.page-header h1::after {
+  content: "";
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: var(--soft-yellow);
+  margin: 14px auto 0;
+  border-radius: 2px;
+  opacity: 0.8;
 }
 
 .page-header p {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   color: var(--deep-indigo);
-  opacity: 0.9;
+  opacity: 0.85;
+  font-style: italic;
 }
 
 /* ---------------------------------------------------------------------------
@@ -459,53 +577,63 @@ nav .nav-menu a.active {
 }
 
 /* ---------------------------------------------------------------------------
-   Footer
+   Footer (ECHOE blue-tint style)
    --------------------------------------------------------------------------- */
 footer.site-footer {
-  margin-top: 60px;
-  background: rgba(42, 61, 102, 0.95);
-  color: #eaf0f7;
-  padding: 48px 0 24px;
+  margin-top: 28px;
+  background-color: rgba(159, 197, 203, 0.9);
+  color: #0f2233;
+  padding: 30px 0 16px;
+  backdrop-filter: saturate(120%) blur(6px);
+  -webkit-backdrop-filter: saturate(120%) blur(6px);
 }
 
 footer.site-footer a {
-  color: #d9e6f2;
+  color: #0f2233;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 footer.site-footer a:hover {
-  color: var(--brand-orange);
+  color: var(--deep-indigo);
+  text-decoration: underline;
 }
 
 .footer-content {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr;
-  gap: 28px;
-  max-width: var(--maxw);
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 18px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 0 20px;
+  align-items: start;
+}
+
+.footer-section {
+  text-align: center;
 }
 
 .footer-section h4 {
   font-family: "Namdhinggo", Georgia, serif;
-  color: #fff;
-  margin-bottom: 12px;
-  font-size: 1.05rem;
+  color: #0f2233;
+  margin-bottom: 14px;
+  font-size: 1.2rem;
 }
 
 .footer-section ul {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  align-items: center;
 }
 
 .footer-bottom {
   text-align: center;
-  margin-top: 32px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 0.85rem;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 0.88rem;
   opacity: 0.85;
 }
 

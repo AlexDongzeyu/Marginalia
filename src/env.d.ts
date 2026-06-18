@@ -14,6 +14,8 @@ interface Env {
   ENVIRONMENT: string;
   /** Shared secret gating the admin review API + manual ingest. */
   ADMIN_TOKEN: string;
+  /** Secret used to sign session cookies. Falls back to ADMIN_TOKEN. */
+  SESSION_SECRET?: string;
 }
 
 type Runtime = import("@astrojs/cloudflare").Runtime<Env>;
