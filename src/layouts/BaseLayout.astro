@@ -51,8 +51,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body class={bodyClass}>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="read-progress" id="read-progress" aria-hidden="true"></div>
     <Header />
-    <main>
+    <main id="main">
       <slot />
     </main>
     <Footer />
@@ -61,6 +63,29 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).to
     <script>
       import { initLivingMargin } from "../scripts/living-margin.ts";
       initLivingMargin();
+    </script>
+    <script is:inline>
+      (() => {
+        const bar = document.getElementById("read-progress");
+        if (!bar) return;
+        let ticking = false;
+        const update = () => {
+          const h = document.documentElement;
+          const max = h.scrollHeight - h.clientHeight;
+          const pct = max > 0 ? (h.scrollTop || document.body.scrollTop) / max : 0;
+          bar.style.width = (pct * 100).toFixed(2) + "%";
+          ticking = false;
+        };
+        const onScroll = () => {
+          if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+          }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll, { passive: true });
+        update();
+      })();
     </script>
   </body>
 </html>
