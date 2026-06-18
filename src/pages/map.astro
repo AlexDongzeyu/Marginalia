@@ -1,0 +1,137 @@
+---
+/**
+ * /map — the Research Directions Mindmap (flagship).
+ * Mounts the React Flow island client-side; provides a list fallback link for
+ * keyboard/no-JS users (accessibility).
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ResearchMap from "../components/ResearchMap.tsx";
+---
+
+<BaseLayout
+  title="Research map — Marginalia"
+  description="An interactive, plain-language map of AI research directions for newcomers. Click a node to learn what an area is and why it matters."
+  bodyClass="page-map"
+>
+  <div class="container">
+    <div class="page-header">
+      <p class="tagline">The whole field, mapped for newcomers</p>
+      <h1>Research map</h1>
+      <p class="muted" style="max-width:60ch;margin:0 auto;">
+        Not a citation graph — an editorial map of research <em>directions</em>.
+        Click any node to see what the area is, why it matters, and the explained
+        papers inside it.
+      </p>
+    </div>
+
+    <div class="map-wrapper">
+      <ResearchMap client:only="react" />
+    </div>
+
+    <p class="text-center muted mt-16">
+      Prefer a list? <a href="/directions">Browse all directions →</a>
+    </p>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  .map-wrapper {
+    border-radius: 20px;
+    overflow: hidden;
+    border: 3px solid var(--deep-indigo);
+    box-shadow: 5px 5px 0 rgba(42, 61, 102, 0.25), 0 16px 40px rgba(42, 61, 102, 0.15);
+    background: #fdfbf7;
+  }
+  .map-shell { display: flex; flex-direction: column; }
+  .map-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--frame-cream);
+    border-bottom: 2px solid rgba(42, 61, 102, 0.12);
+  }
+  .map-search {
+    padding: 0.5rem 0.9rem;
+    border-radius: 50px;
+    border: 2.5px solid var(--deep-indigo);
+    font-family: "Nunito", sans-serif;
+    font-weight: 600;
+    min-width: 200px;
+  }
+  .map-hot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: var(--deep-indigo);
+  }
+  .map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-left: auto;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--deep-indigo);
+  }
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--deep-indigo);
+  }
+  .map-canvas {
+    position: relative;
+    height: 600px;
+  }
+  .map-canvas .react-flow { background: #fdfbf7; }
+  .map-panel {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 300px;
+    max-width: calc(100% - 32px);
+    background: var(--frame-cream);
+    border: 3px solid var(--deep-indigo);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 5px 5px 0 rgba(42, 61, 102, 0.3);
+    z-index: 10;
+  }
+  .map-panel h3 { margin: 8px 0 6px; font-size: 1.3rem; }
+  .map-panel p { font-size: 0.95rem; line-height: 1.6; color: #2a3d66; }
+  .map-panel-stat {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--brand-orange-darker);
+    margin: 10px 0 14px;
+  }
+  .map-panel-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--deep-indigo);
+    line-height: 1;
+  }
+  .map-fallback {
+    padding: 40px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--deep-indigo);
+  }
+  @media (max-width: 600px) {
+    .map-canvas { height: 480px; }
+    .map-legend { display: none; }
+  }
+</style>

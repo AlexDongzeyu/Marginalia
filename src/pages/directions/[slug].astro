@@ -1,0 +1,94 @@
+---
+/**
+ * /directions/[slug] — a single research direction.
+ * Plain-language overview + its explained articles, split into "Foundational"
+ * and "Latest", plus related directions in the same branch.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ArticleCard from "../../components/ArticleCard.astro";
+import {
+  getDirectionBySlug,
+  listPublishedArticles,
+  getDirectionsWithCounts,
+} from "../../lib/db";
+
+const { slug } = Astro.params;
+const { env } = Astro.locals.runtime;
+
+const direction = slug ? await getDirectionBySlug(env.DB, slug) : null;
+if (!direction) {
+  return new Response(null, { status: 404, statusText: "Not Found" });
+}
+
+const [articles, allDirections] = await Promise.all([
+  listPublishedArticles(env.DB, { direction: direction.slug, limit: 50 }),
+  getDirectionsWithCounts(env.DB),
+]);
+
+const foundational = articles.filter((a) => a.is_foundational === 1);
+const latest = articles.filter((a) => a.is_foundational !== 1);
+const related = allDirections.filter(
+  (d) => d.branch === direction.branch && d.parent_id && d.slug !== direction.slug,
+);
+
+const branchLabel: Record<string, string> = {
+  foundations: "Foundations",
+  methods: "Methods & Models",
+  applied: "AI for Good",
+  society: "Safety & Society",
+};
+---
+
+<BaseLayout
+  title={`${direction.name} — Marginalia`}
+  description={direction.plain_description}
+  bodyClass="page-direction"
+>
+  <div class="container">
+    <a href="/map" class="chip mb-16" style="margin-top:8px;display:inline-flex;">← Back to the map</a>
+
+    <div class="page-container direction-hero">
+      <span class="chip">{branchLabel[direction.branch]}</span>
+      <h1 style="margin:.3rem 0;">{direction.name}</h1>
+      <p class="prose" style="margin-bottom:0;">{direction.plain_description}</p>
+    </div>
+
+    {foundational.length > 0 && (
+      <section class="page-section">
+        <h2>Start here — foundational reads</h2>
+        <div class="card-grid mt-16">
+          {foundational.map((a) => <ArticleCard article={a} />)}
+        </div>
+      </section>
+    )}
+
+    <section class="page-section">
+      <h2>Latest in {direction.name}</h2>
+      {latest.length > 0 ? (
+        <div class="card-grid mt-16">
+          {latest.map((a) => <ArticleCard article={a} />)}
+        </div>
+      ) : (
+        <div class="content-section text-center">
+          <p class="muted">No new papers tagged here yet — the daily pipeline will fill this in.</p>
+          <a href="/feed" class="btn btn-secondary mt-16">Browse the full feed</a>
+        </div>
+      )}
+    </section>
+
+    {related.length > 0 && (
+      <section class="page-section">
+        <h3>Related directions</h3>
+        <div class="row wrap gap-8 mt-8">
+          {related.map((d) => (
+            <a class="chip" href={`/directions/${d.slug}`}>{d.name}</a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .direction-hero { background: var(--frame-blue); }
+</style>

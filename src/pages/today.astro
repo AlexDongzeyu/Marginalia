@@ -1,0 +1,74 @@
+---
+/**
+ * /today — the Article of the Day. Renders the current AOTD in a banner-topped
+ * layout and links to the full article + yesterday's pick.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getArticleOfDay } from "../lib/db";
+import { renderMarkdown } from "../lib/markdown";
+import { DIFFICULTY_CLASS } from "../lib/types";
+
+const { env } = Astro.locals.runtime;
+const article = await getArticleOfDay(env.DB);
+
+const todayNice = new Date().toLocaleDateString("en-US", {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+---
+
+<BaseLayout title="Article of the Day — Marginalia" bodyClass="page-today">
+  <div class="container">
+    <div class="page-header">
+      <p class="tagline">Today, {todayNice}</p>
+      <h1>Article of the Day</h1>
+    </div>
+
+    {article ? (
+      <div class="page-container today-feature">
+        <div class="row wrap gap-8">
+          <span class="chip">★ Today's pick</span>
+          <span class={`badge ${DIFFICULTY_CLASS[article.difficulty]}`}>{article.difficulty}</span>
+          {article.is_ai4good === 1 && <span class="badge badge-ai4good">AI for Good</span>}
+          <span class="muted" style="font-size:.85rem;">{article.read_minutes} min read</span>
+        </div>
+
+        <h2 class="feature-title">{article.plain_title}</h2>
+        <p class="feature-hook">{article.hook}</p>
+
+        <div class="prose feature-preview">
+          <Fragment set:html={renderMarkdown(article.whats_going_on.split("\n\n")[0] || "")} />
+        </div>
+
+        <div class="row wrap gap-12 mt-16">
+          <a href={`/article/${article.slug}`} class="btn btn-primary">Read the full explainer</a>
+          <a href="/feed" class="btn btn-ghost">Browse all papers</a>
+        </div>
+      </div>
+    ) : (
+      <div class="page-container text-center">
+        <h2>No pick yet today</h2>
+        <p class="prose">The daily pipeline hasn't published today's article yet.
+          In the meantime, explore <a href="/feed">the feed</a> or
+          <a href="/map">the research map</a>.</p>
+      </div>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .today-feature { background: var(--frame-peach); }
+  .feature-title { font-size: 2.2rem; margin: 12px 0 6px; }
+  .feature-hook {
+    font-family: "Sriracha", cursive;
+    font-size: 1.35rem;
+    color: var(--deep-indigo);
+    margin-bottom: 14px;
+  }
+  .feature-preview { font-size: 1.1rem; }
+  @media (max-width: 600px) {
+    .feature-title { font-size: 1.6rem; }
+  }
+</style>

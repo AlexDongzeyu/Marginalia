@@ -1,0 +1,122 @@
+---
+/**
+ * /feed — every published explained paper, with filters + search.
+ * Filters are applied server-side from query params (SSR), so the page is
+ * shareable and works without JS.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ArticleCard from "../components/ArticleCard.astro";
+import { listPublishedArticles, getAllDirections } from "../lib/db";
+
+const { env } = Astro.locals.runtime;
+const url = Astro.url;
+const direction = url.searchParams.get("direction") ?? "";
+const difficulty = url.searchParams.get("difficulty") ?? "";
+const ai4good = url.searchParams.get("ai4good") === "1";
+const search = url.searchParams.get("q") ?? "";
+
+const [articles, directions] = await Promise.all([
+  listPublishedArticles(env.DB, {
+    direction: direction || undefined,
+    difficulty: difficulty || undefined,
+    ai4good: ai4good || undefined,
+    search: search || undefined,
+    limit: 60,
+  }),
+  getAllDirections(env.DB),
+]);
+
+const childDirections = directions.filter((d) => d.parent_id);
+const difficulties = ["Beginner", "Intermediate", "Advanced"];
+---
+
+<BaseLayout title="The feed — Marginalia" bodyClass="page-feed">
+  <div class="container">
+    <div class="page-header">
+      <p class="tagline">Everything we've explained</p>
+      <h1>The feed</h1>
+    </div>
+
+    <!-- Filters -->
+    <form class="content-section filter-bar" method="get">
+      <div class="filter-row">
+        <input
+          type="search"
+          name="q"
+          value={search}
+          placeholder="Search titles & summaries…"
+          class="filter-search"
+          aria-label="Search"
+        />
+        <select name="direction" aria-label="Research direction">
+          <option value="">All directions</option>
+          {childDirections.map((d) => (
+            <option value={d.slug} selected={d.slug === direction}>{d.name}</option>
+          ))}
+        </select>
+        <select name="difficulty" aria-label="Difficulty">
+          <option value="">Any level</option>
+          {difficulties.map((d) => (
+            <option value={d} selected={d === difficulty}>{d}</option>
+          ))}
+        </select>
+        <label class="ai4good-toggle">
+          <input type="checkbox" name="ai4good" value="1" checked={ai4good} />
+          AI for Good
+        </label>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        {(direction || difficulty || ai4good || search) && (
+          <a href="/feed" class="chip">Clear</a>
+        )}
+      </div>
+    </form>
+
+    <p class="muted mb-16">{articles.length} {articles.length === 1 ? "paper" : "papers"}</p>
+
+    {articles.length > 0 ? (
+      <div class="card-grid">
+        {articles.map((a) => <ArticleCard article={a} />)}
+      </div>
+    ) : (
+      <div class="content-section text-center">
+        <h3>No papers match those filters yet</h3>
+        <p class="muted">Try clearing filters, or check back after the next daily run.</p>
+        <a href="/feed" class="btn btn-secondary mt-16">Clear filters</a>
+      </div>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .filter-bar { padding: 18px; }
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .filter-search {
+    flex: 1 1 240px;
+    padding: 0.6rem 1rem;
+    border-radius: 50px;
+    border: 2.5px solid var(--deep-indigo);
+    font-family: "Nunito", sans-serif;
+    font-size: 0.95rem;
+  }
+  .filter-bar select {
+    padding: 0.55rem 0.8rem;
+    border-radius: 12px;
+    border: 2.5px solid var(--deep-indigo);
+    font-family: "Nunito", sans-serif;
+    font-weight: 700;
+    background: var(--frame-cream);
+    color: var(--deep-indigo);
+  }
+  .ai4good-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: var(--deep-indigo);
+  }
+</style>

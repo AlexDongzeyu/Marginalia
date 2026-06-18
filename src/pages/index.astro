@@ -1,0 +1,304 @@
+---
+/**
+ * Home — communicates "AI research, explained for you — free" in 5 seconds.
+ * Sections mirror the spec: hero, today's pick, what we do, map teaser,
+ * latest papers, learn entry, chapters, newsletter.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ArticleCard from "../components/ArticleCard.astro";
+import { getArticleOfDay, getLatestArticles, getDirectionsWithCounts } from "../lib/db";
+
+const { env } = Astro.locals.runtime;
+const [today, latest, directions] = await Promise.all([
+  getArticleOfDay(env.DB),
+  getLatestArticles(env.DB, 6),
+  getDirectionsWithCounts(env.DB),
+]);
+
+const branches = ["foundations", "methods", "applied", "society"] as const;
+const branchLabels: Record<string, string> = {
+  foundations: "Foundations",
+  methods: "Methods & Models",
+  applied: "AI for Good",
+  society: "Safety & Society",
+};
+---
+
+<BaseLayout bodyClass="page-home">
+  <!-- Hero -->
+  <section class="container">
+    <div class="hero">
+      <div class="hero-copy">
+        <p class="tagline" style="font-size:1.3rem;">A guide for newcomers</p>
+        <h1>Understand AI research.<br />No PhD required.</h1>
+        <p class="hero-sub">
+          Every day we find a notable AI paper and explain it in plain language —
+          then map the whole field so you can explore it. Free, student-run, and
+          built around <strong>AI for good</strong>.
+        </p>
+        <div class="row wrap gap-12 mt-24">
+          <a href="/today" class="btn btn-primary">Read today's paper</a>
+          <a href="/map" class="btn btn-secondary">Explore the map</a>
+        </div>
+      </div>
+      <div class="hero-art home-hero-art" aria-hidden="true">
+        <div class="float-card fc1">¶ attention</div>
+        <div class="float-card fc2">diffusion</div>
+        <div class="float-card fc3">alignment</div>
+        <div class="float-card fc4">embeddings</div>
+        <div class="hero-orb"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Today's pick -->
+  {today && (
+    <section class="container page-section">
+      <div class="content-section today-card">
+        <div class="row between wrap gap-12">
+          <span class="chip">★ Today's pick</span>
+          <a href="/today" class="muted" style="font-size:.9rem;">See full article →</a>
+        </div>
+        <h2 style="margin:.4rem 0;">{today.plain_title}</h2>
+        <p class="prose" style="margin-bottom:0;">{today.hook}</p>
+        <div class="row wrap gap-8 mt-16">
+          <span class={`badge ${today.difficulty === "Beginner" ? "badge-beginner" : today.difficulty === "Advanced" ? "badge-advanced" : "badge-intermediate"}`}>{today.difficulty}</span>
+          <span class="muted" style="font-size:.85rem;">{today.read_minutes} min read</span>
+          <a href={`/article/${today.slug}`} class="btn btn-ghost" style="margin-left:auto;">Read it</a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- What we do -->
+  <section class="container page-section">
+    <div class="card-grid">
+      <div class="card">
+        <div class="emoji" aria-hidden="true">📖</div>
+        <h3>Read</h3>
+        <p class="muted">Plain-language explainers of new and notable papers. One sentence on why it matters, then the gist — at a grade-9 reading level.</p>
+        <a href="/feed" class="chip" style="margin-top:auto;">Browse the feed →</a>
+      </div>
+      <div class="card">
+        <div class="emoji" aria-hidden="true">🗺️</div>
+        <h3>Explore</h3>
+        <p class="muted">An interactive map of research directions. Click a node to learn what an area is, why it matters, and where to start.</p>
+        <a href="/map" class="chip" style="margin-top:auto;">Open the map →</a>
+      </div>
+      <div class="card">
+        <div class="emoji" aria-hidden="true">🎓</div>
+        <h3>Learn</h3>
+        <p class="muted">Short tracks that teach AI from the ground up — built for people who are brand new to the field.</p>
+        <a href="/learn" class="chip" style="margin-top:auto;">Start learning →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Map teaser -->
+  <section class="container page-section">
+    <div class="content-section">
+      <div class="map-teaser">
+        <div>
+          <span class="chip">The map</span>
+          <h2 style="margin:.3rem 0;">See the whole field at a glance</h2>
+          <p class="prose">
+            Most tools draw citation graphs for researchers who already know a
+            paper. Ours is different: an editorial map of <em>research directions</em>,
+            each explained in plain English. Click in and start reading.
+          </p>
+          <a href="/map" class="btn btn-primary mt-8">Explore the map</a>
+        </div>
+        <div class="map-teaser-visual" aria-hidden="true">
+          {branches.map((b) => (
+            <div class={`teaser-branch tb-${b}`}>
+              <strong>{branchLabels[b]}</strong>
+              <div class="teaser-dots">
+                {directions.filter((d) => d.branch === b && d.parent_id).slice(0, 4).map((d) => (
+                  <span class="teaser-dot">{d.name}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest -->
+  {latest.length > 0 && (
+    <section class="container page-section">
+      <div class="row between wrap">
+        <h2>Latest explained papers</h2>
+        <a href="/feed" class="chip">View all →</a>
+      </div>
+      <div class="card-grid mt-16">
+        {latest.map((a) => <ArticleCard article={a} />)}
+      </div>
+    </section>
+  )}
+
+  <!-- Learn + chapters + newsletter -->
+  <section class="container page-section">
+    <div class="two-up">
+      <div class="content-section">
+        <h2>New to AI? Start here.</h2>
+        <p class="prose">No background needed. The Beginner Path walks you from
+          "what is a model?" to reading real papers with confidence.</p>
+        <a href="/learn" class="btn btn-secondary">See the tracks</a>
+      </div>
+      <div class="content-section">
+        <h2>Bring this to your school</h2>
+        <p class="prose">Start a Marginalia chapter, contribute explainers, and
+          put your campus on the map.</p>
+        <a href="/chapters/start" class="btn btn-secondary">Start a chapter</a>
+      </div>
+    </div>
+
+    <div class="content-section newsletter-cta mt-24">
+      <div>
+        <h2 style="margin-bottom:.2rem;">Get the weekly digest</h2>
+        <p class="muted">The week's best explained papers, in your inbox. No spam.</p>
+      </div>
+      <form class="row gap-8 wrap" id="homeSubscribe">
+        <input type="email" name="email" required placeholder="you@email.com" class="email-input" aria-label="Email address" />
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById("homeSubscribe") as HTMLFormElement | null;
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      form.innerHTML = `<p style="font-weight:700;color:#3d6b3a;">${
+        res.ok ? "You're in — thanks for subscribing! 🎉" : (data.error || "Something went wrong.")
+      }</p>`;
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .hero {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 28px;
+    align-items: center;
+    padding: 30px 0 10px;
+  }
+  .hero h1 {
+    font-size: 3.1rem;
+    line-height: 1.08;
+    margin: 6px 0 14px;
+  }
+  .hero-sub {
+    font-size: 1.2rem;
+    max-width: 52ch;
+    color: #2a3d66;
+  }
+  .hero-art {
+    position: relative;
+    min-height: 320px;
+  }
+  .hero-orb {
+    position: absolute;
+    inset: 18% 12%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fbe6bf, #9fc5cb 70%);
+    box-shadow: 6px 6px 0 rgba(42, 61, 102, 0.25), 0 20px 50px rgba(42, 61, 102, 0.2);
+    border: 3px solid var(--deep-indigo);
+  }
+  .float-card {
+    position: absolute;
+    background: var(--frame-cream);
+    border: 2.5px solid var(--deep-indigo);
+    border-radius: 14px;
+    padding: 8px 14px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 3px 3px 0 rgba(42, 61, 102, 0.3);
+    z-index: 2;
+    animation: floaty 6s ease-in-out infinite;
+  }
+  .fc1 { top: 6%; left: 2%; }
+  .fc2 { top: 0; right: 8%; animation-delay: -2s; background: var(--frame-peach); }
+  .fc3 { bottom: 10%; left: 0; animation-delay: -3s; background: var(--frame-green); }
+  .fc4 { bottom: 2%; right: 4%; animation-delay: -1.5s; background: var(--frame-blue); }
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-12px) rotate(1deg); }
+  }
+
+  .emoji { font-size: 2rem; }
+
+  .today-card { border-color: var(--brand-orange); }
+
+  .map-teaser {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+  .map-teaser-visual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .teaser-branch {
+    background: var(--frame-cream);
+    border: 2.5px solid var(--deep-indigo);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 3px 3px 0 rgba(42, 61, 102, 0.2);
+  }
+  .tb-foundations { background: var(--frame-blue); }
+  .tb-methods { background: var(--frame-peach); }
+  .tb-applied { background: var(--frame-green); }
+  .tb-society { background: var(--frame-lavender); }
+  .teaser-dots { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .teaser-dot {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1.5px solid rgba(42, 61, 102, 0.2);
+    border-radius: 50px;
+    padding: 2px 8px;
+  }
+
+  .two-up {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .newsletter-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    background: var(--frame-peach);
+    border-color: var(--brand-orange);
+  }
+  .email-input {
+    padding: 0.7rem 1rem;
+    border-radius: 50px;
+    border: 2.5px solid var(--deep-indigo);
+    font-family: "Nunito", sans-serif;
+    font-size: 1rem;
+    min-width: 240px;
+  }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2.3rem; }
+    .hero-art { min-height: 220px; }
+    .map-teaser { grid-template-columns: 1fr; }
+    .two-up { grid-template-columns: 1fr; }
+  }
+</style>

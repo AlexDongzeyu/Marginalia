@@ -1,0 +1,56 @@
+---
+/**
+ * /directions — list fallback + overview of the research-direction taxonomy,
+ * grouped by branch. Also the accessible alternative to the graph map.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getDirectionsWithCounts } from "../../lib/db";
+
+const { env } = Astro.locals.runtime;
+const directions = await getDirectionsWithCounts(env.DB);
+
+const branches = [
+  { key: "foundations", label: "Foundations", blurb: "The core ideas that make modern AI work." },
+  { key: "methods", label: "Methods & Models", blurb: "The building blocks researchers combine." },
+  { key: "applied", label: "AI for Good", blurb: "Where AI meets real-world problems." },
+  { key: "society", label: "Safety & Society", blurb: "Making AI trustworthy and fair." },
+] as const;
+---
+
+<BaseLayout title="Research directions — Marginalia" bodyClass="page-directions">
+  <div class="container">
+    <div class="page-header">
+      <p class="tagline">The field, organised</p>
+      <h1>Research directions</h1>
+      <p class="muted">Prefer the visual version? <a href="/map">Open the map →</a></p>
+    </div>
+
+    {branches.map((branch) => {
+      const children = directions.filter((d) => d.branch === branch.key && d.parent_id);
+      return (
+        <section class={`content-section branch-${branch.key}`}>
+          <h2>{branch.label}</h2>
+          <p class="muted mb-16">{branch.blurb}</p>
+          <div class="card-grid">
+            {children.map((d) => (
+              <a class="card" href={`/directions/${d.slug}`}>
+                <h3>{d.name}</h3>
+                <p class="muted" style="font-size:.92rem;">{d.plain_description}</p>
+                <span class="chip" style="margin-top:auto;">
+                  {d.article_count > 0 ? `${d.article_count} reads` : "Coming soon"}
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+  </div>
+</BaseLayout>
+
+<style>
+  .branch-foundations { border-left: 6px solid var(--brand-blue-dark); }
+  .branch-methods { border-left: 6px solid var(--brand-orange-dark); }
+  .branch-applied { border-left: 6px solid var(--brand-green); }
+  .branch-society { border-left: 6px solid #9b8fc0; }
+</style>

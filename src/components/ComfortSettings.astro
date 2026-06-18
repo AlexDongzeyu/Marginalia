@@ -1,0 +1,83 @@
+---
+/**
+ * Comfort Settings — floating accessibility panel.
+ * Faithful port of ECHOE's "Echo Options" widget, with the mental-health
+ * mascot swapped for a mascot-light pilcrow (¶) that fits "Marginalia".
+ * Behaviour lives in src/scripts/comfort-settings.ts.
+ */
+---
+
+<button
+  id="comfortFab"
+  class="comfort-fab"
+  aria-haspopup="dialog"
+  aria-expanded="false"
+  aria-controls="comfortPanel"
+  title="Comfort & display options"
+>
+  <span class="fab-mark" aria-hidden="true">¶</span>
+  <span>Comfort</span>
+</button>
+
+<div
+  id="comfortPanel"
+  class="comfort-panel"
+  role="dialog"
+  aria-label="Comfort settings"
+  aria-modal="false"
+>
+  <header>
+    <div class="comfort-title"><span aria-hidden="true">&#9881;</span> Comfort Settings</div>
+    <button id="comfortClose" class="comfort-close" aria-label="Close">&times;</button>
+  </header>
+
+  <div class="comfort-body">
+    <div class="mode-card" data-mode="calm" role="button" tabindex="0">
+      <div class="mode-icon" aria-hidden="true">&#10024;</div>
+      <div class="mode-info">
+        <span class="mode-name">Calm Mode</span>
+        <span class="mode-desc">Reduces animation &amp; motion</span>
+      </div>
+      <span class="mode-state">OFF</span>
+    </div>
+
+    <div class="mode-card" data-mode="focus" role="button" tabindex="0">
+      <div class="mode-icon" aria-hidden="true">&#128065;</div>
+      <div class="mode-info">
+        <span class="mode-name">Focus Mode</span>
+        <span class="mode-desc">Clean, narrow reading column</span>
+      </div>
+      <span class="mode-state">OFF</span>
+    </div>
+
+    <div class="mode-card" data-mode="contrast" role="button" tabindex="0">
+      <div class="mode-icon" aria-hidden="true">&#9681;</div>
+      <div class="mode-info">
+        <span class="mode-name">High Contrast</span>
+        <span class="mode-desc">Maximum readability</span>
+      </div>
+      <span class="mode-state">OFF</span>
+    </div>
+
+    <div class="text-size-control">
+      <div class="text-size-label">Text Size</div>
+      <div class="text-size-buttons">
+        <button id="comfortSmaller" class="size-btn" aria-label="Decrease text size">&minus;</button>
+        <span class="size-display" id="comfortSizeDisplay">100%</span>
+        <button id="comfortLarger" class="size-btn" aria-label="Increase text size">+</button>
+      </div>
+      <button id="comfortReset" class="reset-size-btn">Reset</button>
+    </div>
+
+    <button id="comfortExit" class="exit-btn" title="Leave this site immediately">
+      <span aria-hidden="true">&#8594;</span> Quick Exit
+    </button>
+
+    <div class="comfort-footer">Your settings stay on this device.</div>
+  </div>
+</div>
+
+<script>
+  import { initComfortSettings } from "../scripts/comfort-settings.ts";
+  initComfortSettings();
+</script>

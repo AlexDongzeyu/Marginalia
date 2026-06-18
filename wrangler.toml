@@ -1,0 +1,35 @@
+name = "marginalia"
+compatibility_date = "2025-05-05"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
+
+# ---------------------------------------------------------------------------
+# Bindings
+# ---------------------------------------------------------------------------
+# D1 database — holds articles, research directions, glossary, chapters, etc.
+# Create it once with:  wrangler d1 create marginalia-db
+# then paste the returned database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "marginalia-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Workers AI — used by the ingest pipeline to write plain-language explainers
+# and by the on-page "Explain it simpler" assistant. No external API key needed.
+[ai]
+binding = "AI"
+
+# ---------------------------------------------------------------------------
+# Scheduled jobs (Cron Triggers)
+# ---------------------------------------------------------------------------
+# NOTE: Cron triggers run from a dedicated Worker (see /workers/cron.ts), not
+# from Pages Functions. Deploy that worker separately with `wrangler deploy`.
+# Pages itself cannot host cron, so the cron worker calls the same ingest
+# logic and writes to the shared D1 database.
+
+[vars]
+ENVIRONMENT = "production"
+# Admin token gate for the editorial review API + manual ingest trigger.
+# Override in the Cloudflare dashboard (Settings → Environment variables) with
+# a real secret; never commit the real value.
+ADMIN_TOKEN = "change-me-in-cloudflare-dashboard"

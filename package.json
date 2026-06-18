@@ -1,0 +1,34 @@
+{
+  "name": "marginalia",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Marginalia — AI research, explained for newcomers. AI for Good.",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler pages dev ./dist",
+    "astro": "astro",
+    "db:local": "wrangler d1 execute marginalia-db --local --file=./db/schema.sql",
+    "db:seed:local": "wrangler d1 execute marginalia-db --local --file=./db/seed.sql",
+    "db:remote": "wrangler d1 execute marginalia-db --remote --file=./db/schema.sql",
+    "db:seed:remote": "wrangler d1 execute marginalia-db --remote --file=./db/seed.sql",
+    "deploy": "astro build && wrangler pages deploy ./dist",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.6.0",
+    "@astrojs/react": "^4.3.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "astro": "^5.13.0",
+    "reactflow": "^11.11.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250705.0",
+    "wrangler": "^4.24.0"
+  }
+}

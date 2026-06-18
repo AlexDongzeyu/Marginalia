@@ -1,0 +1,82 @@
+---
+/**
+ * Site header + primary navigation.
+ * Mirrors ECHOE's fixed header with dropdown groups, restyled for Marginalia's
+ * information architecture (Read / Explore / Learn / Community).
+ */
+const path = Astro.url.pathname;
+const isActive = (href: string) =>
+  href === "/" ? path === "/" : path.startsWith(href);
+---
+
+<header class="site-header">
+  <nav class="site-nav" aria-label="Primary">
+    <a href="/" class="logo" aria-label="Marginalia home">
+      <span class="logo-mark" aria-hidden="true">¶</span>
+      <span>Marginalia</span>
+    </a>
+
+    <button
+      class="mobile-menu-toggle"
+      id="mobileMenuToggle"
+      aria-label="Toggle menu"
+      aria-expanded="false"
+    >
+      <span aria-hidden="true">&#9776;</span>
+    </button>
+
+    <ul class="nav-menu" id="navMenu">
+      <li>
+        <a href="/today" class={isActive("/today") ? "active" : ""}>Today</a>
+      </li>
+
+      <li class="dropdown">
+        <a href="/feed" class={isActive("/feed") || isActive("/article") ? "active" : ""}>Read</a>
+        <div class="dropdown-content">
+          <a href="/feed">All explained papers</a>
+          <a href="/today">Article of the Day</a>
+          <a href="/glossary">Glossary</a>
+        </div>
+      </li>
+
+      <li class="dropdown">
+        <a href="/map" class={isActive("/map") || isActive("/directions") ? "active" : ""}>Explore</a>
+        <div class="dropdown-content">
+          <a href="/map">Research map</a>
+          <a href="/directions">All directions</a>
+          <a href="/projects">Project gallery</a>
+        </div>
+      </li>
+
+      <li>
+        <a href="/learn" class={isActive("/learn") ? "active" : ""}>Learn</a>
+      </li>
+
+      <li class="dropdown">
+        <a href="/chapters" class={isActive("/chapters") || isActive("/join") ? "active" : ""}>Community</a>
+        <div class="dropdown-content">
+          <a href="/chapters">Chapters</a>
+          <a href="/chapters/start">Start a chapter</a>
+          <a href="/newsletter">Newsletter</a>
+          <a href="/join">Join us</a>
+        </div>
+      </li>
+
+      <li>
+        <a href="/about" class={isActive("/about") ? "active" : ""}>About</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<script>
+  const toggle = document.getElementById("mobileMenuToggle");
+  const menu = document.getElementById("navMenu");
+  toggle?.addEventListener("click", () => {
+    const open = menu?.classList.toggle("show");
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 768) menu?.classList.remove("show");
+  });
+</script>

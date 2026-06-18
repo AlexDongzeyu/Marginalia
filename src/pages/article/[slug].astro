@@ -1,0 +1,204 @@
+---
+/**
+ * /article/[slug] — the explained-paper template (core content unit).
+ * Renders plain-language fields produced by the AI pipeline + human review,
+ * with a source box that links OUT to arXiv (we never republish the abstract).
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ArticleCard from "../../components/ArticleCard.astro";
+import { getPublishedArticleBySlug, getRelatedArticles } from "../../lib/db";
+import { renderMarkdown } from "../../lib/markdown";
+import { DIFFICULTY_CLASS } from "../../lib/types";
+
+const { slug } = Astro.params;
+const { env } = Astro.locals.runtime;
+
+const article = slug ? await getPublishedArticleBySlug(env.DB, slug) : null;
+if (!article) {
+  return new Response(null, { status: 404, statusText: "Not Found" });
+}
+
+const dirs = article.directions ?? [];
+const related = await getRelatedArticles(
+  env.DB,
+  article.id,
+  dirs.map((d) => d.id),
+  3,
+);
+
+const whatsGoingOn = renderMarkdown(article.whats_going_on);
+const whyItMatters = renderMarkdown(article.why_it_matters);
+const publishedNice = article.published_date
+  ? new Date(article.published_date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  : null;
+---
+
+<BaseLayout
+  title={`${article.plain_title} — Marginalia`}
+  description={article.hook}
+  bodyClass="page-article"
+>
+  <article class="container article-wrap">
+    <a href="/feed" class="chip mb-16">← Back to the feed</a>
+
+    <div class="row wrap gap-8">
+      <span class={`badge ${DIFFICULTY_CLASS[article.difficulty]}`}>{article.difficulty}</span>
+      {article.is_ai4good === 1 && <span class="badge badge-ai4good">AI for Good</span>}
+      {article.is_foundational === 1 && <span class="chip">Foundational read</span>}
+      <span class="muted" style="font-size:.85rem;">{article.read_minutes} min read</span>
+    </div>
+
+    <h1 class="article-title">{article.plain_title}</h1>
+    <p class="original-title muted">
+      Original paper: <em>{article.original_title}</em>
+    </p>
+
+    <p class="hook">{article.hook}</p>
+
+    <!-- direction chips -->
+    {dirs.length > 0 && (
+      <div class="row wrap gap-8 mb-24">
+        {dirs.map((d) => (
+          <a class="chip" href={`/directions/${d.slug}`}>{d.name}</a>
+        ))}
+      </div>
+    )}
+
+    <div class="content-section prose">
+      <h2>What's going on</h2>
+      <Fragment set:html={whatsGoingOn} />
+      <h2>Why it matters</h2>
+      <Fragment set:html={whyItMatters} />
+    </div>
+
+    <!-- Source box -->
+    <div class="content-section source-box">
+      <h3>Source</h3>
+      <p style="margin-bottom:.6rem;">
+        {article.authors.length > 0 && <span><strong>{article.authors.join(", ")}</strong></span>}
+        {article.institution && <span class="muted"> — {article.institution}</span>}
+        {publishedNice && <span class="muted"> · {publishedNice}</span>}
+      </p>
+      <div class="row wrap gap-8">
+        {article.source_url && (
+          <a class="btn btn-ghost" href={article.source_url} target="_blank" rel="noopener noreferrer">
+            View on arXiv ↗
+          </a>
+        )}
+        {article.pdf_url && (
+          <a class="btn btn-ghost" href={article.pdf_url} target="_blank" rel="noopener noreferrer">
+            PDF ↗
+          </a>
+        )}
+        {article.citation_count > 0 && (
+          <span class="chip">{article.citation_count.toLocaleString()} citations</span>
+        )}
+      </div>
+      <p class="transparency muted">
+        <span aria-hidden="true">🤖</span>
+        {article.ai_model === "hand-written"
+          ? `Written and reviewed by ${article.reviewer_name ?? "the Marginalia editorial team"}.`
+          : `AI-assisted summary, reviewed by ${article.reviewer_name ?? "the Marginalia editorial team"}. We link to the original; we don't republish it.`}
+      </p>
+    </div>
+
+    <!-- Explain-simpler assistant -->
+    <div class="content-section explain-box">
+      <h3>Still fuzzy on something?</h3>
+      <p class="muted" style="margin-bottom:.6rem;">
+        Paste a sentence from this article and we'll explain it even more simply.
+      </p>
+      <textarea id="explainInput" rows="2" placeholder="Paste a sentence you'd like explained more simply…"></textarea>
+      <div class="row gap-8 mt-8">
+        <button id="explainBtn" class="btn btn-secondary">Explain it simpler</button>
+      </div>
+      <div id="explainResult" class="explain-result hidden"></div>
+    </div>
+
+    {related.length > 0 && (
+      <section class="page-section">
+        <h2>Related reads</h2>
+        <div class="card-grid mt-16">
+          {related.map((a) => <ArticleCard article={a} />)}
+        </div>
+      </section>
+    )}
+  </article>
+
+  <script define:vars={{ articleSlug: article.slug }}>
+    const btn = document.getElementById("explainBtn");
+    const input = document.getElementById("explainInput");
+    const result = document.getElementById("explainResult");
+    btn?.addEventListener("click", async () => {
+      const sentence = input.value.trim();
+      if (!sentence) return;
+      btn.disabled = true;
+      btn.textContent = "Thinking…";
+      result.classList.remove("hidden");
+      result.textContent = "";
+      try {
+        const res = await fetch("/api/explain-simpler", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sentence, slug: articleSlug }),
+        });
+        const data = await res.json();
+        result.textContent = data.explanation || data.error || "Sorry, couldn't explain that right now.";
+      } catch {
+        result.textContent = "Sorry, the assistant is unavailable right now.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Explain it simpler";
+      }
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .article-wrap { max-width: 820px; }
+  .article-title { font-size: 2.4rem; margin: 10px 0 6px; }
+  .original-title { font-size: 0.95rem; margin-bottom: 14px; }
+  .hook {
+    font-family: "Sriracha", cursive;
+    font-size: 1.3rem;
+    color: var(--deep-indigo);
+    background: var(--frame-peach);
+    border-left: 5px solid var(--brand-orange);
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+  }
+  .source-box { background: var(--frame-blue); border-color: rgba(122, 174, 182, 0.5); }
+  .transparency {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(42, 61, 102, 0.25);
+  }
+  .explain-box { background: var(--frame-green); border-color: rgba(173, 203, 164, 0.6); }
+  .explain-box textarea {
+    width: 100%;
+    border-radius: 12px;
+    border: 2.5px solid var(--deep-indigo);
+    padding: 10px 12px;
+    font-family: "Nunito", sans-serif;
+    font-size: 1rem;
+    resize: vertical;
+  }
+  .explain-result {
+    margin-top: 12px;
+    background: var(--frame-cream);
+    border: 2px solid rgba(42, 61, 102, 0.15);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 1.02rem;
+    line-height: 1.7;
+  }
+  @media (max-width: 600px) {
+    .article-title { font-size: 1.8rem; }
+  }
+</style>

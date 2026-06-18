@@ -1,0 +1,37 @@
+---
+/**
+ * ArticleCard — the feed/grid unit for an explained paper.
+ * Plain title, hook, direction chips, difficulty + read time.
+ */
+import { DIFFICULTY_CLASS, type Article } from "../lib/types";
+
+interface Props {
+  article: Article;
+}
+const { article } = Astro.props;
+const dirs = article.directions ?? [];
+---
+
+<a class="card article-card" href={`/article/${article.slug}`}>
+  <div class="row wrap gap-8">
+    <span class={`badge ${DIFFICULTY_CLASS[article.difficulty]}`}>{article.difficulty}</span>
+    {article.is_ai4good === 1 && <span class="badge badge-ai4good">AI for Good</span>}
+    {article.is_foundational === 1 && <span class="chip">Foundational</span>}
+  </div>
+
+  <h3>{article.plain_title}</h3>
+  <p class="muted" style="font-size:.95rem;">{article.hook}</p>
+
+  <div class="card-meta">
+    {dirs.slice(0, 2).map((d) => <span class="chip">{d.name}</span>)}
+    <span class="muted" style="font-size:.8rem; margin-left:auto;">
+      {article.read_minutes} min read
+    </span>
+  </div>
+</a>
+
+<style>
+  .article-card h3 {
+    margin: 2px 0;
+  }
+</style>

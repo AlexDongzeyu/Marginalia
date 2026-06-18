@@ -1,0 +1,66 @@
+---
+/**
+ * BaseLayout — the page shell for every Marginalia page.
+ * Loads fonts + the ported design system, renders header/footer, and mounts
+ * the Comfort Settings widget. Keeps the ECHOE look while being SSR-rendered
+ * on Cloudflare Pages.
+ */
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import ComfortSettings from "../components/ComfortSettings.astro";
+import "../styles/global.css";
+import "../styles/comfort.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Adds a body class like `page-feed` for page-specific tweaks. */
+  bodyClass?: string;
+  /** Hide the floating Comfort widget (rarely needed). */
+  hideComfort?: boolean;
+}
+
+const {
+  title = "Marginalia — AI research, explained for newcomers",
+  description = "A free, student-run guide to AI research. Plain-language explainers, an interactive map of research directions, and learning tracks — built around AI for good.",
+  bodyClass = "",
+  hideComfort = false,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="Marginalia" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Fonts: carried over from ECHOE design system -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Serif+Display&family=Sriracha&family=Namdhinggo:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class={bodyClass}>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+    {!hideComfort && <ComfortSettings />}
+  </body>
+</html>

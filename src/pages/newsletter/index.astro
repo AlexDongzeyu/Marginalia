@@ -1,0 +1,83 @@
+---
+/**
+ * /newsletter — subscribe + what-you'll-get + (future) web archive.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const { env } = Astro.locals.runtime;
+const rows = await env.DB.prepare(
+  `SELECT slug, title, sent_at FROM newsletter_issues WHERE sent_at IS NOT NULL ORDER BY sent_at DESC LIMIT 20`,
+).all<{ slug: string; title: string; sent_at: string }>();
+const issues = rows.results ?? [];
+---
+
+<BaseLayout title="Newsletter — Marginalia" bodyClass="page-newsletter">
+  <div class="container" style="max-width:820px;">
+    <div class="page-header">
+      <p class="tagline">One email a week</p>
+      <h1>The Marginalia digest</h1>
+    </div>
+
+    <div class="content-section subscribe-card">
+      <h2>Subscribe</h2>
+      <p class="muted">The week's best explained papers, plus one idea worth knowing. No spam, unsubscribe anytime.</p>
+      <form class="row gap-8 wrap mt-16" id="nlForm">
+        <input type="email" name="email" required placeholder="you@email.com" class="email-input" aria-label="Email" />
+        <button type="submit" class="btn btn-primary">Subscribe</button>
+      </form>
+      <p id="nlStatus" class="muted mt-8"></p>
+    </div>
+
+    <div class="content-section">
+      <h2>What you'll get</h2>
+      <ul class="prose">
+        <li>3–5 newly explained papers, in plain language</li>
+        <li>A "start here" pick for newcomers</li>
+        <li>One highlighted research direction from the map</li>
+      </ul>
+    </div>
+
+    <section class="page-section">
+      <h2>Past issues</h2>
+      {issues.length > 0 ? (
+        <ul class="prose">
+          {issues.map((i) => (
+            <li><a href={`/newsletter/${i.slug}`}>{i.title}</a></li>
+          ))}
+        </ul>
+      ) : (
+        <p class="muted">The archive will appear here once the first issue ships.</p>
+      )}
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById("nlForm") as HTMLFormElement;
+    const status = document.getElementById("nlStatus");
+    form?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+      if (status) status.textContent = "Subscribing…";
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (status) status.textContent = res.ok ? "You're in — thanks! 🎉" : (data.error || "Something went wrong.");
+      if (res.ok) form.reset();
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .subscribe-card { background: var(--frame-peach); border-color: var(--brand-orange); }
+  .email-input {
+    padding: 0.7rem 1rem;
+    border-radius: 50px;
+    border: 2.5px solid var(--deep-indigo);
+    font-family: "Nunito", sans-serif;
+    font-size: 1rem;
+    min-width: 240px;
+  }
+</style>

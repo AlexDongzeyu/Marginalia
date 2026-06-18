@@ -1,0 +1,53 @@
+---
+/**
+ * /projects — applied AI-for-good project gallery (v1 curated placeholder set).
+ * Real projects (live demo + GitHub + tags) get added as the community ships.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const projects = [
+  {
+    title: "Plain-language paper explainers",
+    blurb: "The daily pipeline that powers this site: arXiv → Workers AI → human review.",
+    tags: ["NLP", "Pipeline", "Open"],
+    status: "Live",
+  },
+  {
+    title: "Research direction map",
+    blurb: "An editorial, clickable map of AI research directions for newcomers.",
+    tags: ["Visualization", "Education"],
+    status: "Live",
+  },
+  {
+    title: "Accessibility-first reading mode",
+    blurb: "Focus Mode, high contrast, text scaling — built in from day one.",
+    tags: ["Accessibility"],
+    status: "Live",
+  },
+];
+---
+
+<BaseLayout title="Projects — Marginalia" bodyClass="page-projects">
+  <div class="container">
+    <div class="page-header">
+      <p class="tagline">Applied AI for good</p>
+      <h1>Project gallery</h1>
+      <p class="muted">Things we (and our chapters) build in the open. Want yours here? <a href="/join">Join us</a>.</p>
+    </div>
+
+    <div class="card-grid">
+      {projects.map((p) => (
+        <div class="card">
+          <div class="row between">
+            <span class="badge badge-ai4good">{p.status}</span>
+          </div>
+          <h3>{p.title}</h3>
+          <p class="muted" style="font-size:.95rem;">{p.blurb}</p>
+          <div class="card-meta">
+            {p.tags.map((t) => <span class="chip">{t}</span>)}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

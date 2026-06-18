@@ -1,0 +1,362 @@
+/* ===========================================================================
+   Marginalia — Comfort Settings
+   Carried over from ECHOE's accessibility panel. For a reading-heavy research
+   site, Focus Mode (clean, narrow reading column) is a genuine feature.
+   Modes are toggled by adding classes to <body>: mode-calm / mode-focus /
+   mode-contrast, persisted in localStorage by comfort-settings.ts.
+   =========================================================================== */
+
+/* ---- Calm Mode: kill animation & motion ---- */
+body.mode-calm *,
+body.mode-calm *::before,
+body.mode-calm *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+body.mode-calm {
+  background-image: none;
+  background: #eef4f3;
+}
+
+/* ---- Focus Mode: clean, distraction-free reading ---- */
+body.mode-focus .comfort-fab,
+body.mode-focus .explain-fab,
+body.mode-focus .site-footer .footer-extra,
+body.mode-focus .home-decor {
+  /* keep the comfort button reachable; hide purely decorative extras */
+}
+
+body.mode-focus main {
+  background: #fffdf8;
+}
+
+body.mode-focus .container {
+  max-width: 760px;
+}
+
+body.mode-focus .prose,
+body.mode-focus p,
+body.mode-focus li {
+  line-height: 1.95;
+  letter-spacing: 0.01em;
+}
+
+body.mode-focus .card-grid {
+  grid-template-columns: 1fr !important;
+}
+
+body.mode-focus .home-hero-art,
+body.mode-focus .map-teaser-visual {
+  display: none !important;
+}
+
+/* ---- High Contrast ---- */
+body.mode-contrast {
+  background: #000 !important;
+  background-image: none !important;
+  color: #f5f6f7 !important;
+}
+
+body.mode-contrast a {
+  color: #ffe066 !important;
+  text-decoration: underline;
+}
+
+body.mode-contrast header.site-header,
+body.mode-contrast footer.site-footer {
+  background: #000 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  border-bottom: 2px solid #ffe066;
+}
+
+body.mode-contrast nav .nav-menu a,
+body.mode-contrast .btn,
+body.mode-contrast .chip,
+body.mode-contrast .badge {
+  background: #111 !important;
+  color: #fff !important;
+  border: 2px solid #ffe066 !important;
+  box-shadow: none !important;
+}
+
+body.mode-contrast .content-section,
+body.mode-contrast .page-container,
+body.mode-contrast .card {
+  background: #000 !important;
+  border: 2px solid #fff !important;
+  box-shadow: none !important;
+  color: #f5f6f7 !important;
+}
+
+body.mode-contrast .prose,
+body.mode-contrast .prose strong,
+body.mode-contrast h1,
+body.mode-contrast h2,
+body.mode-contrast h3 {
+  color: #fff !important;
+}
+
+/* ===========================================================================
+   Floating buttons (Comfort FAB + Explain assistant FAB)
+   =========================================================================== */
+.comfort-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 88px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(253, 244, 197, 0.7);
+  border: 2px solid rgba(42, 61, 102, 0.2);
+  border-radius: 50px;
+  padding: 10px 16px;
+  box-shadow: 2px 2px 0 rgba(244, 210, 200, 0.4), 0 4px 12px rgba(42, 61, 102, 0.08);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: "Nunito", sans-serif;
+}
+
+.comfort-fab:hover {
+  transform: translate(2px, 2px);
+  background: rgba(253, 244, 197, 0.9);
+}
+
+.comfort-fab .fab-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(42, 61, 102, 0.25);
+  display: grid;
+  place-items: center;
+  background: var(--frame-cream);
+  font-size: 0.95rem;
+}
+
+.comfort-fab span {
+  font-weight: 800;
+  color: var(--deep-indigo);
+  font-size: 0.95rem;
+}
+
+/* ---- Comfort panel ---- */
+.comfort-panel {
+  position: fixed;
+  right: 20px;
+  top: 18px;
+  z-index: 10002;
+  width: 290px;
+  max-height: calc(100vh - 36px);
+  background: linear-gradient(180deg, #fdfbf7 0%, #f8f4ee 100%);
+  border: 3px solid #2a3d66;
+  border-radius: 18px;
+  box-shadow: 6px 6px 0 rgba(42, 61, 102, 0.35), 0 15px 40px rgba(42, 61, 102, 0.2);
+  display: none;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.comfort-panel.open {
+  display: flex;
+}
+
+.comfort-panel header {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f8d29c 0%, #e8c99b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid rgba(42, 61, 102, 0.12);
+}
+
+.comfort-title {
+  font-weight: 800;
+  color: #2a3d66;
+  font-size: 0.98rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Nunito", sans-serif;
+}
+
+.comfort-close {
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(42, 61, 102, 0.2);
+  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  color: #2a3d66;
+  font-weight: 800;
+}
+
+.comfort-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.mode-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 2px solid rgba(42, 61, 102, 0.12);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-card:hover {
+  border-color: rgba(42, 61, 102, 0.3);
+  transform: translateY(-1px);
+}
+
+.mode-card.active {
+  background: var(--frame-blue);
+  border-color: var(--deep-indigo);
+  box-shadow: 2px 2px 0 rgba(42, 61, 102, 0.2);
+}
+
+.mode-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  background: var(--frame-peach);
+  border: 2px solid rgba(42, 61, 102, 0.12);
+}
+
+.mode-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.mode-name {
+  font-weight: 800;
+  color: var(--deep-indigo);
+  font-size: 0.92rem;
+}
+
+.mode-desc {
+  font-size: 0.76rem;
+  color: rgba(42, 61, 102, 0.7);
+}
+
+.mode-state {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 50px;
+  background: #eee;
+  color: #888;
+}
+
+.mode-card.active .mode-state {
+  background: var(--brand-green);
+  color: #2a3d66;
+}
+
+/* ---- Text size control ---- */
+.text-size-control {
+  background: #fff;
+  border: 2px solid rgba(42, 61, 102, 0.12);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.text-size-label {
+  font-weight: 800;
+  color: var(--deep-indigo);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.text-size-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.size-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 2px solid var(--deep-indigo);
+  background: var(--frame-cream);
+  color: var(--deep-indigo);
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(42, 61, 102, 0.2);
+}
+
+.size-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 rgba(42, 61, 102, 0.2);
+}
+
+.size-display {
+  font-weight: 800;
+  color: var(--deep-indigo);
+}
+
+.reset-size-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 6px;
+  border-radius: 10px;
+  border: 2px solid rgba(42, 61, 102, 0.2);
+  background: var(--frame-blue);
+  color: var(--deep-indigo);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+/* ---- Quick exit ---- */
+.exit-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2.5px solid #b3402f;
+  background: #f7d9d3;
+  color: #8a2c1f;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 2px 2px 0 rgba(138, 44, 31, 0.3);
+}
+
+.exit-btn:hover {
+  background: #f3c8c0;
+}
+
+.comfort-footer {
+  text-align: center;
+  font-size: 0.76rem;
+  color: rgba(42, 61, 102, 0.6);
+  padding: 4px 0 2px;
+}
+
+@media (max-width: 768px) {
+  .comfort-fab span { display: none; }
+  .comfort-fab { bottom: 78px; padding: 8px 12px; }
+  .comfort-panel { right: 12px; width: calc(100vw - 24px); max-width: 320px; }
+}

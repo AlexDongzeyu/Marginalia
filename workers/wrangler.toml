@@ -1,0 +1,18 @@
+name = "marginalia-cron"
+main = "cron.ts"
+compatibility_date = "2025-05-05"
+compatibility_flags = ["nodejs_compat"]
+
+# Daily ingest at 06:00 UTC (spec §6.1). Adjust as needed.
+[triggers]
+crons = ["0 6 * * *"]
+
+# Share the SAME D1 database as the Pages app. Paste the same database_id.
+[[d1_databases]]
+binding = "DB"
+database_name = "marginalia-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Workers AI binding for the explainer model.
+[ai]
+binding = "AI"
