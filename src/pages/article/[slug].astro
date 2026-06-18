@@ -8,6 +8,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getPublishedArticleBySlug, getRelatedArticles } from "../../lib/db";
 import { renderMarkdown } from "../../lib/markdown";
+import { getSessionUser } from "../../lib/auth";
 
 const { slug } = Astro.params;
 const { env } = Astro.locals.runtime;
@@ -18,6 +19,23 @@ if (!article) {
 }
 const dirs = article.directions ?? [];
 const related = await getRelatedArticles(env.DB, article.id, dirs.map((d) => d.id), 3);
+
+const me = await getSessionUser(Astro.request.headers.get("cookie"), env, env.DB);
+const annRes = await env.DB
+  .prepare(
+    `SELECT id, author_name, body, created_at FROM annotations
+     WHERE article_id = ? AND status = 'approved' ORDER BY created_at DESC LIMIT 40`,
+  )
+  .bind(article.id)
+  .all();
+const annotations = (annRes.results ?? []) as {
+  id: number;
+  author_name: string;
+  body: string;
+  created_at: string;
+}[];
+const initialsOf = (n: string) =>
+  n.split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
 
 const whatsGoingOn = renderMarkdown(article.whats_going_on);
 const whyItMatters = renderMarkdown(article.why_it_matters);
@@ -138,7 +156,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
           <div>
             <div class="row gap-8" style="justify-content:space-between; align-items:center; margin-bottom:12px;">
               <span style="font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faintest);">Member notes</span>
-              <a href="/login" style="font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); border:1px solid rgba(194,65,12,.4); padding:4px 9px; text-decoration:none;">+ contribute</a>
+              {!me && <a href="/login" style="font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); border:1px solid rgba(194,65,12,.4); padding:4px 9px; text-decoration:none;">Sign in ↗</a>}
             </div>
             <div class="mn-card" data-reveal style="margin-bottom:12px;">
               <div class="row gap-8" style="align-items:center; margin-bottom:6px;">
@@ -148,7 +166,33 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
               </div>
               <div class="mn-body">{article.hook}</div>
             </div>
-            <div class="mn-hand" data-reveal>sign in to add your own note + save a copy to your library ↗</div>
+
+            <div id="annList">
+              {annotations.map((a) => (
+                <div class="mn-card" style="margin-bottom:12px;">
+                  <div class="row gap-8" style="align-items:center; margin-bottom:6px;">
+                    <span class="mn-avatar" style="width:22px; height:22px; font-size:9px;">{initialsOf(a.author_name)}</span>
+                    <span style="font-family:var(--mono); font-size:10px; color:var(--ink-soft); flex:1;">{a.author_name}</span>
+                    <span style="font-family:var(--mono); font-size:8px; letter-spacing:.1em; padding:2px 5px; color:var(--accent-2); border:1px solid rgba(30,58,95,.4);">MEMBER</span>
+                  </div>
+                  <div class="mn-body">{a.body}</div>
+                </div>
+              ))}
+            </div>
+
+            {me ? (
+              <div class="mn-card" style="margin-bottom:12px;">
+                <div class="mn-label">Add a note</div>
+                <textarea id="annInput" class="paper-textarea" rows="3" maxlength="280" placeholder="Explain a bit in plain words…" style="margin-top:6px;"></textarea>
+                <div class="row gap-8" style="margin-top:8px; align-items:center; justify-content:space-between;">
+                  <span id="annCount" style="font-family:var(--mono); font-size:9px; color:var(--ink-faint);">0/280</span>
+                  <button id="annSubmit" class="btn-ink" type="button" style="padding:7px 14px;">Post note</button>
+                </div>
+                <span id="annMsg" style="display:block; margin-top:6px; font-family:var(--mono); font-size:10px; color:var(--ink-soft);"></span>
+              </div>
+            ) : (
+              <div class="mn-hand" data-reveal>sign in to leave your own note in the margin ↗</div>
+            )}
           </div>
 
           <!-- leaderboard (demo) -->
@@ -177,7 +221,7 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
 
   <div id="toast" class="hidden" style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:80; background:var(--ink); color:var(--paper); padding:11px 20px; font-family:var(--mono); font-size:12px;"></div>
 
-  <script define:vars={{ articleSlug: article.slug }}>
+  <script define:vars={{ articleSlug: article.slug, articleId: article.id, loggedIn: !!me }}>
     // ----- mode toggle -----
     const exPane = document.getElementById("explainerPane");
     const srcPane = document.getElementById("sourcePane");
@@ -209,46 +253,86 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
       finally { eBtn.disabled = false; eBtn.textContent = "Explain it simpler"; }
     });
 
-    // ----- quiz (generic comprehension; awards a local stamp) -----
-    const QUESTIONS = [
-      { text: "What does Marginalia do with this paper?", opts: ["Republishes the PDF as its own", "Explains it in plain language and links to the source", "Sells a summary"], correct: 1 },
-      { text: "Where do you read the original?", opts: ["On arXiv, we link out, never republish", "Only here", "Nowhere"], correct: 0 },
-      { text: "What does the red-pen underline mark?", opts: ["A spelling mistake", "A phrase with a margin note or link", "Nothing"], correct: 2 - 1 },
-    ];
-    const sel = {};
-    const qWrap = document.getElementById("quizQuestions");
-    QUESTIONS.forEach((q, qi) => {
-      const block = document.createElement("div");
-      block.style.marginBottom = "18px";
-      const qt = document.createElement("div");
-      qt.style.cssText = "font-size:17px; line-height:1.4; margin-bottom:9px;";
-      qt.innerHTML = `<b style="color:#C2410C; font-family:var(--mono); font-size:13px;">${qi + 1}.</b> ${q.text}`;
-      block.appendChild(qt);
-      q.opts.forEach((label, oi) => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.textContent = label;
-        b.style.cssText = "display:block; text-align:left; width:100%; padding:9px 13px; margin-bottom:7px; font-family:var(--serif); font-size:15px; cursor:pointer; background:#FCFAF4; border:1px solid rgba(33,28,22,.18); color:#211C16;";
-        b.addEventListener("click", () => {
-          sel[qi] = oi;
-          [...block.querySelectorAll("button")].forEach((x) => (x.style.borderColor = "rgba(33,28,22,.18)", x.style.background = "#FCFAF4"));
-          b.style.borderColor = "rgba(33,28,22,.5)"; b.style.background = "rgba(33,28,22,.05)";
-        });
-        block.appendChild(b);
-      });
-      qWrap.appendChild(block);
-    });
+    // ----- quiz (article-specific, generated by AI + cached) -----
     const toast = (m) => { const t = document.getElementById("toast"); t.textContent = m; t.classList.remove("hidden"); setTimeout(() => t.classList.add("hidden"), 2200); };
-    document.getElementById("quizCheck")?.addEventListener("click", () => {
-      if ([0,1,2].some((i) => sel[i] === undefined)) { toast("Answer all three first"); return; }
-      const pass = QUESTIONS.every((q, qi) => sel[qi] === q.correct);
-      const msg = document.getElementById("quizMsg");
-      if (pass) {
-        msg.textContent = "Nailed it, stamp earned.";
+    const qWrap = document.getElementById("quizQuestions");
+    const quizCheckBtn = document.getElementById("quizCheck");
+    const quizMsg = document.getElementById("quizMsg");
+    let QUESTIONS = [];
+    const sel = {};
+    function renderQuiz() {
+      qWrap.innerHTML = "";
+      QUESTIONS.forEach((q, qi) => {
+        const block = document.createElement("div");
+        block.style.marginBottom = "18px";
+        block.setAttribute("data-qi", qi);
+        const qt = document.createElement("div");
+        qt.style.cssText = "font-size:17px; line-height:1.4; margin-bottom:9px;";
+        const num = document.createElement("b");
+        num.style.cssText = "color:#C2410C; font-family:var(--mono); font-size:13px;";
+        num.textContent = (qi + 1) + ". ";
+        qt.appendChild(num);
+        qt.appendChild(document.createTextNode(q.question));
+        block.appendChild(qt);
+        (q.options || []).forEach((label, oi) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.textContent = label;
+          b.style.cssText = "display:block; text-align:left; width:100%; padding:9px 13px; margin-bottom:7px; font-family:var(--serif); font-size:15px; cursor:pointer; background:#FCFAF4; border:1px solid rgba(33,28,22,.18); color:#211C16;";
+          b.addEventListener("click", () => {
+            sel[qi] = oi;
+            [...block.querySelectorAll("button")].forEach((x) => { x.style.borderColor = "rgba(33,28,22,.18)"; x.style.background = "#FCFAF4"; });
+            b.style.borderColor = "rgba(33,28,22,.5)"; b.style.background = "rgba(33,28,22,.05)";
+          });
+          block.appendChild(b);
+        });
+        const exp = document.createElement("div");
+        exp.className = "q-exp hidden";
+        exp.style.cssText = "font-family:var(--mono); font-size:11px; line-height:1.5; margin-top:2px; color:var(--ink-soft);";
+        block.appendChild(exp);
+        qWrap.appendChild(block);
+      });
+    }
+    async function loadQuiz() {
+      qWrap.innerHTML = '<div style="font-family:var(--mono); font-size:12px; color:#8a8073;">Building a quiz about this paper…</div>';
+      try {
+        const r = await fetch(`/api/articles/${articleId}/quiz`);
+        const d = await r.json();
+        if (r.ok && Array.isArray(d.questions) && d.questions.length) {
+          QUESTIONS = d.questions; renderQuiz();
+        } else {
+          qWrap.innerHTML = '<div style="font-family:var(--mono); font-size:12px; color:#8a8073;">' + (d.error || "Quiz unavailable right now.") + '</div>';
+          if (quizCheckBtn) quizCheckBtn.setAttribute("disabled", "true");
+        }
+      } catch {
+        qWrap.innerHTML = '<div style="font-family:var(--mono); font-size:12px; color:#8a8073;">Quiz unavailable right now.</div>';
+        if (quizCheckBtn) quizCheckBtn.setAttribute("disabled", "true");
+      }
+    }
+    loadQuiz();
+    quizCheckBtn?.addEventListener("click", () => {
+      if (!QUESTIONS.length) return;
+      if (QUESTIONS.some((q, qi) => sel[qi] === undefined)) { toast("Answer every question first"); return; }
+      let correct = 0;
+      QUESTIONS.forEach((q, qi) => {
+        const block = qWrap.querySelector('[data-qi="' + qi + '"]');
+        const btns = block ? [...block.querySelectorAll("button")] : [];
+        btns.forEach((b, oi) => {
+          if (oi === q.correct_index) { b.style.borderColor = "#2e6b36"; b.style.background = "rgba(46,107,54,.1)"; }
+          else if (oi === sel[qi]) { b.style.borderColor = "#b91c1c"; b.style.background = "rgba(185,28,28,.08)"; }
+        });
+        const exp = block ? block.querySelector(".q-exp") : null;
+        if (exp && q.explanation) { exp.textContent = (sel[qi] === q.correct_index ? "Correct. " : "Answer: ") + q.explanation; exp.classList.remove("hidden"); }
+        if (sel[qi] === q.correct_index) correct++;
+      });
+      if (correct === QUESTIONS.length) {
+        quizMsg.textContent = "Nailed it, stamp earned.";
         document.getElementById("quizStamp").classList.remove("hidden");
         try { localStorage.setItem("mg.stamp." + articleSlug, "1"); } catch {}
         toast("+10, you understood this one");
-      } else { msg.textContent = "Not quite, try again."; }
+      } else {
+        quizMsg.textContent = correct + "/" + QUESTIONS.length + " correct. Fix the reds and try again.";
+      }
     });
 
     // ----- leaderboard (demo) -----
@@ -264,6 +348,48 @@ const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${a
       row.style.cssText = `display:flex; align-items:center; gap:8px; padding:5px 6px; ${r.you ? "background:rgba(194,65,12,.1); outline:1px solid rgba(194,65,12,.3);" : ""}`;
       row.innerHTML = `<span style="width:16px; font-family:var(--mono); font-size:11px; color:#8a8073;">${i + 1}</span><span class="mn-avatar" style="width:20px; height:20px; font-size:8px; background:${r.you ? "#C2410C" : "#7A5C3E"};">${r.initials}</span><span style="flex:1; font-size:14px;">${r.name}</span><span style="font-family:var(--mono); font-size:11px; color:#3a342b;">${r.pts}</span>`;
       lbWrap.appendChild(row);
+    });
+
+    // ----- annotations (leave a note in the margin) -----
+    const annInput = document.getElementById("annInput");
+    const annSubmit = document.getElementById("annSubmit");
+    const annMsg = document.getElementById("annMsg");
+    const annCount = document.getElementById("annCount");
+    const annList = document.getElementById("annList");
+    annInput?.addEventListener("input", () => { if (annCount) annCount.textContent = annInput.value.length + "/280"; });
+    annSubmit?.addEventListener("click", async () => {
+      const body = (annInput && annInput.value ? annInput.value : "").trim();
+      if (body.length < 3) { if (annMsg) annMsg.textContent = "Write a little more."; return; }
+      annSubmit.setAttribute("disabled", "true"); if (annMsg) annMsg.textContent = "Posting…";
+      try {
+        const r = await fetch("/api/annotations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug: articleSlug, body }) });
+        const d = await r.json();
+        if (r.ok && d.annotation) {
+          const a = d.annotation;
+          const ini = String(a.author_name || "Me").split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+          const card = document.createElement("div");
+          card.className = "mn-card"; card.style.marginBottom = "12px";
+          const head = document.createElement("div");
+          head.className = "row gap-8"; head.style.cssText = "align-items:center; margin-bottom:6px;";
+          const av = document.createElement("span");
+          av.className = "mn-avatar"; av.style.cssText = "width:22px; height:22px; font-size:9px;"; av.textContent = ini;
+          const nm = document.createElement("span");
+          nm.style.cssText = "font-family:var(--mono); font-size:10px; color:var(--ink-soft); flex:1;"; nm.textContent = a.author_name;
+          const tag = document.createElement("span");
+          tag.style.cssText = "font-family:var(--mono); font-size:8px; letter-spacing:.1em; padding:2px 5px; color:var(--accent-2); border:1px solid rgba(30,58,95,.4);"; tag.textContent = "MEMBER";
+          head.appendChild(av); head.appendChild(nm); head.appendChild(tag);
+          const bodyEl = document.createElement("div");
+          bodyEl.className = "mn-body"; bodyEl.textContent = a.body;
+          card.appendChild(head); card.appendChild(bodyEl);
+          if (annList) annList.insertBefore(card, annList.firstChild);
+          annInput.value = ""; if (annCount) annCount.textContent = "0/280";
+          if (annMsg) annMsg.textContent = "Posted. Thanks for the note.";
+          toast("Note added to the margin");
+        } else {
+          if (annMsg) annMsg.textContent = d.error || "Could not post that.";
+        }
+      } catch { if (annMsg) annMsg.textContent = "Network error, try again."; }
+      finally { annSubmit.removeAttribute("disabled"); }
     });
   </script>
 </BaseLayout>

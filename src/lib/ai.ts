@@ -160,3 +160,86 @@ Simpler explanation:`;
   const out = response?.response ?? response?.output ?? "";
   return (typeof out === "string" ? out : String(out ?? "")).trim();
 }
+
+// ---------------------------------------------------------------------------
+// Per-article comprehension quiz
+// ---------------------------------------------------------------------------
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct_index: number;
+  explanation: string;
+}
+
+function parseQuizArray(out: unknown): any[] {
+  if (Array.isArray(out)) return out;
+  if (out && typeof out === "object" && Array.isArray((out as any).questions)) {
+    return (out as any).questions;
+  }
+  const str = typeof out === "string" ? out : String(out ?? "");
+  const fenced = str.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const candidate = fenced ? fenced[1] : str;
+  const start = candidate.indexOf("[");
+  const end = candidate.lastIndexOf("]");
+  if (start !== -1 && end !== -1 && end > start) {
+    return JSON.parse(candidate.slice(start, end + 1));
+  }
+  const os = candidate.indexOf("{");
+  const oe = candidate.lastIndexOf("}");
+  if (os !== -1 && oe !== -1) {
+    const obj = JSON.parse(candidate.slice(os, oe + 1));
+    if (Array.isArray(obj.questions)) return obj.questions;
+  }
+  throw new Error("No quiz array in model output");
+}
+
+function coerceQuestion(raw: any): QuizQuestion | null {
+  if (!raw || typeof raw.question !== "string" || !raw.question.trim()) return null;
+  const options = Array.isArray(raw.options)
+    ? raw.options.map((o: unknown) => String(o).trim()).filter(Boolean).slice(0, 4)
+    : [];
+  if (options.length < 2) return null;
+  let ci = Number(raw.correct_index ?? raw.correct ?? raw.answer ?? 0);
+  if (!Number.isInteger(ci) || ci < 0 || ci >= options.length) ci = 0;
+  return {
+    question: raw.question.trim(),
+    options,
+    correct_index: ci,
+    explanation: String(raw.explanation ?? "").trim(),
+  };
+}
+
+/** Generate three comprehension questions ABOUT this specific article. */
+export async function generateQuiz(
+  ai: Ai,
+  article: { plain_title: string; hook: string; whats_going_on: string; why_it_matters: string },
+): Promise<QuizQuestion[]> {
+  const prompt = `Write a short comprehension quiz for the plain-language explainer below. The questions MUST be about THIS specific article, what the researchers did, how it works, and why it matters. Do NOT ask about the website, "Marginalia", arXiv, or generic trivia.
+
+Write exactly 3 multiple-choice questions. Each has exactly 3 options with ONE correct answer. Make the wrong options plausible but clearly wrong to someone who read the article.
+
+Return ONLY valid minified JSON: an array of exactly 3 objects, each:
+{"question": string, "options": [string, string, string], "correct_index": 0-2, "explanation": one short sentence on why that answer is right}
+
+ARTICLE TITLE: ${article.plain_title}
+HOOK: ${article.hook}
+WHAT'S GOING ON: ${article.whats_going_on.slice(0, 1600)}
+WHY IT MATTERS: ${article.why_it_matters.slice(0, 800)}
+
+JSON:`;
+
+  const response = (await ai.run(MODEL as any, {
+    messages: [
+      { role: "system", content: "You output only valid JSON. No commentary." },
+      { role: "user", content: prompt },
+    ],
+    max_tokens: 800,
+    temperature: 0.3,
+  } as any)) as any;
+
+  const out = response?.response ?? response?.output ?? response;
+  const arr = parseQuizArray(out);
+  const questions = arr.map(coerceQuestion).filter(Boolean) as QuizQuestion[];
+  return questions.slice(0, 3);
+}
