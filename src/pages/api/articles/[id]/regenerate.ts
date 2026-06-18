@@ -1,8 +1,9 @@
 /**
  * POST /api/articles/[id]/regenerate, re-write an article's plain-language
- * content with the current prompt + model. Staff only. Re-fetches the abstract
- * from arXiv, regenerates the summary + why-it-matters, and clears the cached
- * quiz so it rebuilds from the fresh content. Title and slug stay put.
+ * content with the current prompt + model. Staff only. Uses the real arXiv
+ * abstract when the article has one, otherwise re-explains from the content we
+ * already store (so hand-written seed articles can be upgraded too). Clears the
+ * cached quiz. Title and slug stay put.
  */
 import type { APIContext } from "astro";
 import { getSessionUser, isStaff } from "../../../../lib/auth";
@@ -22,20 +23,40 @@ export async function POST(ctx: APIContext) {
   if (!env.AI) return json({ error: "Workers AI is not configured here." }, 503);
 
   const row = await env.DB.prepare(
-    `SELECT id, arxiv_id, original_title, authors FROM articles WHERE id = ? LIMIT 1`,
+    `SELECT id, arxiv_id, original_title, plain_title, whats_going_on, why_it_matters
+     FROM articles WHERE id = ? LIMIT 1`,
   )
     .bind(id)
-    .first<{ id: number; arxiv_id: string | null; original_title: string; authors: string }>();
+    .first<{
+      id: number;
+      arxiv_id: string | null;
+      original_title: string;
+      plain_title: string;
+      whats_going_on: string;
+      why_it_matters: string;
+    }>();
   if (!row) return json({ error: "Article not found." }, 404);
-  if (!row.arxiv_id) return json({ error: "This article has no arXiv id to regenerate from." }, 400);
 
-  const paper = await fetchArxivById(row.arxiv_id);
-  if (!paper || !paper.abstract) {
-    return json({ error: "Could not fetch this paper from arXiv right now." }, 502);
+  // Prefer the real arXiv abstract; otherwise re-explain from what we already have.
+  let paper: { title: string; abstract: string } | null = null;
+  if (row.arxiv_id) {
+    const fetched = await fetchArxivById(row.arxiv_id);
+    if (fetched?.abstract) {
+      paper = { title: fetched.title || row.original_title, abstract: fetched.abstract };
+    }
+  }
+  if (!paper) {
+    const strip = (s: string) =>
+      (s || "").replace(/\*\*/g, "").replace(/^[-*]\s+/gm, "").replace(/\s+/g, " ").trim();
+    const existing = `${strip(row.whats_going_on)} ${strip(row.why_it_matters)}`.trim();
+    if (existing.length < 40) {
+      return json({ error: "Not enough content to regenerate this article." }, 400);
+    }
+    paper = { title: row.original_title || row.plain_title, abstract: existing };
   }
 
   try {
-    const { draft, model } = await explainPaper(env.AI, paper);
+    const { draft, model } = await explainPaper(env.AI, paper as any);
     await env.DB.prepare(
       `UPDATE articles
        SET hook = ?, whats_going_on = ?, why_it_matters = ?, read_minutes = ?, ai_model = ?
