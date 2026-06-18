@@ -2,7 +2,10 @@
 /**
  * Sticky paper-tab nav, rotated paper chips on the desk.
  * Primary tabs mirror the mockup; everything else is reachable from the footer.
+ * Reads the session cookie so the nav reflects the logged-in member.
  */
+import { getSessionUserId, getUserById } from "../lib/auth";
+
 const path = Astro.url.pathname;
 const isActive = (href: string) =>
   href === "/" ? path === "/" : path.startsWith(href);
@@ -14,6 +17,27 @@ const tabs = [
   { href: "/learn", label: "Learn" },
   { href: "/about", label: "About" },
 ];
+
+let user: { id: number; name: string; role: string } | null = null;
+try {
+  const env = Astro.locals.runtime?.env;
+  if (env) {
+    const uid = await getSessionUserId(Astro.request.headers.get("cookie"), env);
+    if (uid) user = await getUserById(env.DB, uid);
+  }
+} catch {
+  user = null;
+}
+const firstName = user ? user.name.split(/\s+/)[0] || user.name : "";
+const initials = user
+  ? user.name
+      .split(/\s+/)
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase()
+  : "";
 ---
 
 <div class="paper-nav">
@@ -28,7 +52,21 @@ const tabs = [
       {tabs.map((t) => (
         <a href={t.href} class={`nav-tab ${isActive(t.href) ? "active" : ""}`}>{t.label}</a>
       ))}
-      <a href="/login" class="nav-signin">Sign&nbsp;in</a>
+      {user ? (
+        <span class="nav-account">
+          <a
+            href="/dashboard"
+            class={`nav-user ${path.startsWith("/dashboard") ? "active" : ""}`}
+            aria-label={`Account: ${user.name}`}
+          >
+            <span class="nav-ava" aria-hidden="true">{initials}</span>
+            <span class="nav-uname">{firstName}</span>
+          </a>
+          <a href="/api/auth/logout" class="nav-out">Sign&nbsp;out</a>
+        </span>
+      ) : (
+        <a href="/login" class="nav-signin">Sign&nbsp;in</a>
+      )}
     </nav>
   </div>
 </div>
