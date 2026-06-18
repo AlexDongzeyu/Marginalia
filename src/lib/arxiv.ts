@@ -94,3 +94,16 @@ export async function fetchRecentArxiv(
   const xml = await res.text();
   return parseEntries(xml);
 }
+
+/** Fetch a single paper (with its abstract) by arXiv id, for regeneration. */
+export async function fetchArxivById(arxivId: string): Promise<ArxivPaper | null> {
+  const url = `${ARXIV_API}?id_list=${encodeURIComponent(arxivId)}&max_results=1`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Marginalia/0.1 (student research explainer; +https://marginalia.pages.dev)",
+    },
+  });
+  if (!res.ok) return null;
+  const xml = await res.text();
+  return parseEntries(xml)[0] ?? null;
+}

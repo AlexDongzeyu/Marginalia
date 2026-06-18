@@ -45,6 +45,7 @@ const drafts = await listDraftArticles(env.DB);
               <button class="btn-outline act-save" type="button">Save edits</button>
               <button class="btn-ink act-publish" type="button">Publish</button>
               <button class="btn-outline act-aotd" type="button">Publish as Today</button>
+              <button class="btn-outline act-regen" type="button">Regenerate</button>
               <button class="btn-outline act-reject" type="button" style="margin-left:auto;">Reject</button>
             </div>
             <span class="row-status muted" style="display:block; margin-top:8px; font-family:var(--mono); font-size:11px;"></span>
@@ -78,6 +79,14 @@ const drafts = await listDraftArticles(env.DB);
       card.querySelector(".act-publish")?.addEventListener("click", async () => { await review(id, { action: "update", ...fieldValues(card) }, statusEl); await review(id, { action: "publish" }, statusEl); });
       card.querySelector(".act-aotd")?.addEventListener("click", async () => { await review(id, { action: "update", ...fieldValues(card) }, statusEl); await review(id, { action: "set-aotd" }, statusEl); });
       card.querySelector(".act-reject")?.addEventListener("click", () => review(id, { action: "reject" }, statusEl));
+      card.querySelector(".act-regen")?.addEventListener("click", async () => {
+        if (statusEl) statusEl.textContent = "Regenerating with AI, this takes a few seconds…";
+        try {
+          const res = await fetch(`/api/articles/${id}/regenerate`, { method: "POST", headers: { "Content-Type": "application/json" } });
+          const data = await res.json();
+          if (statusEl) statusEl.textContent = res.ok ? `Rewritten with ${data.model}. Reload the page to see it.` : (data.error || "Could not regenerate.");
+        } catch { if (statusEl) statusEl.textContent = "Network error."; }
+      });
     });
     document.getElementById("runIngest")?.addEventListener("click", async () => {
       const statusEl = document.getElementById("ingestStatus");

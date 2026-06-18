@@ -13,11 +13,8 @@ const diffClass = article?.difficulty === "Beginner" ? "tag-beginner" : article?
 ---
 <BaseLayout title="Today · Marginalia" bodyClass="page-today">
   <Sheet>
-    <Masthead title="Today's Margin" tagline={today} top="The paper worth understanding" compact={true} />
+    <Masthead title="Today's Margin" tagline={today} compact={true} />
     <MarginRow>
-      <Fragment slot="left">
-        <MarginNote variant="hand">fresh every morning before school. <span class="mn-arrow">↘</span></MarginNote>
-      </Fragment>
       <div>
         {article ? (
           <div class="scrap">
