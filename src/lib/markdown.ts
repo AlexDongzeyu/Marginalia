@@ -30,9 +30,29 @@ function inline(text: string): string {
   return out;
 }
 
+/**
+ * Some models cram a whole bullet list onto one line, separating the points
+ * with " - " instead of real line breaks. When a line is already a bullet,
+ * split those inline separators back into one bullet per line so the list
+ * renders as a list, not a paragraph full of stray dashes.
+ */
+function normalizeBullets(src: string): string {
+  return src
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((ln) => {
+      const m = ln.match(/^\s*[-*]\s+(.*)$/);
+      if (m && /\s-\s/.test(m[1])) {
+        return ("- " + m[1]).replace(/\s+-\s+/g, "\n- ");
+      }
+      return ln;
+    })
+    .join("\n");
+}
+
 export function renderMarkdown(src: string): string {
   if (!src) return "";
-  const lines = src.replace(/\r\n/g, "\n").split("\n");
+  const lines = normalizeBullets(src).split("\n");
   const html: string[] = [];
   let listType: "ul" | "ol" | null = null;
   let para: string[] = [];
