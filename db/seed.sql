@@ -185,3 +185,49 @@ WHERE a.slug = 'imagenet-deep-learning'
 UPDATE articles
 SET is_article_of_day = 1, day_date = date('now')
 WHERE slug = 'attention-is-all-you-need';
+
+-- ---------------------------------------------------------------------------
+-- Sample member annotations, so the right margin shows real notes on day one.
+-- Idempotent: each note inserts only if an identical one isn't already there.
+-- ---------------------------------------------------------------------------
+INSERT INTO annotations (article_id, author_name, body, status)
+SELECT a.id, 'Priya D.',
+  'The "it" example is what finally made attention click for me. The model just learns what each word is pointing at.', 'approved'
+FROM articles a WHERE a.slug = 'attention-is-all-you-need'
+  AND NOT EXISTS (SELECT 1 FROM annotations x WHERE x.article_id = a.id
+    AND x.body = 'The "it" example is what finally made attention click for me. The model just learns what each word is pointing at.');
+
+INSERT INTO annotations (article_id, author_name, body, status)
+SELECT a.id, 'Marcus L.',
+  'If you have ever used Google Translate, you have used this paper. Still wild that it is only from 2017.', 'approved'
+FROM articles a WHERE a.slug = 'attention-is-all-you-need'
+  AND NOT EXISTS (SELECT 1 FROM annotations x WHERE x.article_id = a.id
+    AND x.body = 'If you have ever used Google Translate, you have used this paper. Still wild that it is only from 2017.');
+
+INSERT INTO annotations (article_id, author_name, body, status)
+SELECT a.id, 'Sam B.',
+  'Quick heads up: "attention" here is not the human kind. It is the model scoring how much each word should look at the others.', 'approved'
+FROM articles a WHERE a.slug = 'attention-is-all-you-need'
+  AND NOT EXISTS (SELECT 1 FROM annotations x WHERE x.article_id = a.id
+    AND x.body = 'Quick heads up: "attention" here is not the human kind. It is the model scoring how much each word should look at the others.');
+
+INSERT INTO annotations (article_id, author_name, body, status)
+SELECT a.id, 'Jordan K.',
+  'The real unlock here was the GPUs. The idea had been around for years, it just got fast enough to actually work.', 'approved'
+FROM articles a WHERE a.slug = 'imagenet-deep-learning'
+  AND NOT EXISTS (SELECT 1 FROM annotations x WHERE x.article_id = a.id
+    AND x.body = 'The real unlock here was the GPUs. The idea had been around for years, it just got fast enough to actually work.');
+
+INSERT INTO annotations (article_id, author_name, body, status)
+SELECT a.id, 'Aisha N.',
+  'This is the before-and-after moment for AI vision. A lot of self-driving research traces back to roughly here.', 'approved'
+FROM articles a WHERE a.slug = 'imagenet-deep-learning'
+  AND NOT EXISTS (SELECT 1 FROM annotations x WHERE x.article_id = a.id
+    AND x.body = 'This is the before-and-after moment for AI vision. A lot of self-driving research traces back to roughly here.');
+
+INSERT INTO annotations (article_id, author_name, body, status)
+SELECT a.id, 'Leo M.',
+  'Reminder that telling a cat from a dog used to be a genuinely hard research problem. We forget how big this jump was.', 'approved'
+FROM articles a WHERE a.slug = 'imagenet-deep-learning'
+  AND NOT EXISTS (SELECT 1 FROM annotations x WHERE x.article_id = a.id
+    AND x.body = 'Reminder that telling a cat from a dog used to be a genuinely hard research problem. We forget how big this jump was.');
