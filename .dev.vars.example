@@ -1,0 +1,6 @@
+# Example local secrets for `wrangler` / `astro dev`.
+# Copy to `.dev.vars` (gitignored) and fill in. These are only needed locally;
+# in production, set them in the Cloudflare dashboard (Settings → Variables).
+
+# Gates the /admin review actions and the manual ingest trigger.
+ADMIN_TOKEN="set-a-long-random-string-here"
