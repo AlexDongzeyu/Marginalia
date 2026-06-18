@@ -5,20 +5,26 @@
  * without a human here.
  */
 import type { APIContext } from "astro";
+import { getSessionUser, isStaff } from "../../../../lib/auth";
 
 export const prerender = false;
 
-function isAuthorized(ctx: APIContext): boolean {
+async function isAuthorized(ctx: APIContext): Promise<boolean> {
   const { env } = ctx.locals.runtime;
+  // Editors/admins are authorized by their signed-in session cookie.
+  const user = await getSessionUser(ctx.request.headers.get("cookie"), env, env.DB);
+  if (isStaff(user)) return true;
+  // Fallback: the shared ADMIN_TOKEN secret (Bearer header).
   const expected = env.ADMIN_TOKEN;
-  if (!expected || expected === "change-me-in-cloudflare-dashboard") return false;
-  const header = ctx.request.headers.get("authorization") ?? "";
-  const bearer = header.replace(/^Bearer\s+/i, "");
-  return bearer === expected;
+  if (expected && expected !== "change-me-in-cloudflare-dashboard") {
+    const bearer = (ctx.request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+    if (bearer === expected) return true;
+  }
+  return false;
 }
 
 export async function POST(ctx: APIContext) {
-  if (!isAuthorized(ctx)) return json({ error: "Unauthorized" }, 401);
+  if (!(await isAuthorized(ctx))) return json({ error: "Unauthorized" }, 401);
 
   const id = Number(ctx.params.id);
   if (!Number.isInteger(id) || id <= 0) return json({ error: "Bad id" }, 400);

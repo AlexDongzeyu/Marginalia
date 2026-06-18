@@ -160,3 +160,19 @@ export async function getUserByEmail(
     .bind(email)
     .first();
 }
+
+/** Resolve the logged-in user straight from the request cookie. */
+export async function getSessionUser(
+  cookieHeader: string | null,
+  env: SessionEnv,
+  db: D1Database,
+): Promise<AuthUser | null> {
+  const id = await getSessionUserId(cookieHeader, env);
+  if (id == null) return null;
+  return getUserById(db, id);
+}
+
+/** Editors and admins may use the editorial tools (the review queue + ingest). */
+export function isStaff(user: { role?: string } | null | undefined): boolean {
+  return !!user && (user.role === "admin" || user.role === "editor");
+}

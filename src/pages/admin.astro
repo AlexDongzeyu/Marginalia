@@ -3,8 +3,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Sheet from "../components/Sheet.astro";
 import Masthead from "../components/Masthead.astro";
 import { listDraftArticles } from "../lib/db";
+import { getSessionUser, isStaff } from "../lib/auth";
 
 const { env } = Astro.locals.runtime;
+const me = await getSessionUser(Astro.request.headers.get("cookie"), env, env.DB);
+if (!me) return Astro.redirect("/login");
+if (!isStaff(me)) return Astro.redirect("/dashboard");
 const drafts = await listDraftArticles(env.DB);
 ---
 <BaseLayout title="Review queue · Marginalia" bodyClass="page-admin" hideComfort={true}>
@@ -12,9 +16,9 @@ const drafts = await listDraftArticles(env.DB);
     <Masthead title="Review queue" tagline="Nothing publishes without a human." top="Editorial" compact={true} />
     <div style="max-width:720px; margin:0 auto;">
       <div class="mn-card" style="max-width:none; display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:18px;">
-        <input id="adminToken" type="password" placeholder="Paste ADMIN_TOKEN" class="paper-input" style="width:auto; flex:1 1 180px;" autocomplete="off" />
-        <input id="reviewerName" type="text" placeholder="Your name (byline)" class="paper-input" style="width:auto; flex:1 1 140px;" />
+        <input id="reviewerName" type="text" placeholder="Your name (byline)" value={me.name} class="paper-input" style="width:auto; flex:1 1 160px;" />
         <button id="runIngest" class="btn-outline" type="button">Run ingest now</button>
+        <span class="muted" style="font-family:var(--mono); font-size:10px; letter-spacing:.08em;">Signed in as {me.name} · {me.role}</span>
         <span id="ingestStatus" class="muted" style="font-family:var(--mono); font-size:11px;"></span>
       </div>
 
@@ -50,11 +54,9 @@ const drafts = await listDraftArticles(env.DB);
     </div>
   </Sheet>
   <script>
-    const tokenEl = document.getElementById("adminToken") as HTMLInputElement;
     const reviewerEl = document.getElementById("reviewerName") as HTMLInputElement;
-    function authHeaders() { return { "Content-Type": "application/json", Authorization: `Bearer ${tokenEl.value.trim()}` }; }
+    function authHeaders() { return { "Content-Type": "application/json" }; }
     async function review(id: string, payload: Record<string, unknown>, statusEl: Element | null) {
-      if (!tokenEl.value.trim()) { if (statusEl) statusEl.textContent = "Enter the admin token first."; return; }
       if (statusEl) statusEl.textContent = "Working…";
       try {
         const res = await fetch(`/api/articles/${id}/review`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ ...payload, reviewer: reviewerEl.value.trim() || "Editorial" }) });
@@ -79,7 +81,6 @@ const drafts = await listDraftArticles(env.DB);
     });
     document.getElementById("runIngest")?.addEventListener("click", async () => {
       const statusEl = document.getElementById("ingestStatus");
-      if (!tokenEl.value.trim()) { if (statusEl) statusEl.textContent = "Enter the admin token first."; return; }
       if (statusEl) statusEl.textContent = "Fetching + explaining…";
       try {
         const res = await fetch(`/api/cron/ingest`, { method: "POST", headers: authHeaders() });

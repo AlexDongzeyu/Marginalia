@@ -208,6 +208,20 @@ h1, h2, h3, h4 {
   white-space: nowrap;
 }
 .nav-out:hover { color: var(--accent); border-color: rgba(194, 65, 12, 0.4); }
+.nav-admin {
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--accent);
+  padding: 4px 9px;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.nav-admin:hover { transform: translateY(-2px); box-shadow: 0 4px 9px rgba(40, 30, 20, 0.16); }
+.nav-admin.active { background: var(--ink); }
 .nav-toggle {
   display: none;
   background: var(--paper);

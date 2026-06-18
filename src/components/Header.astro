@@ -62,6 +62,9 @@ const initials = user
             <span class="nav-ava" aria-hidden="true">{initials}</span>
             <span class="nav-uname">{firstName}</span>
           </a>
+          {(user.role === "admin" || user.role === "editor") && (
+            <a href="/admin" class={`nav-admin ${path.startsWith("/admin") ? "active" : ""}`}>Admin</a>
+          )}
           <a href="/api/auth/logout" class="nav-out">Sign&nbsp;out</a>
         </span>
       ) : (
