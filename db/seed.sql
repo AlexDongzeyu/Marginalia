@@ -231,3 +231,199 @@ SELECT a.id, 'Leo M.',
 FROM articles a WHERE a.slug = 'imagenet-deep-learning'
   AND NOT EXISTS (SELECT 1 FROM annotations x WHERE x.article_id = a.id
     AND x.body = 'Reminder that telling a cat from a dog used to be a genuinely hard research problem. We forget how big this jump was.');
+
+-- ===========================================================================
+-- Foundational backfill, one well-known paper per research direction so the
+-- map, feed, and glossary are not sparse on day one. INSERT OR IGNORE on slug
+-- makes this safe to re-run. All explainers are original plain-language summaries.
+-- ===========================================================================
+INSERT OR IGNORE INTO articles
+  (slug, arxiv_id, original_title, plain_title, hook, whats_going_on, why_it_matters,
+   difficulty, read_minutes, is_ai4good, is_foundational, source_url, pdf_url,
+   authors, institution, published_date, status, reviewer_name, ai_model, published_at)
+VALUES
+(
+  'deep-residual-learning', '1512.03385',
+  'Deep Residual Learning for Image Recognition',
+  'How to train very deep networks without them falling apart',
+  'Stacking more layers used to make image models worse, not better. This paper found a simple trick that fixed it.',
+  'Researchers wanted deeper networks because depth usually helps a model see more. Past a point, though, adding layers made accuracy drop even on the training data, which made no sense. The fix was the **residual connection**, a shortcut that lets a layer pass its input straight through and only learn the small change on top. With these shortcuts the team trained networks over a hundred layers deep and won the 2015 ImageNet contest by a wide margin.',
+  'Residual connections are now in almost every large model, including the ones behind modern language and image tools. The idea is small and easy to add, which is part of why it spread so fast. It is a clean example of how one fix can unlock a whole direction of research.',
+  'Beginner', 4, 0, 1,
+  'https://arxiv.org/abs/1512.03385', 'https://arxiv.org/pdf/1512.03385',
+  '["Kaiming He","Xiangyu Zhang","Shaoqing Ren","Jian Sun"]', 'Microsoft Research',
+  '2015-12-10', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-3 days')
+),
+(
+  'generative-adversarial-networks', '1406.2661',
+  'Generative Adversarial Nets',
+  'Two networks playing a forgery game taught computers to create',
+  'Long before modern image generators, this paper had two networks compete, and the result was machines that could make new pictures from scratch.',
+  'The setup is a game between two networks. One, the generator, tries to make fake images. The other, the discriminator, tries to tell fakes from real photos. As each gets better, the generator is pushed to make more convincing images, until its output starts to look real. This was one of the first methods that could **generate** believable new images instead of just sorting existing ones.',
+  'This kicked off the wave of AI that creates rather than classifies. The adversarial idea showed up in art tools, photo editing, and data generation for years. Newer methods like diffusion have taken over for images, but the question it asked, how do you teach a machine to make something new, is still central.',
+  'Intermediate', 4, 0, 1,
+  'https://arxiv.org/abs/1406.2661', 'https://arxiv.org/pdf/1406.2661',
+  '["Ian Goodfellow","Jean Pouget-Abadie","Mehdi Mirza","Bing Xu","David Warde-Farley","Sherjil Ozair","Aaron Courville","Yoshua Bengio"]', 'University of Montreal',
+  '2014-06-10', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-4 days')
+),
+(
+  'playing-atari-deep-rl', '1312.5602',
+  'Playing Atari with Deep Reinforcement Learning',
+  'One program that learned to play Atari games from the pixels',
+  'This system learned to play dozens of Atari games on its own, using nothing but the screen and the score.',
+  'Most game-playing programs are told the rules. This one was not. It saw only the raw pixels and the score, then learned by trial and error which actions led to more points. It paired that trial-and-error approach, called **reinforcement learning**, with a deep network that read the screen. On several games it reached or passed human skill, all from the same setup with no game-specific tuning.',
+  'This was a striking proof that one general method could learn many different tasks from scratch. It launched a decade of work on agents that learn by doing, leading to systems that play Go, control robots, and tune other AI. It is the cleanest early example of learning a skill purely from feedback.',
+  'Intermediate', 4, 0, 1,
+  'https://arxiv.org/abs/1312.5602', 'https://arxiv.org/pdf/1312.5602',
+  '["Volodymyr Mnih","Koray Kavukcuoglu","David Silver","Alex Graves","Ioannis Antonoglou","Daan Wierstra","Martin Riedmiller"]', 'DeepMind',
+  '2013-12-19', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-5 days')
+),
+(
+  'alphafold-protein-structure', '',
+  'Highly accurate protein structure prediction with AlphaFold',
+  'The AI that cracked a 50-year-old biology puzzle',
+  'Working out the shape a protein folds into took scientists months in a lab. This system does it in minutes, often near perfectly.',
+  'Proteins are chains of building blocks that fold into 3D shapes, and the shape decides what the protein does. Predicting that shape from the chain alone was an open problem for fifty years. **AlphaFold** learned the patterns from known structures and now predicts shapes with accuracy close to lab experiments. Its team later released predicted shapes for nearly every known protein, for free.',
+  'This is one of the clearest cases of AI speeding up real science. Researchers use the predictions to study diseases, design medicines, and understand life at the molecular level. It moved a hard problem from years of lab work to an afternoon on a computer.',
+  'Beginner', 4, 1, 1,
+  'https://www.nature.com/articles/s41586-021-03819-2', '',
+  '["John Jumper","Richard Evans","Alexander Pritzel","Demis Hassabis"]', 'DeepMind',
+  '2021-07-15', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-6 days')
+),
+(
+  'graphcast-weather-forecasting', '2212.12794',
+  'GraphCast: Learning skillful medium-range global weather forecasting',
+  'A weather model that keeps up with the supercomputers',
+  'This model predicts ten days of global weather in under a minute, and it is often more accurate than the traditional forecast.',
+  'Standard forecasts run huge physics simulations on supercomputers. **GraphCast** instead learned from decades of past weather and predicts the next steps directly. It produces a ten-day global forecast in well under a minute, and in tests it matched or beat the leading physics-based system on most measures, including the tracks of major storms.',
+  'Faster, cheaper forecasts help with everything from daily planning to early warnings for extreme weather. It also shows learned models can rival decades of carefully built physics code in a serious scientific field. That makes it a strong example of AI pointed at a real-world problem.',
+  'Intermediate', 4, 1, 0,
+  'https://arxiv.org/abs/2212.12794', 'https://arxiv.org/pdf/2212.12794',
+  '["Remi Lam","Alvaro Sanchez-Gonzalez","Matthew Willson","Peter Battaglia"]', 'Google DeepMind',
+  '2022-12-24', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-7 days')
+),
+(
+  'concrete-problems-ai-safety', '1606.06565',
+  'Concrete Problems in AI Safety',
+  'A practical checklist of ways AI can go wrong',
+  'Instead of distant doom, this paper lists the small, concrete ways an AI can do the wrong thing while looking like it is working.',
+  'The authors set aside science-fiction worries and focus on everyday failure modes. Examples include a cleaning robot that knocks things over to finish faster, a system that games its own reward, or one that behaves well in testing but not in the real world. For each problem they suggest research directions to study it. The point is to make safety a normal engineering topic with clear, testable questions.',
+  'This paper helped turn AI safety from a vague worry into a working research field. Many of the problems it named are now active areas, especially as models are given more freedom to act. It is a good starting point for anyone who wants to understand what alignment actually means in practice.',
+  'Beginner', 4, 0, 1,
+  'https://arxiv.org/abs/1606.06565', 'https://arxiv.org/pdf/1606.06565',
+  '["Dario Amodei","Chris Olah","Jacob Steinhardt","Paul Christiano","John Schulman","Dan Mane"]', 'Google Brain and OpenAI',
+  '2016-06-21', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-8 days')
+),
+(
+  'model-cards', '1810.03993',
+  'Model Cards for Model Reporting',
+  'A short label that says what an AI model is and is not good for',
+  'Food comes with a nutrition label. This paper proposes the same idea for AI models, so people know where they work and where they fail.',
+  'A **model card** is a short document that ships with a model. It says what the model was built for, how it was tested, and where it performs worse, for example across different groups of people. The goal is to surface gaps in fairness and reliability before the model is used in the real world, rather than after something goes wrong.',
+  'Model cards are now common practice at major AI labs and on model-sharing sites. They are a simple, low-cost step toward using AI responsibly, and they make it harder to quietly ship a model that fails for some people. This is a practical piece of the fairness and accountability conversation.',
+  'Beginner', 3, 1, 0,
+  'https://arxiv.org/abs/1810.03993', 'https://arxiv.org/pdf/1810.03993',
+  '["Margaret Mitchell","Simone Wu","Andrew Zaldivar","Timnit Gebru"]', 'Google',
+  '2018-10-05', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-9 days')
+),
+(
+  'bert-language-understanding', '1810.04805',
+  'BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding',
+  'The model that taught computers to read both directions at once',
+  'For a few years, this one model quietly powered a huge chunk of Google Search and a wave of language tools.',
+  'Earlier models read text left to right. **BERT** reads the whole sentence at once, looking both ways, which helps it understand how words depend on each other. It learns by playing fill-in-the-blank on huge amounts of text: hide a word, guess it from the context. After that general training, it can be quickly adapted to specific jobs like answering questions or judging sentiment.',
+  'BERT made the now-standard recipe popular: train one big model on lots of text, then fine-tune it for each task. That recipe is behind most modern language tools. It also went straight into real products, including search, soon after release.',
+  'Intermediate', 4, 0, 1,
+  'https://arxiv.org/abs/1810.04805', 'https://arxiv.org/pdf/1810.04805',
+  '["Jacob Devlin","Ming-Wei Chang","Kenton Lee","Kristina Toutanova"]', 'Google AI Language',
+  '2018-10-11', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-10 days')
+),
+(
+  'word2vec-word-embeddings', '1301.3781',
+  'Efficient Estimation of Word Representations in Vector Space',
+  'Turning words into numbers that capture meaning',
+  'This paper showed you can turn words into lists of numbers where "king minus man plus woman" lands near "queen".',
+  'Computers need numbers, not words. **Word2Vec** learns to place each word at a point in space so that words used in similar ways sit close together. A surprising result was that simple arithmetic on these points captured real relationships, like capital cities to their countries. It learned all of this just by reading lots of text and predicting nearby words.',
+  'Turning words into meaningful numbers, called **embeddings**, became a building block for nearly all language AI that followed. The same idea now applies to images, products, and papers. It is one of the most practical ideas a newcomer can pick up early.',
+  'Beginner', 3, 0, 1,
+  'https://arxiv.org/abs/1301.3781', 'https://arxiv.org/pdf/1301.3781',
+  '["Tomas Mikolov","Kai Chen","Greg Corrado","Jeffrey Dean"]', 'Google',
+  '2013-01-16', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-11 days')
+),
+(
+  'knowledge-distillation', '1503.02531',
+  'Distilling the Knowledge in a Neural Network',
+  'Teaching a small model to copy a big one',
+  'Big models are accurate but slow. This paper shows how to pour most of that skill into a small, fast model.',
+  'The trick is to train a small student model to copy the outputs of a large teacher model, not just the right answers but how confident the teacher is across all the options. Those soft signals carry extra hints that help the student learn more than it could from the labels alone. The result is a smaller model that runs faster and cheaper while keeping much of the accuracy. This is called **distillation**.',
+  'Distillation is a big reason capable AI can run on phones and in browsers. As models get larger, shrinking them down without losing much skill becomes more valuable. It is one of the core tools for making AI practical and affordable.',
+  'Intermediate', 3, 0, 0,
+  'https://arxiv.org/abs/1503.02531', 'https://arxiv.org/pdf/1503.02531',
+  '["Geoffrey Hinton","Oriol Vinyals","Jeff Dean"]', 'Google',
+  '2015-03-09', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-12 days')
+),
+(
+  'grad-cam-explanations', '1610.02391',
+  'Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization',
+  'A heatmap that shows where a model is actually looking',
+  'When an image model says "dog", this method draws a heatmap over the photo showing which pixels made it decide that.',
+  'Deep models are often a black box: they give an answer with no reason. **Grad-CAM** highlights the parts of an image that pushed the model toward its prediction, producing a rough heatmap over the picture. If the model says "train" but the heatmap lights up the rails instead of the train, you have learned something about how it really works, and where it might be fooled.',
+  'Being able to see why a model decided something matters a lot in areas like medicine, where a wrong reason is dangerous even when the answer happens to be right. Grad-CAM made this kind of check simple and popular. It is a practical entry point into interpretability, the study of opening the black box.',
+  'Intermediate', 3, 0, 0,
+  'https://arxiv.org/abs/1610.02391', 'https://arxiv.org/pdf/1610.02391',
+  '["Ramprasaath R. Selvaraju","Michael Cogswell","Abhishek Das","Ramakrishna Vedantam","Devi Parikh","Dhruv Batra"]', 'Georgia Institute of Technology',
+  '2016-10-07', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-13 days')
+),
+(
+  'react-reasoning-acting', '2210.03629',
+  'ReAct: Synergizing Reasoning and Acting in Language Models',
+  'Letting a language model think out loud and use tools',
+  'This paper lets a model switch between reasoning step by step and taking actions, like looking something up, so it can solve tasks it could not before.',
+  'A plain language model answers in one shot and cannot check facts. **ReAct** has the model interleave two things: a short thought about what to do next, and an action such as searching a database or a website. It reads the result, thinks again, and continues until it has an answer. This loop lets the model gather information it did not memorise and correct itself along the way.',
+  'This think-and-act loop is the backbone of modern AI **agents**, the systems that browse, use tools, and complete multi-step tasks. It made models far more useful for real work than answering from memory alone. If you have seen an AI search the web and reason about what it finds, this is the idea underneath.',
+  'Intermediate', 4, 0, 0,
+  'https://arxiv.org/abs/2210.03629', 'https://arxiv.org/pdf/2210.03629',
+  '["Shunyu Yao","Jeffrey Zhao","Dian Yu","Nan Du","Izhak Shafran","Karthik Narasimhan","Yuan Cao"]', 'Princeton University and Google Research',
+  '2022-10-06', 'published', 'Marginalia Editorial', 'hand-written', datetime('now','-14 days')
+);
+
+-- Tag the backfill articles to their research directions.
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='deep-residual-learning' AND d.slug IN ('computer-vision','deep-learning');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='generative-adversarial-networks' AND d.slug IN ('generative-models');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='playing-atari-deep-rl' AND d.slug IN ('reinforcement-learning');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='alphafold-protein-structure' AND d.slug IN ('ai-for-health');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='graphcast-weather-forecasting' AND d.slug IN ('ai-for-climate');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='concrete-problems-ai-safety' AND d.slug IN ('ai-alignment');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='model-cards' AND d.slug IN ('fairness');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='bert-language-understanding' AND d.slug IN ('large-language-models');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='word2vec-word-embeddings' AND d.slug IN ('machine-learning');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='knowledge-distillation' AND d.slug IN ('efficient-ai');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='grad-cam-explanations' AND d.slug IN ('interpretability');
+INSERT OR IGNORE INTO article_directions (article_id, direction_id)
+SELECT a.id, d.id FROM articles a, directions d WHERE a.slug='react-reasoning-acting' AND d.slug IN ('ai-agents');
+
+-- More plain-language glossary terms, growing the dictionary alongside the articles.
+INSERT OR IGNORE INTO glossary_terms (term, definition, status) VALUES
+('gradient descent', 'The basic training loop: nudge the model a tiny step in the direction that lowers its error, then repeat many times.', 'approved'),
+('overfitting', 'When a model memorises its training examples instead of the general pattern, so it looks great in practice and fails on anything new.', 'approved'),
+('convolution', 'A small filter slid across an image to pick up local features like edges and textures. The core operation in most vision models.', 'approved'),
+('generative model', 'A model that creates new content, such as images or text, rather than sorting or scoring things that already exist.', 'approved'),
+('diffusion model', 'A way to generate images by starting from pure noise and removing it step by step until a picture appears. The method behind most modern image generators.', 'approved'),
+('reinforcement learning', 'Learning by trial and error: an agent takes actions, gets rewards, and works out a strategy that earns more reward.', 'approved'),
+('hallucination', 'When an AI states something false with confidence. Common in language models because they predict fluent text, not verified facts.', 'approved'),
+('bias', 'Systematic unfairness in a model, often because the data it learned from was unbalanced, which can mean worse results for some groups of people.', 'approved'),
+('distillation', 'Training a small, fast model to copy a large, accurate one, so you keep most of the skill at a fraction of the cost.', 'approved'),
+('tokenization', 'Splitting text into the small chunks, called tokens, that a language model actually reads. A token is often a word piece, not a whole word.', 'approved'),
+('backpropagation', 'The method that works out how much each parameter contributed to the error, so training knows which way to adjust them.', 'approved'),
+('agent', 'An AI system that takes several steps toward a goal, often planning, using tools, or calling other models along the way.', 'approved');
