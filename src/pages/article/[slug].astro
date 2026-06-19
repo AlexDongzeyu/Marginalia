@@ -98,6 +98,11 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
               <div class="mn-body">{t.definition}</div>
             </div>
           ))}
+          <div class="read-companion" id="readCompanion" hidden>
+            <div class="rc-label">In this part</div>
+            <div class="rc-part" id="rcPart"></div>
+            <div class="rc-terms" id="rcTerms"></div>
+          </div>
         </div>
 
         <!-- CENTER: reader -->
@@ -114,9 +119,9 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
             <div style="background:var(--paper); border:1px solid rgba(33,28,22,.1); padding:36px 40px; box-shadow:0 20px 50px -26px rgba(40,30,20,.4);">
               <p class="pullquote">{article.hook}</p>
               <div class="section-label">What's going on</div>
-              <div class="read drop-cap"><Fragment set:html={whatsGoingOn} /></div>
+              <div class="read drop-cap" data-part="What's going on"><Fragment set:html={whatsGoingOn} /></div>
               <div class="section-label" style="margin-top:24px;">Why it matters</div>
-              <div class="read"><Fragment set:html={whyItMatters} /></div>
+              <div class="read" data-part="Why it matters"><Fragment set:html={whyItMatters} /></div>
             </div>
 
             <!-- source box -->
@@ -496,8 +501,71 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
       pop.addEventListener("mouseenter", () => clearTimeout(hideT));
       pop.addEventListener("mouseleave", hide);
       document.addEventListener("click", (e) => {
-        if (!(e.target instanceof Element) || !e.target.closest(".gloss")) pop.classList.add("hidden");
+        if (!(e.target instanceof Element) || !e.target.closest(".gloss, .rc-chip, .gloss-pop")) pop.classList.add("hidden");
       });
+
+      // "In this part": the margin annotation changes as you scroll the article.
+      const companion = document.getElementById("readCompanion");
+      const rcPart = document.getElementById("rcPart");
+      const rcTerms = document.getElementById("rcTerms");
+      if (companion && rcPart && rcTerms) {
+        const parts = Array.from(document.querySelectorAll("[data-part]"));
+        const termsInPart = (partEl) => {
+          const seen = new Map();
+          partEl.querySelectorAll(".gloss").forEach((g) => {
+            const t = g.getAttribute("data-term");
+            const d = g.getAttribute("data-def");
+            if (t && d && !seen.has(t.toLowerCase())) seen.set(t.toLowerCase(), { t, d });
+          });
+          return Array.from(seen.values());
+        };
+        const render = (partEl) => {
+          rcPart.textContent = partEl.getAttribute("data-part") || "";
+          rcTerms.innerHTML = "";
+          const list = termsInPart(partEl);
+          if (!list.length) {
+            const none = document.createElement("span");
+            none.className = "rc-empty";
+            none.textContent = "no new jargon in this part";
+            rcTerms.appendChild(none);
+            return;
+          }
+          list.forEach((x) => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "rc-chip";
+            chip.setAttribute("data-term", x.t);
+            chip.setAttribute("data-def", x.d);
+            chip.textContent = x.t;
+            chip.addEventListener("mouseenter", () => show(chip));
+            chip.addEventListener("mouseleave", hide);
+            chip.addEventListener("focus", () => show(chip));
+            chip.addEventListener("blur", hide);
+            chip.addEventListener("click", (e) => { e.stopPropagation(); show(chip); });
+            rcTerms.appendChild(chip);
+          });
+        };
+        let active = null;
+        const setActive = (el) => {
+          if (!el || el === active) return;
+          active = el;
+          render(el);
+          companion.classList.remove("rc-flip");
+          void companion.offsetWidth;
+          companion.classList.add("rc-flip");
+        };
+        if ("IntersectionObserver" in window && parts.length) {
+          const io2 = new IntersectionObserver((entries) => {
+            let best = null, bestRatio = 0;
+            entries.forEach((e) => {
+              if (e.isIntersecting && e.intersectionRatio >= bestRatio) { best = e.target; bestRatio = e.intersectionRatio; }
+            });
+            if (best) setActive(best);
+          }, { threshold: [0.1, 0.35, 0.6], rootMargin: "-18% 0px -45% 0px" });
+          parts.forEach((p) => io2.observe(p));
+        }
+        if (parts.length) { setActive(parts[0]); companion.hidden = false; }
+      }
     })();
   </script>
 </BaseLayout>
