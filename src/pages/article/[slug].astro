@@ -317,18 +317,20 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
     }
     async function loadQuiz() {
       qWrap.innerHTML = '<div style="font-family:var(--mono); font-size:12px; color:#8a8073;">Building a quiz about this paper…</div>';
+      if (quizCheckBtn) quizCheckBtn.removeAttribute("disabled");
       try {
         const r = await fetch(`/api/articles/${articleId}/quiz`);
         const d = await r.json();
         if (r.ok && Array.isArray(d.questions) && d.questions.length) {
           QUESTIONS = d.questions; renderQuiz();
-        } else {
-          qWrap.innerHTML = '<div style="font-family:var(--mono); font-size:12px; color:#8a8073;">' + (d.error || "Quiz unavailable right now.") + '</div>';
-          if (quizCheckBtn) quizCheckBtn.setAttribute("disabled", "true");
+          return;
         }
+        throw new Error(d.error || "not ready");
       } catch {
-        qWrap.innerHTML = '<div style="font-family:var(--mono); font-size:12px; color:#8a8073;">Quiz unavailable right now.</div>';
+        qWrap.innerHTML = '<div style="font-family:var(--mono); font-size:12px; color:#8a8073;">This paper\'s quiz is still being written. <button type="button" id="quizRetry" style="font-family:var(--mono); font-size:12px; color:var(--accent); background:none; border:none; text-decoration:underline; cursor:pointer; padding:0;">Try again</button></div>';
         if (quizCheckBtn) quizCheckBtn.setAttribute("disabled", "true");
+        const retry = document.getElementById("quizRetry");
+        if (retry) retry.addEventListener("click", loadQuiz);
       }
     }
     loadQuiz();
