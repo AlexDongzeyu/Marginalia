@@ -406,6 +406,43 @@ main {
   margin-bottom: 14px;
 }
 
+/* Inline glossary annotations: highlighted key terms + hover/tap explainer */
+.gloss {
+  border-bottom: 1.5px dotted var(--accent);
+  cursor: help;
+  text-decoration: none;
+}
+.gloss:hover,
+.gloss:focus-visible {
+  background: rgba(194, 65, 12, 0.1);
+  outline: none;
+}
+mark.gloss { background: transparent; color: inherit; }
+.gloss-pop {
+  position: absolute;
+  z-index: 95;
+  max-width: 280px;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  box-shadow: 0 16px 36px -16px rgba(40, 30, 20, 0.5);
+  padding: 12px 14px;
+}
+.gloss-pop.hidden { display: none; }
+.gloss-pop-term {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+.gloss-pop-def {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
 /* ---------------------------------------------------------------------------
    Living Margin, the three-zone grid
    --------------------------------------------------------------------------- */

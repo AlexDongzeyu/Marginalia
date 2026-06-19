@@ -6,7 +6,7 @@
  * Footer: an understanding quiz that awards a stamp (client-side demo).
  */
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getPublishedArticleBySlug, getRelatedArticles } from "../../lib/db";
+import { getPublishedArticleBySlug, getRelatedArticles, getApprovedGlossary } from "../../lib/db";
 import { renderMarkdown } from "../../lib/markdown";
 import { getSessionUser } from "../../lib/auth";
 
@@ -60,6 +60,10 @@ const whyItMatters = renderMarkdown(article.why_it_matters);
 const diffClass = article.difficulty === "Beginner" ? "tag-beginner" : article.difficulty === "Advanced" ? "tag-advanced" : "tag-intermediate";
 const pdfUrl = article.pdf_url || (article.arxiv_id ? `https://arxiv.org/pdf/${article.arxiv_id}` : null);
 const hasPdf = !!pdfUrl;
+// Same-origin proxy so the PDF actually renders inline (arXiv blocks iframing).
+const pdfEmbed = article.arxiv_id ? `/api/pdf?id=${encodeURIComponent(article.arxiv_id)}` : pdfUrl;
+// Plain-language glossary for the inline highlight-and-explain annotations.
+const glossary = await getApprovedGlossary(env.DB).catch(() => []);
 ---
 
 <BaseLayout title={`${article.plain_title} · Marginalia`} description={article.hook} bodyClass="page-article">
@@ -147,7 +151,7 @@ const hasPdf = !!pdfUrl;
                 <span style="opacity:.6;">{article.arxiv_id ? `arXiv:${article.arxiv_id}` : "Source paper"}</span>
                 {article.source_url && <a href={article.source_url} target="_blank" rel="noopener noreferrer" style="color:#F0A878; text-decoration:none;">Open on arXiv ↗</a>}
               </div>
-              <iframe src={pdfUrl} title="Source PDF" style="width:100%; height:720px; border:1px solid rgba(33,28,22,.16); border-top:none; background:#fff;"></iframe>
+              <iframe src={pdfEmbed} title="Source PDF" style="width:100%; height:720px; border:1px solid rgba(33,28,22,.16); border-top:none; background:#fff;"></iframe>
             </div>
           )}
 
@@ -391,5 +395,109 @@ const hasPdf = !!pdfUrl;
       } catch { if (annMsg) annMsg.textContent = "Network error, try again."; }
       finally { annSubmit.removeAttribute("disabled"); }
     });
+  </script>
+
+  {/* Inline glossary annotations: highlight key terms, explain them on hover/tap. */}
+  <script define:vars={{ glossTerms: glossary.map((g) => ({ t: g.term, d: g.definition })) }}>
+    (() => {
+      if (!Array.isArray(glossTerms) || !glossTerms.length) return;
+      const terms = glossTerms.slice().sort((a, b) => b.t.length - a.t.length);
+      const defByLower = new Map(terms.map((x) => [x.t.toLowerCase(), x.d]));
+      const used = new Set();
+      const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp("\\b(" + terms.map((x) => esc(x.t)).join("|") + ")\\b", "i");
+      const roots = document.querySelectorAll("#explainerPane .read");
+
+      roots.forEach((root) => {
+        // Pass 1: key terms the writer already bolded.
+        root.querySelectorAll("strong").forEach((el) => {
+          const key = (el.textContent || "").trim().toLowerCase();
+          const def = defByLower.get(key);
+          if (def && !used.has(key)) {
+            used.add(key);
+            el.classList.add("gloss");
+            el.tabIndex = 0;
+            el.setAttribute("data-term", el.textContent.trim());
+            el.setAttribute("data-def", def);
+          }
+        });
+        // Pass 2: first plain-text mention of any other term.
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+            const p = node.parentElement;
+            if (!p || p.closest("a, code, mark, .gloss, strong")) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          },
+        });
+        const nodes = [];
+        let node;
+        while ((node = walker.nextNode())) nodes.push(node);
+        nodes.forEach((tn) => {
+          const text = tn.nodeValue;
+          const m = pattern.exec(text);
+          if (!m) return;
+          const term = m[1];
+          const lower = term.toLowerCase();
+          if (used.has(lower)) return;
+          const def = defByLower.get(lower);
+          if (!def) return;
+          used.add(lower);
+          const mark = document.createElement("mark");
+          mark.className = "gloss";
+          mark.tabIndex = 0;
+          mark.setAttribute("data-term", term);
+          mark.setAttribute("data-def", def);
+          mark.textContent = term;
+          const frag = document.createDocumentFragment();
+          const before = text.slice(0, m.index);
+          const after = text.slice(m.index + term.length);
+          if (before) frag.appendChild(document.createTextNode(before));
+          frag.appendChild(mark);
+          if (after) frag.appendChild(document.createTextNode(after));
+          tn.parentNode.replaceChild(frag, tn);
+        });
+      });
+
+      const marks = document.querySelectorAll(".gloss");
+      if (!marks.length) return;
+      const pop = document.createElement("div");
+      pop.className = "gloss-pop hidden";
+      document.body.appendChild(pop);
+      let hideT;
+      const show = (el) => {
+        clearTimeout(hideT);
+        pop.innerHTML = "";
+        const label = document.createElement("div");
+        label.className = "gloss-pop-term";
+        label.textContent = el.getAttribute("data-term") || "";
+        const body = document.createElement("div");
+        body.className = "gloss-pop-def";
+        body.textContent = el.getAttribute("data-def") || "";
+        pop.appendChild(label);
+        pop.appendChild(body);
+        pop.classList.remove("hidden");
+        const r = el.getBoundingClientRect();
+        const pw = pop.offsetWidth;
+        let left = window.scrollX + r.left;
+        left = Math.min(left, window.scrollX + document.documentElement.clientWidth - pw - 12);
+        left = Math.max(12, left);
+        pop.style.left = left + "px";
+        pop.style.top = window.scrollY + r.bottom + 8 + "px";
+      };
+      const hide = () => { hideT = setTimeout(() => pop.classList.add("hidden"), 140); };
+      marks.forEach((el) => {
+        el.addEventListener("mouseenter", () => show(el));
+        el.addEventListener("mouseleave", hide);
+        el.addEventListener("focus", () => show(el));
+        el.addEventListener("blur", hide);
+        el.addEventListener("click", (e) => { e.stopPropagation(); show(el); });
+      });
+      pop.addEventListener("mouseenter", () => clearTimeout(hideT));
+      pop.addEventListener("mouseleave", hide);
+      document.addEventListener("click", (e) => {
+        if (!(e.target instanceof Element) || !e.target.closest(".gloss")) pop.classList.add("hidden");
+      });
+    })();
   </script>
 </BaseLayout>
