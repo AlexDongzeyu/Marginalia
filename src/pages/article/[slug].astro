@@ -214,13 +214,13 @@ const hasPdf = !!pdfUrl;
             )}
           </div>
 
-          <!-- leaderboard (demo) -->
+          <!-- chapter leaderboard: honest empty state until chapters exist -->
           <div class="mn-card" data-reveal style="rotate:.5deg;">
             <div class="mn-label">Leaderboard · this week</div>
-            <div style="font-family:var(--mono); font-size:9px; color:var(--ink-faintest); margin-bottom:10px;">your chapter</div>
-            <div id="leaderboard" style="display:flex; flex-direction:column; gap:4px;"></div>
+            <p class="mn-body" style="margin:6px 0 10px;">Pass quizzes and leave notes to climb your chapter's board. No chapters are running yet, so this one is wide open.</p>
+            <a href="/chapters/start" class="text-link">Start a chapter to compete →</a>
           </div>
-          <div class="mn-hand" data-reveal>↑ pass the quiz and watch yourself climb. it's stupidly addictive.</div>
+          <div class="mn-hand" data-reveal>↑ once your chapter is going, this fills up fast.</div>
         </div>
       </section>
 
@@ -354,20 +354,7 @@ const hasPdf = !!pdfUrl;
       }
     });
 
-    // ----- leaderboard (demo) -----
-    const lb = [
-      { initials: "PD", name: "Priya D.", pts: 1480, you: false },
-      { initials: "JK", name: "Jordan K.", pts: 1355, you: false },
-      { initials: "YO", name: "You", pts: 1240, you: true },
-      { initials: "SB", name: "Sam B.", pts: 1190, you: false },
-    ];
-    const lbWrap = document.getElementById("leaderboard");
-    lb.forEach((r, i) => {
-      const row = document.createElement("div");
-      row.style.cssText = `display:flex; align-items:center; gap:8px; padding:5px 6px; ${r.you ? "background:rgba(194,65,12,.1); outline:1px solid rgba(194,65,12,.3);" : ""}`;
-      row.innerHTML = `<span style="width:16px; font-family:var(--mono); font-size:11px; color:#8a8073;">${i + 1}</span><span class="mn-avatar" style="width:20px; height:20px; font-size:8px; background:${r.you ? "#C2410C" : "#7A5C3E"};">${r.initials}</span><span style="flex:1; font-size:14px;">${r.name}</span><span style="font-family:var(--mono); font-size:11px; color:#3a342b;">${r.pts}</span>`;
-      lbWrap.appendChild(row);
-    });
+    // ----- chapter leaderboard ----- (real boards arrive with chapters; no fake data)
 
     // ----- annotations (leave a note in the margin) -----
     const annInput = document.getElementById("annInput");

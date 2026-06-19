@@ -85,13 +85,13 @@ const updated = new Date().toLocaleDateString("en-US", {
   day: "numeric",
 });
 
-const counters = [
+const counters: { n: number; label: string; cta?: { href: string; text: string } }[] = [
   { n: totalArticles, label: "papers explained" },
   { n: directions.length, label: "research directions" },
   { n: annCount, label: "margin notes" },
   { n: glossaryCount, label: "glossary terms" },
-  { n: chapterCount, label: "active chapters" },
-  { n: subCount, label: "readers subscribed" },
+  { n: chapterCount, label: "active chapters", cta: { href: "/chapters/start", text: "Start the first →" } },
+  { n: subCount, label: "readers subscribed", cta: { href: "/newsletter", text: "Be the first →" } },
 ];
 ---
 <BaseLayout
@@ -121,6 +121,9 @@ const counters = [
           <div class="pulse-counter">
             <div class="pc-num">{c.n.toLocaleString()}</div>
             <div class="pc-label">{c.label}</div>
+            {c.n === 0 && c.cta && (
+              <a class="text-link" href={c.cta.href} style="font-size:10px; display:inline-block; margin-top:5px;">{c.cta.text}</a>
+            )}
           </div>
         ))}
       </div>

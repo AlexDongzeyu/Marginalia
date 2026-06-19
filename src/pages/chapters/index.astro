@@ -20,7 +20,15 @@ const chapters = rows.results ?? [];
       {chapters.length > 0 ? chapters.map((c) => (
         <a class="note-row" href={`/chapters/${c.slug}`}><span class="nr-main"><span class="title">{c.name}</span><br /><span class="meta">{c.region ?? ""}</span></span><span class="arr">→</span></a>
       )) : (
-        <p class="muted text-center" style="margin-top:24px;">No chapters yet, be the founding one. <a href="/chapters/start">Start a chapter →</a></p>
+        <div style="margin-top:24px;">
+          <p class="read" style="max-width:60ch; margin:0 auto;">A chapter is a small reading group at your school. You meet, pick a paper from the feed, and read it together. We hand you the explainers, the prompts, and a place to post your group's notes.</p>
+          <div class="torn-cards" style="margin-top:18px;">
+            <div class="torn-card"><div class="roman">i.</div><h3>Round up a few friends</h3><p>Two or three curious people is enough to begin.</p></div>
+            <div class="torn-card"><div class="roman">ii.</div><h3>Read one paper a week</h3><p>Open the annotated version, then talk it through together.</p></div>
+            <div class="torn-card"><div class="roman">iii.</div><h3>Leave notes behind</h3><p>Your group's margin notes help whoever reads it next.</p></div>
+          </div>
+          <p class="muted text-center" style="margin-top:20px;">No chapters yet, so yours would be the first. <a href="/chapters/start">Start a chapter →</a></p>
+        </div>
       )}
     </div>
   </Sheet>
