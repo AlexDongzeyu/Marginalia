@@ -94,9 +94,6 @@ const hasPdf = !!pdfUrl;
               <div class="mn-body">{t.definition}</div>
             </div>
           ))}
-          <div class="mn-hand" data-reveal style="rotate:.6deg;">
-            we keep the jargon out here so the middle stays easy to read
-          </div>
         </div>
 
         <!-- CENTER: reader -->
@@ -209,9 +206,7 @@ const hasPdf = !!pdfUrl;
                 </div>
                 <span id="annMsg" style="display:block; margin-top:6px; font-family:var(--mono); font-size:10px; color:var(--ink-soft);"></span>
               </div>
-            ) : (
-              <div class="mn-hand" data-reveal>sign in to leave your own note in the margin ↗</div>
-            )}
+            ) : null}
           </div>
 
           <!-- chapter leaderboard: honest empty state until chapters exist -->
@@ -220,7 +215,6 @@ const hasPdf = !!pdfUrl;
             <p class="mn-body" style="margin:6px 0 10px;">Pass quizzes and leave notes to climb your chapter's board. No chapters are running yet, so this one is wide open.</p>
             <a href="/chapters/start" class="text-link">Start a chapter to compete →</a>
           </div>
-          <div class="mn-hand" data-reveal>↑ once your chapter is going, this fills up fast.</div>
         </div>
       </section>
 

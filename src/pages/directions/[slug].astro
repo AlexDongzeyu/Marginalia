@@ -24,9 +24,6 @@ const branchLabel: Record<string, string> = { foundations: "Foundations", method
   <Sheet>
     <Masthead title={direction.name} tagline={branchLabel[direction.branch]} top="A direction" compact={true} />
     <MarginRow>
-      <Fragment slot="left">
-        <MarginNote variant="hand">new here? start with the foundational reads. <span class="mn-arrow">↘</span></MarginNote>
-      </Fragment>
       <div>
         <p class="read">{direction.plain_description}</p>
         {foundational.length > 0 && (
