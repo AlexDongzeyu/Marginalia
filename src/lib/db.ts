@@ -19,14 +19,26 @@ import {
 // ---------------------------------------------------------------------------
 
 export async function getArticleOfDay(db: D1Database): Promise<Article | null> {
-  const row = await db
+  // Prefer a pick explicitly marked for today; otherwise fall back to the most
+  // recently published article so "Today" never goes stale on an old seed paper.
+  let row = await db
     .prepare(
       `SELECT * FROM articles
        WHERE status = 'published' AND is_article_of_day = 1
-       ORDER BY day_date DESC, published_at DESC
+         AND day_date = date('now')
+       ORDER BY published_at DESC
        LIMIT 1`,
     )
     .first<ArticleRow>();
+  if (!row) {
+    row = await db
+      .prepare(
+        `SELECT * FROM articles WHERE status = 'published'
+         ORDER BY published_at DESC, created_at DESC
+         LIMIT 1`,
+      )
+      .first<ArticleRow>();
+  }
   if (!row) return null;
   const article = hydrateArticle(row);
   article.directions = await getDirectionsForArticle(db, article.id);

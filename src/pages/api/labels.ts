@@ -25,13 +25,25 @@ export async function POST(ctx: APIContext) {
     return json({ error: "Invalid request." }, 400);
   }
   if (!slug || !itemId || !value) return json({ error: "Invalid request." }, 400);
+  if (itemId.length > 255) return json({ error: "Invalid item." }, 400);
 
   const campaign = await env.DB.prepare(
-    `SELECT id FROM dataset_campaigns WHERE slug = ? AND status = 'open' LIMIT 1`,
+    `SELECT id, items_json FROM dataset_campaigns WHERE slug = ? AND status = 'open' LIMIT 1`,
   )
     .bind(slug)
-    .first<{ id: number }>();
+    .first<{ id: number; items_json: string }>();
   if (!campaign) return json({ error: "Campaign not found or closed." }, 404);
+
+  // Only accept labels for items that actually belong to this campaign, so the
+  // open dataset cannot be polluted with made-up item ids.
+  let validItem = false;
+  try {
+    const items = JSON.parse(campaign.items_json) as Array<{ id?: string | number }>;
+    validItem = Array.isArray(items) && items.some((it) => String(it.id) === itemId);
+  } catch {
+    validItem = false;
+  }
+  if (!validItem) return json({ error: "Unknown item for this campaign." }, 400);
 
   try {
     await env.DB.prepare(
