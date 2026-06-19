@@ -47,3 +47,13 @@ quips, dry jokes, first-person warmth, plain language. Humanizing means removing
 tells, not the personality. Keep the quips, the lowercase margin notes, and the
 human edge. Read it aloud: if a person wouldn't say it, fix it; if they would, leave
 it alone.
+
+## Design rules (hard constraints)
+
+- FORBIDDEN: decorative vertical accent strips/bars. Never add a colored
+  `border-left` / `border-inline-start` (or a thin tall element, `::before`/`::after`
+  bar, or narrow accent-background div) to pullquotes, blockquotes, cards, sections,
+  or headings. The thin vertical "red pen" strip is banned site-wide. Use space,
+  weight, italics, or a section label for emphasis instead, never a vertical rule.
+- When you catch one of these strips anywhere, remove it.
+

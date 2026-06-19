@@ -835,8 +835,7 @@ p.drop-cap::first-letter {
 }
 .pullquote {
   margin: 26px 0;
-  padding: 4px 0 4px 22px;
-  border-left: 3px solid var(--accent);
+  padding: 4px 0;
   font-family: var(--serif);
   font-style: italic;
   font-size: 27px;
