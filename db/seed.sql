@@ -181,10 +181,10 @@ SELECT a.id, d.id FROM articles a, directions d
 WHERE a.slug = 'imagenet-deep-learning'
   AND d.slug IN ('computer-vision','deep-learning');
 
--- Make the most recent foundational pick the current Article of the Day
-UPDATE articles
-SET is_article_of_day = 1, day_date = date('now')
-WHERE slug = 'attention-is-all-you-need';
+-- Today's pick tracks the most recently published paper. Clear any stale
+-- "article of the day" pin so the daily pipeline drives Today; editors can
+-- still feature a specific paper from the admin review queue.
+UPDATE articles SET is_article_of_day = 0 WHERE is_article_of_day = 1;
 
 -- ---------------------------------------------------------------------------
 -- Sample member annotations, so the right margin shows real notes on day one.
