@@ -13,10 +13,8 @@ import TornDivider from "../components/TornDivider.astro";
     <MarginRow>
       <div class="read">
         <div class="section-label">Our mission</div>
-        <p>AI research moves fast and is written for experts. Marginalia is a free,
-          student-run guide that explains new and notable AI work in plain language,
-          maps the field so newcomers can explore it, and, once you understand
-          something, lets <span class="anchor" data-anchor="who">you annotate it</span> for the next person.</p>
+        <p>AI research is written for experts. Marginalia explains the work that
+          matters in plain language, and lets <span class="anchor" data-anchor="who">you annotate it</span> for the next reader.</p>
         <p>The name is a nod to <span class="anchor" data-anchor="def">marginalia</span>: the notes people scribble in
           the margins to make a difficult text their own. That's what we do, in
           public, for AI.</p>
@@ -55,9 +53,62 @@ import TornDivider from "../components/TornDivider.astro";
     </section>
 
     <section style="max-width:620px; margin:24px auto 0;">
-      <div class="section-label">The team</div>
-      <p class="read">Marginalia is built by students. Want to write explainers, build
-        features, or start a chapter? <a href="/join">Come say hi.</a></p>
+      <div class="section-label">How we're organized</div>
+      <p class="read">Marginalia was founded by <b>Alex Dong</b> and runs as four
+        programs, each led by a student director who does the work and can answer
+        for it.</p>
+      <div class="ab-roles">
+        <div class="ab-role">
+          <div class="ab-role-prog">Press</div>
+          <div class="ab-role-name">Editor-in-Chief</div>
+          <p>Owns the daily publication: the cadence, the review queue, the quality bar.</p>
+        </div>
+        <div class="ab-role">
+          <div class="ab-role-prog">Learn</div>
+          <div class="ab-role-name">Head of Learning</div>
+          <p>Owns the curriculum and the lessons, and runs the workshops.</p>
+        </div>
+        <div class="ab-role">
+          <div class="ab-role-prog">Lab</div>
+          <div class="ab-role-name">Head of Research</div>
+          <p>Mentors the project teams and review authors, and holds the real-venues-only line.</p>
+        </div>
+        <div class="ab-role">
+          <div class="ab-role-prog">Commons</div>
+          <div class="ab-role-name">Head of Community</div>
+          <p>Supports the chapter leads, runs the campaigns, owns the newsletter.</p>
+        </div>
+      </div>
+      <p class="read" style="margin-top:18px;">A title here means real involvement,
+        never a name on a chart. Want to write explainers, build features, lead a
+        program, or start a chapter? <a href="/join">Come say hi.</a></p>
     </section>
   </Sheet>
 </BaseLayout>
+
+<style>
+  .ab-roles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .ab-role {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 16px 18px;
+  }
+  .ab-role-prog {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .ab-role-name { font-family: var(--serif); font-size: 18px; line-height: 1.15; margin-bottom: 6px; }
+  .ab-role p { margin: 0; font-size: 13.5px; line-height: 1.55; color: #3a342b; }
+  @media (max-width: 560px) {
+    .ab-roles { grid-template-columns: 1fr; }
+  }
+</style>

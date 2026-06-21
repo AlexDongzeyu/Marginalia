@@ -1,0 +1,128 @@
+---
+/**
+ * /press — Marginalia Press program landing.
+ * The daily plain-language publication: Today, Feed, Map, Glossary, Pulse.
+ * One screen that says what Press is and opens every door under it.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
+import { getArticleOfDay } from "../lib/db";
+
+const { env } = Astro.locals.runtime;
+const today = await getArticleOfDay(env.DB).catch(() => null);
+
+const doors = [
+  { title: "Today", desc: "One paper, explained, every day.", href: "/today" },
+  { title: "The feed", desc: "Every paper we've explained, newest first.", href: "/feed" },
+  { title: "The map", desc: "The research as a map you can wander.", href: "/map" },
+  { title: "Glossary", desc: "Every term we've defined, one sentence each.", href: "/glossary" },
+  { title: "Pulse", desc: "The publication's numbers, in the open.", href: "/pulse" },
+];
+---
+<BaseLayout
+  title="Marginalia Press · The daily publication"
+  description="Marginalia Press is the daily plain-language publication: one paper explained every day, plus the feed, the map, the glossary, and the live numbers."
+  bodyClass="page-press"
+>
+  <Sheet>
+    <Masthead title="Marginalia Press" tagline="The daily plain-language publication." compact={true} />
+
+    <div class="pg-wrap">
+      {today && (
+        <a class="pg-feature" href={`/article/${today.slug}`} data-reveal>
+          <span class="pg-feature-kicker">Today's pick</span>
+          <span class="pg-feature-title">{today.plain_title}</span>
+          <span class="pg-feature-hook">{today.hook}</span>
+          <span class="pg-feature-go">Read it →</span>
+        </a>
+      )}
+
+      <div class="section-label">In Press</div>
+      <nav class="pg-list">
+        {doors.map((d) => (
+          <a href={d.href}>
+            <span class="pl-t">{d.title}</span>
+            <span class="pl-d">{d.desc}</span>
+            <span class="pl-arr">→</span>
+          </a>
+        ))}
+      </nav>
+
+      <p class="pg-writeline"><a class="text-link" href="/contribute/explain">Write an explainer →</a></p>
+    </div>
+  </Sheet>
+</BaseLayout>
+
+<style>
+  .pg-wrap { max-width: 720px; margin: 0 auto; }
+  .pg-lede { font-size: 16px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 22px; }
+
+  .pg-role {
+    background: var(--card-2);
+    border: 1px solid rgba(122, 92, 62, 0.22);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+  }
+  .pg-role-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pg-role p { margin: 6px 0 0; font-size: 14.5px; line-height: 1.6; color: #3a342b; }
+
+  .pg-feature {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 20px 22px;
+    margin-bottom: 24px;
+    box-shadow: 0 12px 30px -20px rgba(40, 30, 20, 0.5);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+  .pg-feature:hover { transform: translateY(-2px); box-shadow: 0 18px 38px -20px rgba(40, 30, 20, 0.55); }
+  .pg-feature-kicker {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .pg-feature-title { display: block; font-size: 22px; font-weight: 500; line-height: 1.15; margin-bottom: 6px; }
+  .pg-feature-hook { display: block; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); margin-bottom: 8px; }
+  .pg-feature-go { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+
+  .pg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pg-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px 22px 22px;
+    box-shadow: 0 8px 22px -16px rgba(40, 30, 20, 0.4);
+    display: flex;
+    flex-direction: column;
+  }
+  .pg-roman {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 26px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .pg-card h2 { font-size: 22px; font-weight: 500; margin: 0 0 8px; line-height: 1.1; }
+  .pg-body { font-size: 14px; line-height: 1.55; color: #3a342b; margin: 0 0 14px; }
+  .pg-cta { margin-top: auto; align-self: flex-start; }
+
+  .pg-foot-cta { max-width: 560px; margin: 0 auto; }
+  .pg-foot-cta p { font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); margin: 8px 0 14px; }
+
+  @media (max-width: 640px) {
+    .pg-grid { grid-template-columns: 1fr; }
+  }
+</style>

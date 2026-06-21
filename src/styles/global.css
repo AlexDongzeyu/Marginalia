@@ -406,84 +406,6 @@ main {
   margin-bottom: 14px;
 }
 
-/* Inline glossary annotations: highlighted key terms + hover/tap explainer */
-.gloss {
-  border-bottom: 1.5px dotted var(--accent);
-  cursor: help;
-  text-decoration: none;
-}
-.gloss:hover,
-.gloss:focus-visible {
-  background: rgba(194, 65, 12, 0.1);
-  outline: none;
-}
-mark.gloss { background: transparent; color: inherit; }
-.gloss-pop {
-  position: absolute;
-  z-index: 95;
-  max-width: 280px;
-  background: var(--paper);
-  border: 1px solid var(--ink);
-  box-shadow: 0 16px 36px -16px rgba(40, 30, 20, 0.5);
-  padding: 12px 14px;
-}
-.gloss-pop.hidden { display: none; }
-.gloss-pop-term {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 5px;
-}
-.gloss-pop-def {
-  font-family: var(--serif);
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--ink);
-}
-
-/* Scroll-synced "In this part" reading companion */
-.read-companion {
-  position: sticky;
-  top: 88px;
-  margin-top: 18px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  padding: 12px 14px;
-  box-shadow: 0 10px 26px -18px rgba(40, 30, 20, 0.45);
-}
-.read-companion.rc-flip { animation: rcFlip 0.32s ease; }
-@keyframes rcFlip {
-  from { opacity: 0.35; transform: translateY(5px); }
-  to { opacity: 1; transform: none; }
-}
-.rc-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-faintest);
-  margin-bottom: 4px;
-}
-.rc-part { font-family: var(--serif); font-size: 16px; color: var(--ink); margin-bottom: 9px; }
-.rc-terms { display: flex; flex-wrap: wrap; gap: 6px; }
-.rc-chip {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.03em;
-  padding: 3px 8px;
-  border: 1px solid var(--line-2);
-  background: var(--paper);
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-.rc-chip:hover, .rc-chip:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
-.rc-empty { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
-@media (max-width: 1040px) {
-  .read-companion { position: static; }
-}
-
 /* ---------------------------------------------------------------------------
    Living Margin, the three-zone grid
    --------------------------------------------------------------------------- */
@@ -913,7 +835,8 @@ p.drop-cap::first-letter {
 }
 .pullquote {
   margin: 26px 0;
-  padding: 4px 0;
+  padding: 4px 0 4px 22px;
+  border-left: 3px solid var(--accent);
   font-family: var(--serif);
   font-style: italic;
   font-size: 27px;

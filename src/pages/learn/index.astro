@@ -5,24 +5,62 @@ import Masthead from "../../components/Masthead.astro";
 
 const tracks = [
   { slug: "beginner-path", title: "Beginner Path", num: "i.", blurb: "Zero background needed. From 'what is a model?' to reading real papers.", lessons: 6, level: "Beginner" },
-  { slug: "large-language-models", title: "Large Language Models", num: "ii.", blurb: "How models like ChatGPT actually work, tokens, attention, limits.", lessons: 5, level: "Beginner" },
+  { slug: "large-language-models", title: "Large Language Models", num: "ii.", blurb: "How models like ChatGPT actually work: tokens, attention, limits.", lessons: 5, level: "Beginner" },
   { slug: "computer-vision", title: "Computer Vision", num: "iii.", blurb: "How machines learn to see, from pixels to recognising objects.", lessons: 4, level: "Intermediate" },
   { slug: "ai-for-good", title: "AI for Good", num: "iv.", blurb: "Real applications in health, climate, education, accessibility.", lessons: 5, level: "Beginner" },
   { slug: "build-and-deploy", title: "Build & Deploy", num: "v.", blurb: "Go hands-on: run a model, ship a small project, put it online.", lessons: 6, level: "Intermediate" },
 ];
 ---
-<BaseLayout title="Learn · Marginalia" bodyClass="page-learn">
+<BaseLayout
+  title="Marginalia Learn · AI from the ground up"
+  description="Marginalia Learn takes a beginner from 'what is AI' to 'I can read a paper': free, annotated learning tracks, taught in plain language."
+  bodyClass="page-learn"
+>
   <Sheet>
-    <Masthead title="Learn" tagline="AI from the ground up, annotated textbook style." top="The lessons" compact={true} />
-    <div style="max-width:680px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-      {tracks.map((t) => (
-        <a class="torn-card" href={`/learn/${t.slug}`} data-reveal style="text-decoration:none; color:inherit; display:block;">
-          <div class="roman">{t.num}</div>
-          <h3>{t.title}</h3>
-          <p style="margin-bottom:8px;">{t.blurb}</p>
-          <span class="tag tag-beginner">{t.level}</span> <span class="tag">{t.lessons} lessons</span>
-        </a>
-      ))}
+    <Masthead title="Marginalia Learn" tagline="AI from the ground up, annotated textbook style." compact={true} />
+
+    <div class="pg-wrap">
+      <div class="pg-grid">
+        {tracks.map((t) => (
+          <a class="torn-card" href={`/learn/${t.slug}`} data-reveal style="text-decoration:none; color:inherit; display:block;">
+            <div class="roman">{t.num}</div>
+            <h3>{t.title}</h3>
+            <p style="margin-bottom:8px;">{t.blurb}</p>
+            <span class="tag tag-beginner">{t.level}</span> <span class="tag">{t.lessons} lessons</span>
+          </a>
+        ))}
+      </div>
+
+      <p class="pg-writeline text-center"><a class="text-link" href="/contribute/explain">Teach with us: author a lesson →</a></p>
     </div>
   </Sheet>
 </BaseLayout>
+
+<style>
+  .pg-wrap { max-width: 680px; margin: 0 auto; }
+  .pg-lede { font-size: 16px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 22px; }
+
+  .pg-role {
+    background: var(--card-2);
+    border: 1px solid rgba(122, 92, 62, 0.22);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+  }
+  .pg-role-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pg-role p { margin: 6px 0 0; font-size: 14.5px; line-height: 1.6; color: #3a342b; }
+
+  .pg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .pg-foot-cta { max-width: 560px; margin: 0 auto; }
+  .pg-foot-cta p { font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); margin: 8px 0 14px; }
+
+  @media (max-width: 640px) {
+    .pg-grid { grid-template-columns: 1fr; }
+  }
+</style>

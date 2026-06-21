@@ -47,7 +47,13 @@ function applyState(state: ComfortState) {
   body.classList.toggle("mode-calm", state.calm);
   body.classList.toggle("mode-focus", state.focus);
   body.classList.toggle("mode-contrast", state.contrast);
-  document.documentElement.style.fontSize = `${state.textScale}%`;
+  // The site is laid out in px, so a root font-size change does nothing.
+  // Scale the whole page with zoom instead, which affects px text too.
+  try {
+    (document.body.style as CSSStyleDeclaration & { zoom?: string }).zoom = String(state.textScale / 100);
+  } catch {
+    document.documentElement.style.fontSize = `${state.textScale}%`;
+  }
 
   // Reflect toggle UI
   for (const mode of ["calm", "focus", "contrast"] as const) {

@@ -64,6 +64,8 @@ const hasPdf = !!pdfUrl;
 const pdfEmbed = article.arxiv_id ? `/api/pdf?id=${encodeURIComponent(article.arxiv_id)}` : pdfUrl;
 // Plain-language glossary for the inline highlight-and-explain annotations.
 const glossary = await getApprovedGlossary(env.DB).catch(() => []);
+// Per-reader key for private, browser-local highlights (never sent to the server).
+const annKey = me ? String(me.id) : "guest";
 ---
 
 <BaseLayout title={`${article.plain_title} · Marginalia`} description={article.hook} bodyClass="page-article">
@@ -86,12 +88,6 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
         <!-- LEFT MARGIN: team explainer notes -->
         <div class="lmside left" style="padding-top:30px;">
           <div style="font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faintest);">In the margin</div>
-          {dirs[0] && (
-            <div class="mn-card mn-tilt-l" data-reveal data-note="area">
-              <div class="mn-label">Area</div>
-              <div class="mn-body"><b>{dirs[0].name}</b>, {dirs[0].plain_description}</div>
-            </div>
-          )}
           {terms.map((t, i) => (
             <div class={`mn-card ${i % 2 ? "mn-tilt-r" : "mn-tilt-l"}`} data-reveal>
               <div class="mn-label">{t.term}</div>
@@ -99,7 +95,8 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
             </div>
           ))}
           <div class="read-companion" id="readCompanion" hidden>
-            <div class="rc-label">In this part</div>
+            <div class="rc-label">The point</div>
+            <div class="rc-gist" id="rcGist"></div>
             <div class="rc-part" id="rcPart"></div>
             <div class="rc-terms" id="rcTerms"></div>
           </div>
@@ -116,8 +113,8 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
 
           <!-- EXPLAINER -->
           <div id="explainerPane">
-            <div style="background:var(--paper); border:1px solid rgba(33,28,22,.1); padding:36px 40px; box-shadow:0 20px 50px -26px rgba(40,30,20,.4);">
-              <p class="pullquote">{article.hook}</p>
+            <div id="annRoot" style="background:var(--paper); border:1px solid rgba(33,28,22,.1); padding:36px 40px; box-shadow:0 20px 50px -26px rgba(40,30,20,.4);">
+              <p class="pullquote" data-part="The big idea">{article.hook}</p>
               <div class="section-label">What's going on</div>
               <div class="read drop-cap" data-part="What's going on"><Fragment set:html={whatsGoingOn} /></div>
               <div class="section-label" style="margin-top:24px;">Why it matters</div>
@@ -216,13 +213,6 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
                 <span id="annMsg" style="display:block; margin-top:6px; font-family:var(--mono); font-size:10px; color:var(--ink-soft);"></span>
               </div>
             ) : null}
-          </div>
-
-          <!-- chapter leaderboard: honest empty state until chapters exist -->
-          <div class="mn-card" data-reveal style="rotate:.5deg;">
-            <div class="mn-label">Leaderboard · this week</div>
-            <p class="mn-body" style="margin:6px 0 10px;">Pass quizzes and leave notes to climb your chapter's board. No chapters are running yet, so this one is wide open.</p>
-            <a href="/chapters/start" class="text-link">Start a chapter to compete →</a>
           </div>
         </div>
       </section>
@@ -509,9 +499,19 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
       // "In this part": the margin annotation changes as you scroll the article.
       const companion = document.getElementById("readCompanion");
       const rcPart = document.getElementById("rcPart");
+      const rcGist = document.getElementById("rcGist");
       const rcTerms = document.getElementById("rcTerms");
       if (companion && rcPart && rcTerms) {
         const parts = Array.from(document.querySelectorAll("[data-part]"));
+        // One-line "the point" for a section: its lead sentence, trimmed.
+        const gistOf = (partEl) => {
+          const raw = (partEl.textContent || "").replace(/\s+/g, " ").trim();
+          if (!raw) return "";
+          const m = raw.match(/^.*?[.!?](?=\s|$)/);
+          let s = (m ? m[0] : raw).trim();
+          if (s.length > 165) s = s.slice(0, 160).replace(/\s+\S*$/, "") + "…";
+          return s;
+        };
         const termsInPart = (partEl) => {
           const seen = new Map();
           partEl.querySelectorAll(".gloss").forEach((g) => {
@@ -522,7 +522,8 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
           return Array.from(seen.values());
         };
         const render = (partEl) => {
-          rcPart.textContent = partEl.getAttribute("data-part") || "";
+          if (rcGist) rcGist.textContent = gistOf(partEl);
+          rcPart.textContent = "in “" + (partEl.getAttribute("data-part") || "") + "”";
           rcTerms.innerHTML = "";
           const list = termsInPart(partEl);
           if (!list.length) {
@@ -568,6 +569,193 @@ const glossary = await getApprovedGlossary(env.DB).catch(() => []);
         }
         if (parts.length) { setActive(parts[0]); companion.hidden = false; }
       }
+    })();
+  </script>
+
+  {/* Personal, private highlights: select text -> pick a colour -> add a note.
+     Stored only in this browser (localStorage), so no one else ever sees them.
+     Hovering a highlight pulses it and reveals its matching note. */}
+  <script define:vars={{ annKey, annSlug: article.slug }}>
+    (() => {
+      const root = document.getElementById("annRoot");
+      if (!root) return;
+      const KEY = "mg.anns." + annKey + "." + annSlug;
+      const PALETTE = [
+        ["#ffe08a", "yellow"],
+        ["#bfe6b4", "green"],
+        ["#bcd6f2", "blue"],
+        ["#f3c2d6", "pink"],
+        ["#f4b3a6", "coral"],
+      ];
+      const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } };
+      const save = () => { try { localStorage.setItem(KEY, JSON.stringify(anns)); } catch (e) {} };
+      let anns = load();
+      const uid = () => "a" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+      function eachText(cb) {
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+          acceptNode(n) {
+            if (!n.nodeValue) return NodeFilter.FILTER_REJECT;
+            const p = n.parentElement;
+            if (!p || p.closest("script,style")) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          },
+        });
+        let n; while ((n = w.nextNode())) cb(n);
+      }
+      const combined = () => { let t = ""; eachText((n) => { t += n.nodeValue; }); return t; };
+      function rangeOffsets(range) {
+        let pos = 0, s = -1, e = -1;
+        eachText((n) => {
+          if (n === range.startContainer) s = pos + range.startOffset;
+          if (n === range.endContainer) e = pos + range.endOffset;
+          pos += n.nodeValue.length;
+        });
+        return (s >= 0 && e >= 0 && e > s) ? { s, e } : null;
+      }
+      function wrapOffsets(s, e, id, color) {
+        if (e <= s) return;
+        const segs = []; let pos = 0;
+        eachText((n) => {
+          const ns = pos, ne = pos + n.nodeValue.length;
+          const a = Math.max(s, ns), b = Math.min(e, ne);
+          if (a < b) segs.push([n, a - ns, b - ns]);
+          pos += n.nodeValue.length;
+        });
+        segs.forEach((seg) => {
+          let t = seg[0]; const ls = seg[1], le = seg[2];
+          if (ls > 0) t = t.splitText(ls);
+          if (le - ls < t.nodeValue.length) t.splitText(le - ls);
+          const m = document.createElement("mark");
+          m.className = "uann"; m.dataset.id = id; m.tabIndex = 0;
+          if (color) m.style.setProperty("--uc", color);
+          t.parentNode.insertBefore(m, t); m.appendChild(t);
+        });
+      }
+      const marksOf = (id) => Array.from(root.querySelectorAll('mark.uann[data-id="' + id + '"]'));
+      function unwrap(id) {
+        marksOf(id).forEach((m) => { m.parentNode.replaceChild(document.createTextNode(m.textContent), m); });
+        root.normalize();
+      }
+      function place(a) {
+        const text = combined();
+        let s = a.s, e = a.e;
+        if (text.slice(s, e) !== a.quote) {
+          let idx = -1;
+          if (a.before) idx = text.indexOf(a.before + a.quote);
+          if (idx >= 0) idx += a.before.length; else idx = text.indexOf(a.quote);
+          if (idx < 0) return;
+          s = idx; e = idx + a.quote.length; a.s = s; a.e = e;
+        }
+        wrapOffsets(s, e, a.id, a.color);
+      }
+      anns.forEach(place);
+
+      const bar = document.createElement("div"); bar.className = "uann-bar hidden"; document.body.appendChild(bar);
+      const pop = document.createElement("div"); pop.className = "uann-pop hidden"; document.body.appendChild(pop);
+      let mode = null, current = null, pending = null, popT;
+      const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+      function swatches(sel) {
+        return PALETTE.map((p) => '<button class="uann-sw' + (sel === p[0] ? " sel" : "") + '" data-c="' + p[0] + '" title="' + p[1] + '" style="background:' + p[0] + '"></button>').join("");
+      }
+      function showBar(rect) {
+        bar.classList.remove("hidden");
+        const br = bar.getBoundingClientRect();
+        let top, left;
+        if (rect) {
+          top = window.scrollY + rect.top - br.height - 10;
+          left = window.scrollX + rect.left + rect.width / 2 - br.width / 2;
+          if (top < window.scrollY + 6) top = window.scrollY + rect.bottom + 10;
+        } else { top = window.scrollY + 120; left = window.scrollX + 40; }
+        left = Math.max(8, Math.min(left, window.scrollX + document.documentElement.clientWidth - br.width - 8));
+        bar.style.top = top + "px"; bar.style.left = left + "px";
+      }
+      function hideBar() { bar.classList.add("hidden"); mode = null; current = null; pending = null; }
+      function openCreate(range, rect) {
+        const off = rangeOffsets(range); if (!off) return;
+        const text = combined();
+        pending = { s: off.s, e: off.e, quote: text.slice(off.s, off.e), before: text.slice(Math.max(0, off.s - 30), off.s), after: text.slice(off.e, off.e + 30) };
+        mode = "create"; current = null;
+        bar.innerHTML = '<span class="uann-tag">Highlight</span>' + swatches(null) + '<span class="uann-priv">private</span>';
+        showBar(rect);
+      }
+      function openEdit(id) {
+        const a = anns.find((x) => x.id === id); if (!a) return;
+        mode = "edit"; current = id;
+        const m = marksOf(id)[0]; const rect = m ? m.getBoundingClientRect() : null;
+        bar.innerHTML = swatches(a.color) +
+          '<textarea class="uann-note" rows="2" placeholder="a private note (optional)…">' + esc(a.note || "") + "</textarea>" +
+          '<button class="uann-act" data-act="save">Save</button>' +
+          '<button class="uann-act uann-del" data-act="del">Delete</button>';
+        showBar(rect);
+        const ta = bar.querySelector(".uann-note"); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      }
+
+      bar.addEventListener("click", (ev) => {
+        const sw = ev.target.closest(".uann-sw");
+        if (sw) {
+          const c = sw.dataset.c;
+          if (mode === "create" && pending) {
+            const a = { id: uid(), color: c, quote: pending.quote, before: pending.before, after: pending.after, s: pending.s, e: pending.e, note: "", created: Date.now() };
+            anns.push(a); save(); wrapOffsets(a.s, a.e, a.id, a.color);
+            const sel = window.getSelection(); if (sel) sel.removeAllRanges();
+            openEdit(a.id);
+          } else if (mode === "edit" && current) {
+            const a = anns.find((x) => x.id === current);
+            if (a) { a.color = c; save(); marksOf(current).forEach((m) => m.style.setProperty("--uc", c)); bar.querySelectorAll(".uann-sw").forEach((b) => b.classList.toggle("sel", b.dataset.c === c)); }
+          }
+          return;
+        }
+        const act = ev.target.closest(".uann-act");
+        if (act) {
+          if (act.dataset.act === "save") { const a = anns.find((x) => x.id === current); if (a) { const ta = bar.querySelector(".uann-note"); a.note = ta ? ta.value.trim() : ""; save(); } hideBar(); }
+          else if (act.dataset.act === "del") { if (current) { unwrap(current); anns = anns.filter((x) => x.id !== current); save(); } hideBar(); }
+        }
+      });
+
+      let selT;
+      function onSelect(ev) {
+        if (bar.contains(ev.target)) return;
+        clearTimeout(selT);
+        selT = setTimeout(() => {
+          const sel = window.getSelection();
+          if (!sel || sel.isCollapsed || !sel.rangeCount) return;
+          const range = sel.getRangeAt(0);
+          if (!root.contains(range.commonAncestorContainer)) return;
+          if (range.toString().trim().length < 1) return;
+          openCreate(range, range.getBoundingClientRect());
+        }, 10);
+      }
+      document.addEventListener("mouseup", onSelect);
+      document.addEventListener("keyup", (ev) => { if (ev.shiftKey || ev.key === "Shift") onSelect(ev); });
+      root.addEventListener("click", (ev) => { const m = ev.target.closest("mark.uann"); if (m) { ev.stopPropagation(); openEdit(m.dataset.id); } });
+      document.addEventListener("mousedown", (ev) => {
+        if (bar.classList.contains("hidden")) return;
+        if (bar.contains(ev.target) || ev.target.closest("mark.uann")) return;
+        if (mode === "edit" && current) { const a = anns.find((x) => x.id === current); const ta = bar.querySelector(".uann-note"); if (a && ta) { a.note = ta.value.trim(); save(); } }
+        hideBar();
+      });
+
+      function showPop(id, anchor) {
+        const a = anns.find((x) => x.id === id); if (!a) return;
+        clearTimeout(popT);
+        marksOf(id).forEach((m) => m.classList.add("uann-live"));
+        pop.innerHTML = '<span class="uann-pop-dot" style="background:' + a.color + '"></span>' +
+          (a.note ? '<span class="uann-pop-note">' + esc(a.note) + "</span>" : '<span class="uann-pop-empty">your highlight · click to add a note</span>');
+        pop.classList.remove("hidden");
+        const r = anchor.getBoundingClientRect(); const pr = pop.getBoundingClientRect();
+        let left = window.scrollX + r.left;
+        left = Math.max(8, Math.min(left, window.scrollX + document.documentElement.clientWidth - pr.width - 8));
+        pop.style.left = left + "px"; pop.style.top = (window.scrollY + r.bottom + 8) + "px";
+      }
+      function hidePop() { popT = setTimeout(() => { pop.classList.add("hidden"); root.querySelectorAll("mark.uann.uann-live").forEach((m) => m.classList.remove("uann-live")); }, 160); }
+      root.addEventListener("mouseover", (ev) => { const m = ev.target.closest("mark.uann"); if (m) showPop(m.dataset.id, m); });
+      root.addEventListener("mouseout", (ev) => { const m = ev.target.closest("mark.uann"); if (m) hidePop(); });
+      root.addEventListener("focusin", (ev) => { const m = ev.target.closest("mark.uann"); if (m) showPop(m.dataset.id, m); });
+      root.addEventListener("focusout", (ev) => { const m = ev.target.closest("mark.uann"); if (m) hidePop(); });
+      pop.addEventListener("mouseenter", () => clearTimeout(popT));
+      pop.addEventListener("mouseleave", hidePop);
     })();
   </script>
 </BaseLayout>

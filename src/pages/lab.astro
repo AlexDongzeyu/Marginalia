@@ -1,0 +1,184 @@
+---
+/**
+ * /lab — Marginalia Lab program landing.
+ * Real collaborative research + applied AI-for-good projects.
+ * Two honest tracks: deployed projects (flagship: healthcare navigation) and
+ * research / lit reviews with a real-question-first, real-venues-only policy.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Sheet from "../components/Sheet.astro";
+import Masthead from "../components/Masthead.astro";
+import TornDivider from "../components/TornDivider.astro";
+---
+<BaseLayout
+  title="Marginalia Lab · Real research, built in the open"
+  description="Marginalia Lab is where students do real, collaborative, applied AI-for-good research: deployed projects and honest literature reviews, real questions first, real venues only."
+  bodyClass="page-lab"
+>
+  <Sheet>
+    <Masthead title="Marginalia Lab" tagline="Real research and applied AI for good, built in the open." compact={true} />
+
+    <div class="pg-wrap">
+      <p class="pg-lede">
+        The Lab is where students build real things together. Not write-ups of
+        other people's work, but deployed tools that help someone, and honest
+        research that stands behind every claim it makes. We work in the open,
+        and we only ship what we can defend.
+      </p>
+
+      <!-- Flagship project: the one bordered box on the page -->
+      <article class="pg-feature" data-reveal>
+        <span class="pg-feature-kicker">Flagship project · in build</span>
+        <span class="pg-feature-title">A guide through Canadian healthcare</span>
+        <span class="pg-feature-hook">
+          The care is free. The hard part is navigation: where to go, what
+          you're entitled to, what to ask. We're building a tool that walks an
+          underserved person through it in plain language, in the language they
+          speak.
+        </span>
+        <div class="pg-feature-meta">
+          <span class="pg-chip">AI for good</span>
+          <span class="pg-chip">Real users</span>
+          <span class="pg-chip">Deployed, not a demo</span>
+        </div>
+      </article>
+
+      <!-- Two tracks, on plain paper -->
+      <div class="pg-tracks">
+        <div class="pg-track" data-reveal>
+          <div class="section-label">Applied projects</div>
+          <p>Small teams build and ship real, deployed AI-for-good tools, in
+          health, language, education, and accessibility. The goal is a thing
+          with users, not a slide.</p>
+          <a class="text-link" href="/projects">Browse open projects →</a>
+        </div>
+        <div class="pg-track" data-reveal>
+          <div class="section-label">Research &amp; reviews</div>
+          <p>Pick a real question, do a real review or study, and we help you
+          write a manuscript you can stand behind. A mentor signs off before
+          anything is Lab-published.</p>
+          <a class="text-link" href="/contribute/explain">Start with a question →</a>
+        </div>
+      </div>
+
+      <TornDivider variant="b" />
+
+      <!-- Honest publishing policy -->
+      <section class="pg-policy" data-reveal>
+        <div class="section-label">What we publish, and where</div>
+        <ul class="pg-policy-list">
+          <li><b>Real question first.</b> The work starts from a question worth
+          answering, never from a target number of papers.</li>
+          <li><b>A mentor signs off.</b> Nothing is Lab-published until someone
+          who knows the area has read it and agrees it holds up.</li>
+          <li><b>Real venues only.</b> Genuinely good work goes to real
+          preprint servers and workshops, because the work earns it. One paper
+          you can defend beats five you can't.</li>
+          <li><b>You stand behind it.</b> If a researcher or a reporter emails
+          the author, the author can answer for every claim.</li>
+        </ul>
+        <p class="muted pg-policy-foot">
+          The datasets our work produces are open for anyone to use.
+          <a href="/datasets"> See the open datasets →</a>
+        </p>
+      </section>
+    </div>
+  </Sheet>
+</BaseLayout>
+
+<style>
+  .pg-wrap { max-width: 720px; margin: 0 auto; }
+  .pg-lede { font-size: 16px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 22px; }
+
+  .pg-role {
+    background: var(--card-2);
+    border: 1px solid rgba(122, 92, 62, 0.22);
+    padding: 16px 18px;
+    margin-bottom: 24px;
+  }
+  .pg-role-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pg-role p { margin: 6px 0 0; font-size: 14.5px; line-height: 1.6; color: #3a342b; }
+
+  .pg-feature {
+    display: block;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    padding: 22px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 12px 30px -20px rgba(40, 30, 20, 0.5);
+  }
+  .pg-feature-kicker {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .pg-feature-title { display: block; font-size: 26px; font-weight: 500; line-height: 1.12; margin-bottom: 8px; }
+  .pg-feature-hook { display: block; font-size: 15px; line-height: 1.6; color: var(--ink-soft); margin-bottom: 12px; }
+  .pg-feature-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pg-chip {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border: 1px solid var(--line-2);
+    color: var(--accent-2);
+  }
+
+  .pg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pg-tracks { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 4px; }
+  .pg-track p { font-size: 14px; line-height: 1.55; color: #3a342b; margin: 6px 0 12px; }
+  .pg-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 20px 22px 22px;
+    box-shadow: 0 8px 22px -16px rgba(40, 30, 20, 0.4);
+    display: flex;
+    flex-direction: column;
+  }
+  .pg-roman {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 26px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .pg-card h2 { font-size: 22px; font-weight: 500; margin: 0 0 8px; line-height: 1.1; }
+  .pg-body { font-size: 14px; line-height: 1.55; color: #3a342b; margin: 0 0 14px; }
+  .pg-cta { margin-top: auto; align-self: flex-start; }
+
+  .pg-policy { max-width: 640px; margin: 0 auto; }
+  .pg-policy-list { list-style: none; margin: 10px 0 0; padding: 0; }
+  .pg-policy-list li {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: #3a342b;
+    padding: 9px 0 9px 18px;
+    border-bottom: 1px dashed var(--line-2);
+    position: relative;
+  }
+  .pg-policy-list li:before {
+    content: "·";
+    position: absolute;
+    left: 2px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .pg-policy-foot { margin-top: 14px; font-size: 13.5px; }
+
+  @media (max-width: 640px) {
+    .pg-grid { grid-template-columns: 1fr; }
+    .pg-tracks { grid-template-columns: 1fr; }
+  }
+</style>

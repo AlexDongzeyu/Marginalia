@@ -21,11 +21,11 @@ const metaBits = [
 ].filter(Boolean);
 ---
 
-<a class="note-row" href={`/article/${article.slug}`} data-reveal>
+<a class="note-row" href={`/article/${article.slug}`} data-slug={article.slug} data-reveal>
   <span class="date">{dateNice}</span>
   <span class="nr-main">
     <span class="title">{article.plain_title}</span><br />
-    <span class="meta">{metaBits.join(" · ")}{article.is_ai4good === 1 ? " · AI for Good" : ""}</span>
+    <span class="meta">{metaBits.join(" · ")}{article.is_ai4good === 1 ? " · AI for Good" : ""}<span class="nr-stamp" hidden> · ✓ understood</span></span>
   </span>
   <span class="arr">→</span>
 </a>

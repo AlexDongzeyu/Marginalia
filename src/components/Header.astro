@@ -13,9 +13,12 @@ const isActive = (href: string) =>
 const tabs = [
   { href: "/today", label: "Today" },
   { href: "/feed", label: "Read" },
+  { href: "/map", label: "Map" },
   { href: "/learn", label: "Learn" },
   { href: "/contribute", label: "Contribute" },
-  { href: "/about", label: "About" },
+  { href: "/pulse", label: "Pulse" },
+  { href: "/projects", label: "Projects" },
+  { href: "/chapters", label: "Chapters" },
 ];
 
 // Every public page, grouped, for the "All pages" dropdown directory.
@@ -99,7 +102,7 @@ const initials = user
           aria-haspopup="true"
           aria-expanded="false"
           aria-controls="navDropdown"
-        >More <span class="nav-more-caret" aria-hidden="true">▾</span></button>
+        >All pages <span class="nav-more-caret" aria-hidden="true">▾</span></button>
         <div class="nav-dropdown" id="navDropdown" role="menu" aria-label="All pages">
           {moreGroups.map((g) => (
             <div class="nav-dd-group">
