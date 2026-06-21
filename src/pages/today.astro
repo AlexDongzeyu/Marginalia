@@ -41,14 +41,13 @@ const reviewerInitials = article
 
         <section class="lmrow" style="--read-w:600px; align-items:start;">
           <div class="lmside left" style="padding-top:40px;">
-            <MarginNote variant="def" taped tilt="l" label="Heads up">every bold word has a plain-English note right next to it. no jargon left behind.</MarginNote>
+            <MarginNote variant="def" taped tilt="l" label="Heads up">{article.hook}</MarginNote>
           </div>
 
           <div class="lmcenter">
-            <p class="pullquote">{article.hook}</p>
-            <div class="section-label">What's going on</div>
+            <div class="section-label" style="color:var(--accent-2);">What's going on</div>
             <div class="read drop-cap"><Fragment set:html={whatsGoingOn} /></div>
-            <div class="section-label" style="margin-top:26px;">Why it matters</div>
+            <div class="section-label" style="margin-top:26px; color:var(--accent-2);">Why it matters</div>
             <div class="read"><Fragment set:html={whyItMatters} /></div>
             <div class="cta-row">
               <a href={`/article/${article.slug}`} class="btn-ink">Open the annotated version →</a>
@@ -63,9 +62,8 @@ const reviewerInitials = article
                 <span style="font-family:var(--mono); font-size:10px; color:var(--ink-soft); flex:1;">{article.reviewer_name ?? "Marginalia team"}</span>
                 <span style="font-family:var(--mono); font-size:8px; letter-spacing:.1em; padding:2px 5px; color:var(--accent); border:1px solid rgba(194,65,12,.4);">TEAM</span>
               </div>
-              <div class="mn-body">Today's pick. We read the whole paper so you get it in plain language.</div>
+              <div class="mn-body">The editorial team picked this paper because it is worth your time, and an AI drafted this note. We check each one and rewrite it when the draft misses the mark.</div>
             </div>
-            <MarginNote variant="why" tilt="r" label="The point">{article.is_ai4good === 1 ? "AI aimed at a real problem: health, climate, learning, access." : "a building-block idea worth getting right."}</MarginNote>
           </div>
         </section>
       </Fragment>

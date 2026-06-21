@@ -88,18 +88,16 @@ const annKey = me ? String(me.id) : "guest";
         <!-- LEFT MARGIN: team explainer notes -->
         <div class="lmside left" style="padding-top:30px;">
           <div style="font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faintest);">In the margin</div>
+          <div class="mn-card taped mn-tilt-l" data-reveal>
+            <div class="mn-label" style="color:var(--accent);">Heads up</div>
+            <div class="mn-body" style="font-family:var(--hand); font-size:17px; line-height:1.4; color:var(--ink-soft);">{article.hook}</div>
+          </div>
           {terms.map((t, i) => (
             <div class={`mn-card ${i % 2 ? "mn-tilt-r" : "mn-tilt-l"}`} data-reveal>
               <div class="mn-label">{t.term}</div>
               <div class="mn-body">{t.definition}</div>
             </div>
           ))}
-          <div class="read-companion" id="readCompanion" hidden>
-            <div class="rc-label">The point</div>
-            <div class="rc-gist" id="rcGist"></div>
-            <div class="rc-part" id="rcPart"></div>
-            <div class="rc-terms" id="rcTerms"></div>
-          </div>
         </div>
 
         <!-- CENTER: reader -->
@@ -113,11 +111,10 @@ const annKey = me ? String(me.id) : "guest";
 
           <!-- EXPLAINER -->
           <div id="explainerPane">
-            <div id="annRoot" style="background:var(--paper); border:1px solid rgba(33,28,22,.1); padding:36px 40px; box-shadow:0 20px 50px -26px rgba(40,30,20,.4);">
-              <p class="pullquote" data-part="The big idea">{article.hook}</p>
-              <div class="section-label">What's going on</div>
+            <div id="annRoot" style="background:var(--paper); border:1px solid rgba(33,28,22,.1); padding:32px 40px 36px; box-shadow:0 20px 50px -26px rgba(40,30,20,.4);">
+              <div class="section-label" style="color:var(--accent-2);" data-part="The big idea">What's going on</div>
               <div class="read drop-cap" data-part="What's going on"><Fragment set:html={whatsGoingOn} /></div>
-              <div class="section-label" style="margin-top:24px;">Why it matters</div>
+              <div class="section-label" style="margin-top:24px; color:var(--accent-2);">Why it matters</div>
               <div class="read" data-part="Why it matters"><Fragment set:html={whyItMatters} /></div>
             </div>
 
@@ -129,7 +126,7 @@ const annKey = me ? String(me.id) : "guest";
               </p>
               <div class="row wrap gap-8">
                 {article.source_url && <a class="btn-outline" href={article.source_url} target="_blank" rel="noopener noreferrer">{article.arxiv_id ? "View on arXiv ↗" : "View the paper ↗"}</a>}
-                {pdfUrl && <a class="btn-outline" href={pdfUrl} target="_blank" rel="noopener noreferrer">PDF ↗</a>}
+                {pdfEmbed && <a class="btn-outline" href={pdfEmbed} target="_blank" rel="noopener noreferrer">Read the PDF ↗</a>}
               </div>
             </div>
 
@@ -150,7 +147,7 @@ const annKey = me ? String(me.id) : "guest";
                 <span style="opacity:.6;">{article.arxiv_id ? `arXiv:${article.arxiv_id}` : "Source paper"}</span>
                 {article.source_url && <a href={article.source_url} target="_blank" rel="noopener noreferrer" style="color:#F0A878; text-decoration:none;">Open on arXiv ↗</a>}
               </div>
-              <iframe src={pdfEmbed} title="Source PDF" style="width:100%; height:720px; border:1px solid rgba(33,28,22,.16); border-top:none; background:#fff;"></iframe>
+              <iframe id="pdfFrame" data-src={`${pdfEmbed}#view=FitH&toolbar=1`} title="Source PDF" loading="lazy" style="width:100%; height:760px; border:1px solid rgba(33,28,22,.16); border-top:none; background:#fff;"></iframe>
             </div>
           )}
 
@@ -182,7 +179,7 @@ const annKey = me ? String(me.id) : "guest";
                 <span style="font-family:var(--mono); font-size:10px; color:var(--ink-soft); flex:1;">{article.reviewer_name ?? "Marginalia team"}</span>
                 <span style="font-family:var(--mono); font-size:8px; letter-spacing:.1em; padding:2px 5px; color:var(--accent); border:1px solid rgba(194,65,12,.4);">TEAM</span>
               </div>
-              <div class="mn-body">We read the full paper and rewrote it in plain language. Leave your own note below.</div>
+              <div class="mn-body">The editorial team picked this paper because it is worth your time, and an AI drafted this note. We check each one and rewrite it when the draft misses the mark.</div>
             </div>
 
             <div id="annList">
@@ -240,6 +237,10 @@ const annKey = me ? String(me.id) : "guest";
       srcPane.classList.toggle("hidden", !src);
       exBtn.className = src ? "btn-outline" : "btn-ink";
       srcBtn.className = src ? "btn-ink" : "btn-outline";
+      if (src) {
+        const fr = document.getElementById("pdfFrame");
+        if (fr && !fr.src && fr.dataset.src) fr.src = fr.dataset.src;
+      }
     }
     exBtn?.addEventListener("click", () => setMode(false));
     srcBtn?.addEventListener("click", () => setMode(true));
