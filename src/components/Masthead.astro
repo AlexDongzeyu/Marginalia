@@ -9,16 +9,8 @@ interface Props {
   bottom?: string;
   compact?: boolean;
 }
-const { title, tagline, bottom, compact = false } = Astro.props;
+const { title, compact = false } = Astro.props;
 ---
 <section class={`masthead ${compact ? "compact" : ""}`}>
   <h1>{title}</h1>
-  {tagline && <p class="tagline">{tagline}</p>}
-  {bottom && (
-    <div class="mast-rule lower">
-      <span class="bar"></span>
-      <span>{bottom}</span>
-      <span class="bar"></span>
-    </div>
-  )}
 </section>
