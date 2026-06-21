@@ -7,44 +7,57 @@
 import { getSessionUserId, getUserById } from "../lib/auth";
 
 const path = Astro.url.pathname;
-const isActive = (href: string) =>
-  href === "/" ? path === "/" : path.startsWith(href);
 
+// Top nav resolves to the four programs, plus Today (the daily habit) and About.
+// Each program "owns" a set of routes so its tab stays lit while you're inside it.
 const tabs = [
-  { href: "/today", label: "Today" },
-  { href: "/feed", label: "Read" },
-  { href: "/map", label: "Map" },
-  { href: "/learn", label: "Learn" },
-  { href: "/contribute", label: "Contribute" },
-  { href: "/pulse", label: "Pulse" },
-  { href: "/projects", label: "Projects" },
-  { href: "/chapters", label: "Chapters" },
+  { href: "/today", label: "Today", match: ["/today"] },
+  { href: "/press", label: "Press", match: ["/press", "/feed", "/map", "/glossary", "/pulse", "/article"] },
+  { href: "/learn", label: "Learn", match: ["/learn"] },
+  { href: "/lab", label: "Lab", match: ["/lab", "/projects", "/datasets"] },
+  { href: "/commons", label: "Commons", match: ["/commons", "/chapters", "/newsletter"] },
+  { href: "/about", label: "About", match: ["/about"] },
 ];
+const tabActive = (matches: string[]) =>
+  matches.some((m) => (m === "/" ? path === "/" : path === m || path.startsWith(m + "/") || path.startsWith(m)));
 
-// Every public page, grouped, for the "All pages" dropdown directory.
+// Full directory for the "More" dropdown, grouped by program.
 const moreGroups = [
   {
-    title: "Read",
+    title: "Press",
+    href: "/press",
     links: [
-      { href: "/", label: "Home" },
-      { href: "/today", label: "Today" },
+      { href: "/today", label: "Today's paper" },
       { href: "/feed", label: "The feed" },
       { href: "/map", label: "The map" },
       { href: "/glossary", label: "Glossary" },
       { href: "/pulse", label: "Pulse" },
+    ],
+  },
+  {
+    title: "Learn",
+    href: "/learn",
+    links: [
+      { href: "/learn", label: "Tracks & lessons" },
+      { href: "/glossary", label: "Glossary" },
+    ],
+  },
+  {
+    title: "Lab",
+    href: "/lab",
+    links: [
+      { href: "/projects", label: "Projects" },
+      { href: "/contribute/explain", label: "Explain & research" },
       { href: "/datasets", label: "Datasets" },
     ],
   },
   {
-    title: "Take part",
+    title: "Commons",
+    href: "/commons",
     links: [
-      { href: "/learn", label: "Learn" },
-      { href: "/contribute", label: "Contribute" },
-      { href: "/contribute/classify", label: "Classify" },
-      { href: "/contribute/explain", label: "Explain" },
-      { href: "/projects", label: "Projects" },
       { href: "/chapters", label: "Chapters" },
       { href: "/chapters/start", label: "Start a chapter" },
+      { href: "/contribute/classify", label: "Classify" },
       { href: "/newsletter", label: "Newsletter" },
     ],
   },
@@ -52,6 +65,7 @@ const moreGroups = [
     title: "Org & you",
     links: [
       { href: "/about", label: "About & team" },
+      { href: "/contribute", label: "All the ways to help" },
       { href: "/join", label: "Join" },
       { href: "/dashboard", label: "Your library" },
       { href: "/login", label: "Sign in" },
@@ -91,7 +105,7 @@ const initials = user
 
     <nav class="nav-tabs" id="navTabs" aria-label="Primary">
       {tabs.map((t) => (
-        <a href={t.href} class={`nav-tab ${isActive(t.href) ? "active" : ""}`}>{t.label}</a>
+        <a href={t.href} class={`nav-tab ${tabActive(t.match) ? "active" : ""}`}>{t.label}</a>
       ))}
 
       <div class="nav-more" id="navMore">
@@ -102,11 +116,15 @@ const initials = user
           aria-haspopup="true"
           aria-expanded="false"
           aria-controls="navDropdown"
-        >All pages <span class="nav-more-caret" aria-hidden="true">▾</span></button>
+        >More <span class="nav-more-caret" aria-hidden="true">▾</span></button>
         <div class="nav-dropdown" id="navDropdown" role="menu" aria-label="All pages">
           {moreGroups.map((g) => (
             <div class="nav-dd-group">
-              <div class="nav-dd-title">{g.title}</div>
+              {g.href ? (
+                <a class="nav-dd-title nav-dd-title-link" href={g.href} role="menuitem">{g.title}</a>
+              ) : (
+                <div class="nav-dd-title">{g.title}</div>
+              )}
               {g.links.map((l) => (
                 <a
                   href={l.href}
